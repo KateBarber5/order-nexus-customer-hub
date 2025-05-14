@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,8 +10,11 @@ import OrderCard from '@/components/OrderCard';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { formatDistanceToNow } from 'date-fns';
+import OrderDetails from '@/components/OrderDetails';
 
 const Dashboard = () => {
+  const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
+  
   // Count orders by status
   const orderStats = mockOrders.reduce((acc: Record<string, number>, order) => {
     acc[order.status] = (acc[order.status] || 0) + 1;
@@ -27,6 +30,18 @@ const Dashboard = () => {
     const date = new Date(dateString);
     return formatDistanceToNow(date, { addSuffix: true });
   };
+  
+  const handleViewDetails = (orderId: number) => {
+    setSelectedOrder(orderId);
+  };
+  
+  const handleCloseDetails = () => {
+    setSelectedOrder(null);
+  };
+  
+  const selectedOrderData = selectedOrder !== null 
+    ? mockOrders.find(order => order.id === selectedOrder) 
+    : null;
 
   return (
     <DashboardLayout>
@@ -68,7 +83,7 @@ const Dashboard = () => {
       
       <div className="mb-12">
         <Link to="/orders">
-          <Button size="lg" className="w-full md:w-auto text-lg py-6 px-8">
+          <Button size="lg" className="w-full md:w-auto text-lg py-6 px-8 bg-green-600 hover:bg-green-700">
             Place New Order
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
@@ -107,7 +122,11 @@ const Dashboard = () => {
                     <StatusBadge status={order.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewDetails(order.id)}
+                    >
                       View Details
                     </Button>
                   </TableCell>
@@ -129,7 +148,7 @@ const Dashboard = () => {
               <p className="text-center text-muted-foreground mb-4">
                 Request a new municipal lien search for a property
               </p>
-              <Button>New Search</Button>
+              <Button className="bg-green-600 hover:bg-green-700">New Search</Button>
             </CardContent>
           </Card>
         </Link>
@@ -164,6 +183,13 @@ const Dashboard = () => {
           </Card>
         </Link>
       </div>
+      
+      {selectedOrderData && (
+        <OrderDetails 
+          order={selectedOrderData} 
+          onClose={handleCloseDetails} 
+        />
+      )}
     </DashboardLayout>
   );
 };

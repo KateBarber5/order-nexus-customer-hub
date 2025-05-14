@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSearch, History, User, Menu, X } from 'lucide-react';
+import { FileSearch, History, User, Menu, X, LayoutDashboard } from 'lucide-react';
 
 const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -11,6 +11,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
   
   const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { name: 'Place New Order', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
     { name: 'Search History', path: '/history', icon: <History className="h-5 w-5" /> },
     { name: 'Profile', path: '/profile', icon: <User className="h-5 w-5" /> }
