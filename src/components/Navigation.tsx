@@ -11,7 +11,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
   
   const navItems = [
-    { name: 'New Search', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
+    { name: 'Place New Order', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
     { name: 'Search History', path: '/history', icon: <History className="h-5 w-5" /> },
     { name: 'Profile', path: '/profile', icon: <User className="h-5 w-5" /> }
   ];
