@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockOrders } from '@/data/mockData';
 import { Link } from 'react-router-dom';
-import { Package, History, User } from 'lucide-react';
+import { FileSearch, History, User } from 'lucide-react';
 
 const Dashboard = () => {
   // Count orders by status
@@ -23,8 +23,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Searches</CardTitle>
+            <FileSearch className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalOrders}</div>
@@ -33,7 +33,7 @@ const Dashboard = () => {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">In Transit</CardTitle>
+            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
             <History className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -59,13 +59,13 @@ const Dashboard = () => {
           <Card className="h-full hover:shadow-md transition-shadow">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <div className="bg-primary/10 p-3 rounded-full mb-4">
-                <Package className="h-8 w-8 text-primary" />
+                <FileSearch className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Place New Order</h3>
+              <h3 className="text-lg font-semibold mb-2">New Lien Search</h3>
               <p className="text-center text-muted-foreground mb-4">
-                Create a new delivery order with parcel details
+                Request a new municipal lien search for a property
               </p>
-              <Button>New Order</Button>
+              <Button>New Search</Button>
             </CardContent>
           </Card>
         </Link>
@@ -76,9 +76,9 @@ const Dashboard = () => {
               <div className="bg-primary/10 p-3 rounded-full mb-4">
                 <History className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Order History</h3>
+              <h3 className="text-lg font-semibold mb-2">Search History</h3>
               <p className="text-center text-muted-foreground mb-4">
-                View and track all your previous orders
+                View and track all your previous search requests
               </p>
               <Button variant="outline">View History</Button>
             </CardContent>
@@ -93,7 +93,7 @@ const Dashboard = () => {
               </div>
               <h3 className="text-lg font-semibold mb-2">Your Profile</h3>
               <p className="text-center text-muted-foreground mb-4">
-                Manage your personal information
+                Manage your company and contact information
               </p>
               <Button variant="outline">Edit Profile</Button>
             </CardContent>

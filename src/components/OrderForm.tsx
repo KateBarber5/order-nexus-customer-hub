@@ -36,8 +36,8 @@ const OrderForm = () => {
     
     // Simulate API call
     setTimeout(() => {
-      console.log('Order submitted:', formData);
-      toast.success('Order placed successfully!');
+      console.log('Search request submitted:', formData);
+      toast.success('Lien search request submitted successfully!');
       
       // Reset form
       setFormData({
@@ -53,19 +53,19 @@ const OrderForm = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Place New Order</CardTitle>
+        <CardTitle>Request Municipal Lien Search</CardTitle>
         <CardDescription>
-          Fill out the form below to place a new delivery order
+          Fill out the form below to request a new municipal lien search
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="address">Delivery Address</Label>
+            <Label htmlFor="address">Property Address</Label>
             <Textarea
               id="address"
               name="address"
-              placeholder="Enter full address"
+              placeholder="Enter complete property address"
               value={formData.address}
               onChange={handleChange}
               required
@@ -74,11 +74,11 @@ const OrderForm = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="parcelId">Parcel ID</Label>
+            <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
             <Input
               id="parcelId"
               name="parcelId"
-              placeholder="Enter parcel ID"
+              placeholder="Enter parcel identification number"
               value={formData.parcelId}
               onChange={handleChange}
               required
@@ -90,7 +90,7 @@ const OrderForm = () => {
             <Input
               id="county"
               name="county"
-              placeholder="Enter county"
+              placeholder="Enter county name"
               value={formData.county}
               onChange={handleChange}
               required
@@ -101,10 +101,10 @@ const OrderForm = () => {
         <CardFooter>
           <Button 
             type="submit" 
-            className="w-full md:w-auto"
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Submitting...' : 'Place Order'}
+            {isSubmitting ? 'Submitting...' : 'Submit Search Request'}
           </Button>
         </CardFooter>
       </form>

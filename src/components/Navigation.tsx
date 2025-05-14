@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Package, History, User, Menu, X } from 'lucide-react';
+import { FileSearch, History, User, Menu, X } from 'lucide-react';
 
 const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -11,8 +11,8 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
   
   const navItems = [
-    { name: 'New Order', path: '/orders', icon: <Package className="h-5 w-5" /> },
-    { name: 'Order History', path: '/history', icon: <History className="h-5 w-5" /> },
+    { name: 'New Search', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
+    { name: 'Search History', path: '/history', icon: <History className="h-5 w-5" /> },
     { name: 'Profile', path: '/profile', icon: <User className="h-5 w-5" /> }
   ];
 
@@ -23,8 +23,8 @@ const Navigation = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <Package className="h-8 w-8 text-primary" />
-                <span className="ml-2 text-xl font-bold text-gray-900">ParcelTrack</span>
+                <FileSearch className="h-8 w-8 text-primary" />
+                <span className="ml-2 text-xl font-bold text-gray-900">GovMetric</span>
               </Link>
             </div>
             

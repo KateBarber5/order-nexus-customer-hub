@@ -27,7 +27,20 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
   };
 
   const getStatusLabel = () => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'processing':
+        return 'Processing';
+      case 'shipped':
+        return 'In Research';
+      case 'delivered':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
   };
 
   return (

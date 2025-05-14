@@ -52,8 +52,8 @@ const OrderHistory = () => {
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="shipped">Shipped</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
+              <SelectItem value="shipped">In Research</SelectItem>
+              <SelectItem value="delivered">Completed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
@@ -62,7 +62,7 @@ const OrderHistory = () => {
       
       {filteredOrders.length === 0 ? (
         <div className="text-center py-12 border rounded-lg bg-gray-50">
-          <p className="text-muted-foreground">No orders found matching your search criteria.</p>
+          <p className="text-muted-foreground">No searches found matching your criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
