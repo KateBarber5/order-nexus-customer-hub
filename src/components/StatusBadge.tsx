@@ -39,7 +39,7 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
       case 'cancelled':
         return 'Cancelled';
       default:
-        return status.charAt(0).toUpperCase() + status.slice(1);
+        return status;
     }
   };
 

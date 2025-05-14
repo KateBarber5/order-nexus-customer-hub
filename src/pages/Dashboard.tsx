@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockOrders } from '@/data/mockData';
 import { Link } from 'react-router-dom';
-import { FileSearch, History, User } from 'lucide-react';
+import { FileSearch, History, User, ArrowRight } from 'lucide-react';
+import OrderCard from '@/components/OrderCard';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import StatusBadge from '@/components/StatusBadge';
+import { formatDistanceToNow } from 'date-fns';
 
 const Dashboard = () => {
   // Count orders by status
@@ -15,6 +19,14 @@ const Dashboard = () => {
   }, {});
   
   const totalOrders = mockOrders.length;
+  const recentOrders = [...mockOrders].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  ).slice(0, 10);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
 
   return (
     <DashboardLayout>
@@ -54,14 +66,66 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mb-12">
+        <Link to="/orders">
+          <Button size="lg" className="w-full md:w-auto text-lg py-6 px-8">
+            Place New Order
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </Link>
+      </div>
+      
+      <h2 className="section-title mb-4">Recent Orders</h2>
+      
+      <div className="overflow-hidden rounded-lg border bg-white shadow">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Property Address</TableHead>
+              <TableHead>County</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {recentOrders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  No orders found
+                </TableCell>
+              </TableRow>
+            ) : (
+              recentOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">#{order.id}</TableCell>
+                  <TableCell>{order.address}</TableCell>
+                  <TableCell>{order.county}</TableCell>
+                  <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={order.status} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm">
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <Link to="/orders" className="col-span-1">
           <Card className="h-full hover:shadow-md transition-shadow">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <div className="bg-primary/10 p-3 rounded-full mb-4">
                 <FileSearch className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">New Lien Search</h3>
+              <h3 className="text-lg font-semibold mb-2">Place New Order</h3>
               <p className="text-center text-muted-foreground mb-4">
                 Request a new municipal lien search for a property
               </p>
