@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ArrowLeft } from 'lucide-react';
 
 interface OrderFormData {
   address: string;
@@ -24,6 +25,8 @@ const OrderForm = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'details' | 'review'>('details');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -40,6 +43,18 @@ const OrderForm = () => {
     }));
   };
 
+  const handleProceedToReview = () => {
+    if (!formData.address || !formData.parcelId || !formData.county) {
+      toast.error('Please fill out all required fields');
+      return;
+    }
+    setCurrentStep('review');
+  };
+
+  const handleBackToDetails = () => {
+    setCurrentStep('details');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -47,19 +62,104 @@ const OrderForm = () => {
     // Simulate API call
     setTimeout(() => {
       console.log('Order submitted:', formData);
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      
+      // Show success message
       toast.success('Municipal lien search order submitted successfully!');
       
-      // Reset form
-      setFormData({
-        address: '',
-        parcelId: '',
-        county: '',
-        productType: 'full'
-      });
-      
-      setIsSubmitting(false);
+      // Reset after 3 seconds
+      setTimeout(() => {
+        // Reset form
+        setFormData({
+          address: '',
+          parcelId: '',
+          county: '',
+          productType: 'full'
+        });
+        setCurrentStep('details');
+        setIsSuccess(false);
+      }, 5000);
     }, 1500);
   };
+
+  // Display success message screen
+  if (isSuccess) {
+    return (
+      <Card className="text-center py-10">
+        <CardContent className="pt-10">
+          <div className="mx-auto rounded-full bg-green-100 p-6 w-16 h-16 flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <CardTitle className="text-2xl mb-4">Thank you for your order submission</CardTitle>
+          <CardDescription className="text-lg max-w-md mx-auto mb-6">
+            We'll notify you via email when your order is completed.
+          </CardDescription>
+          <div className="mt-8">
+            <Button onClick={() => setIsSuccess(false)}>Return to Dashboard</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (currentStep === 'review') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Review Your Order</CardTitle>
+          <CardDescription>
+            Please review your order details before submitting your order
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            <div className="space-y-4 border rounded-md p-4 bg-gray-50">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">Product Type</div>
+                <div className="col-span-2 font-medium">
+                  {formData.productType === 'full' ? 'Full Report' : 'Card Report'}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
+                <div className="col-span-2 font-medium">{formData.address}</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">Parcel ID / Folio Number</div>
+                <div className="col-span-2 font-medium">{formData.parcelId}</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">County</div>
+                <div className="col-span-2 font-medium">{formData.county}</div>
+              </div>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleBackToDetails}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Edit
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Order'}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -69,7 +169,7 @@ const OrderForm = () => {
           Fill out the form below to request a new municipal lien search
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(e) => { e.preventDefault(); handleProceedToReview(); }}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <Label className="text-base font-medium">Product Type</Label>
@@ -138,9 +238,8 @@ const OrderForm = () => {
           <Button 
             type="submit" 
             className="w-full md:w-auto"
-            disabled={isSubmitting}
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Order'}
+            Review Order
           </Button>
         </CardFooter>
       </form>

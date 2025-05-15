@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from './StatusBadge';
 import { Order } from '@/data/mockData';
-import { FileSearch } from 'lucide-react';
+import { FileSearch, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface OrderCardProps {
@@ -59,9 +59,18 @@ const OrderCard = ({ order }: OrderCardProps) => {
       </CardContent>
       
       <CardFooter className="bg-gray-50 p-3">
-        <Button variant="outline" size="sm" className="w-full">
-          View Results
-        </Button>
+        <div className="w-full flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1">
+            View Results
+          </Button>
+          
+          {order.status === 'delivered' && (
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <FileText className="h-4 w-4" />
+              Download
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

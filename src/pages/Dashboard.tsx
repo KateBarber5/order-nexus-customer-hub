@@ -159,7 +159,7 @@ const Dashboard = () => {
               <div className="bg-primary/10 p-3 rounded-full mb-4">
                 <History className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Search History</h3>
+              <h3 className="text-lg font-semibold mb-2">Order History</h3>
               <p className="text-center text-muted-foreground mb-4">
                 View and track all your previous search requests
               </p>

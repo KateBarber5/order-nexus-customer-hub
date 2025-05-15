@@ -19,6 +19,11 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
     { id: 2, name: 'Property Tax Certificate', type: 'PDF', size: '0.8 MB', date: new Date() },
     { id: 3, name: 'Utility Statement', type: 'PDF', size: '0.5 MB', date: new Date() },
   ];
+
+  const handleDownload = (docName: string) => {
+    console.log(`Downloading ${docName}`);
+    // In a real app, this would trigger an actual download
+  };
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
@@ -64,20 +69,34 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
             <div className="mt-6">
               <h3 className="text-lg font-medium mb-2">Documents</h3>
               <div className="space-y-2">
-                {mockDocuments.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between border rounded-md p-3">
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-primary mr-3" />
-                      <div>
-                        <p className="font-medium">{doc.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {doc.type} • {doc.size} • {format(doc.date, 'MMM d, yyyy')}
-                        </p>
+                {order.status === 'delivered' ? (
+                  mockDocuments.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between border rounded-md p-3">
+                      <div className="flex items-center">
+                        <FileText className="h-5 w-5 text-primary mr-3" />
+                        <div>
+                          <p className="font-medium">{doc.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {doc.type} • {doc.size} • {format(doc.date, 'MMM d, yyyy')}
+                          </p>
+                        </div>
                       </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleDownload(doc.name)}
+                      >
+                        Download
+                      </Button>
                     </div>
-                    <Button size="sm" variant="outline">Download</Button>
+                  ))
+                ) : (
+                  <div className="text-center py-8 border rounded-md bg-gray-50">
+                    <p className="text-muted-foreground">
+                      Documents will be available when the order is completed.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </CardContent>
