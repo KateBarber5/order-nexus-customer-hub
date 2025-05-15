@@ -1,11 +1,22 @@
 
 import React, { useState } from 'react';
 import { mockOrders } from '@/data/mockData';
-import OrderCard from './OrderCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Search } from 'lucide-react';
+import StatusBadge from './StatusBadge';
+import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { formatDistanceToNow } from 'date-fns';
 
 const OrderHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +32,11 @@ const OrderHistory = () => {
     
     return matchesSearch && matchesStatus;
   });
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
 
   return (
     <div className="space-y-6">
@@ -65,10 +81,47 @@ const OrderHistory = () => {
           <p className="text-muted-foreground">No searches found matching your criteria.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredOrders.map(order => (
-            <OrderCard key={order.id} order={order} />
-          ))}
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Search ID</TableHead>
+                <TableHead>Property Address</TableHead>
+                <TableHead>Parcel ID</TableHead>
+                <TableHead>County</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">#{order.id}</TableCell>
+                  <TableCell>{order.address}</TableCell>
+                  <TableCell className="font-mono">{order.parcelId}</TableCell>
+                  <TableCell>{order.county}</TableCell>
+                  <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={order.status} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                      {order.status === 'delivered' && (
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          Download
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
