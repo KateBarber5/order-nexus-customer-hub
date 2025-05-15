@@ -68,9 +68,9 @@ const Index = () => {
         <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#645DF3]/30 rounded-full blur-3xl"></div>
         
         <div className="flex justify-center mb-6 relative z-10">
-          {/* Adjusted logo size */}
+          {/* Updated logo with new image and h-16 height class */}
           <div className="p-2">
-            <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-26" />
+            <img src="/lovable-uploads/fd821935-e446-4482-8a82-2cdfc6b0305e.png" alt="GovMetric Logo" className="h-16" />
           </div>
         </div>
         
