@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
-import { FileSearch, Lock, Mail, UserPlus } from 'lucide-react';
+import { FileSearch, Lock, Mail, UserPlus, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +23,7 @@ const SignUp = () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       toast({
         title: "Error",
-        description: "Please fill in all fields.",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -85,6 +86,21 @@ const SignUp = () => {
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name (Optional)</Label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="companyName" 
+                    type="text" 
+                    placeholder="Your company name" 
+                    className="pl-10"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
                     disabled={isLoading}
                   />
                 </div>
