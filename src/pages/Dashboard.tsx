@@ -1,148 +1,137 @@
 
 import React from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockOrders } from '@/data/mockData';
-import { Activity, FileText, DollarSign, Clock } from 'lucide-react';
-import StatusBadge from '@/components/StatusBadge';
-import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { FileText, Users, CheckCircle, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { mockOrders } from '@/data/mockData';
 
 const Dashboard = () => {
-  // Calculate dashboard metrics
-  const totalOrders = mockOrders.length;
-  const pendingOrders = mockOrders.filter(order => order.status === 'pending').length;
-  const completedOrders = mockOrders.filter(order => order.status === 'delivered').length;
+  // Count metrics
+  const pendingOrders = mockOrders.filter(order => !order.status.includes('completed')).length;
+  const completedOrders = mockOrders.filter(order => order.status.includes('completed')).length;
+  const totalUsers = 12; // Mock user count
   
-  // Get recent orders (most recent 5)
-  const recentOrders = [...mockOrders]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  // Recent completed orders - in a real app, would fetch from API
+  const recentCompletedOrders = mockOrders
+    .filter(order => order.status.includes('completed'))
+    .sort((a, b) => {
+      const dateA = a.statusDate ? new Date(a.statusDate).getTime() : 0;
+      const dateB = b.statusDate ? new Date(b.statusDate).getTime() : 0;
+      return dateB - dateA;
+    })
     .slice(0, 5);
-  
-  // Calculate average completion time (in days)
-  const completedOrdersWithDuration = mockOrders
-    .filter(order => order.status === 'delivered' && order.completedAt)
-    .map(order => {
-      const start = new Date(order.createdAt).getTime();
-      const end = new Date(order.completedAt || Date.now()).getTime();
-      return (end - start) / (1000 * 60 * 60 * 24); // convert to days
-    });
-  
-  const averageCompletionTime = completedOrdersWithDuration.length > 0 
-    ? completedOrdersWithDuration.reduce((sum, days) => sum + days, 0) / completedOrdersWithDuration.length
-    : 0;
-  
-  // Format the date for display
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
-  };
-  
+
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-        
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Searches</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalOrders}</div>
-              <p className="text-xs text-muted-foreground">
-                {pendingOrders} pending
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completedOrders}</div>
-              <p className="text-xs text-muted-foreground">
-                {((completedOrders / totalOrders) * 100).toFixed(0)}% completion rate
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Avg. Time</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{averageCompletionTime.toFixed(1)} days</div>
-              <p className="text-xs text-muted-foreground">
-                Average search completion
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Cost Saved</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$1,280</div>
-              <p className="text-xs text-muted-foreground">
-                Compared to traditional methods
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Recent Orders */}
-        <div className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Searches</CardTitle>
-              <CardDescription>Your 5 most recent search requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentOrders.map(order => (
-                  <div key={order.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-medium">{order.address}</p>
-                      <p className="text-sm text-muted-foreground">{order.county} County - {formatDate(order.createdAt)}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <StatusBadge status={order.status} />
-                      <Link to={`/orders/${order.id}`}>
-                        <Button variant="outline" size="sm">View</Button>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* New Search CTA */}
-        <Card className="bg-primary text-primary-foreground">
+      <h1 className="page-title">Dashboard</h1>
+      
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
+        <MetricCard 
+          icon={<Clock className="h-8 w-8 text-orange-500" />} 
+          title="Pending Orders" 
+          value={pendingOrders.toString()}
+          linkTo="/orders"
+        />
+        <MetricCard 
+          icon={<CheckCircle className="h-8 w-8 text-green-500" />} 
+          title="Completed Orders" 
+          value={completedOrders.toString()}
+          linkTo="/history"
+        />
+        <MetricCard 
+          icon={<Users className="h-8 w-8 text-blue-500" />} 
+          title="Total Users" 
+          value={totalUsers.toString()}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
           <CardHeader>
-            <CardTitle>Need to run a new search?</CardTitle>
-            <CardDescription className="text-primary-foreground/90">
-              Submit a new municipal lien search request
-            </CardDescription>
+            <CardTitle className="text-lg">Recent Completed Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="secondary">
-              <Link to="/orders">Start New Search</Link>
-            </Button>
+            <div className="space-y-4">
+              {recentCompletedOrders.length > 0 ? (
+                recentCompletedOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p className="font-medium">{order.property.address}</p>
+                      <p className="text-sm text-muted-foreground">{order.statusDate}</p>
+                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/history?id=${order.id}`}>View Details</Link>
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No completed orders yet.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Button className="w-full justify-start" asChild>
+                <Link to="/orders">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Create New Order
+                </Link>
+              </Button>
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <Link to="/history">
+                  <Clock className="mr-2 h-4 w-4" />
+                  View Order History
+                </Link>
+              </Button>
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <Link to="/profile">
+                  <Users className="mr-2 h-4 w-4" />
+                  Update Profile
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     </DashboardLayout>
   );
+};
+
+interface MetricCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  linkTo?: string;
+}
+
+const MetricCard = ({ icon, title, value, linkTo }: MetricCardProps) => {
+  const content = (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-3xl font-bold">{value}</p>
+          </div>
+          {icon}
+        </div>
+      </CardContent>
+    </Card>
+  );
+  
+  if (linkTo) {
+    return <Link to={linkTo}>{content}</Link>;
+  }
+  
+  return content;
 };
 
 export default Dashboard;

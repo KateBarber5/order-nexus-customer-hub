@@ -4,24 +4,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Link, useNavigate } from 'react-router-dom';
-import { FileSearch, Lock, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileSearch, Lock, Mail, UserPlus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-const Index = () => {
+const SignUp = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       toast({
         title: "Error",
-        description: "Please enter both email and password.",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match.",
         variant: "destructive",
       });
       return;
@@ -29,33 +39,12 @@ const Index = () => {
     
     setIsLoading(true);
     
-    // Simulate authentication (in a real app, this would call an API)
+    // Simulate account creation
     setTimeout(() => {
-      // This is just for demonstration
-      // In a real app, you would verify credentials against a backend
-      if (email === 'demo@example.com' && password === 'password') {
-        // Store login state
-        if (rememberMe) {
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('userEmail', email);
-        } else {
-          sessionStorage.setItem('isLoggedIn', 'true');
-          sessionStorage.setItem('userEmail', email);
-        }
-        
-        toast({
-          title: "Success",
-          description: "Login successful! Redirecting to dashboard...",
-        });
-        
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Authentication failed",
-          description: "Invalid email or password. Try demo@example.com / password",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Account Request Submitted",
+        description: "Your account request has been submitted for review. You will be notified when your account is approved.",
+      });
       setIsLoading(false);
     }, 1000);
   };
@@ -71,13 +60,35 @@ const Index = () => {
         
         <Card className="w-full">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">GovMetric</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Enter your information to request access
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input 
+                    id="firstName" 
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input 
+                    id="lastName" 
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -89,18 +100,12 @@ const Index = () => {
                     className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
                     disabled={isLoading}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -113,29 +118,31 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={isLoading}
-                />
-                <Label htmlFor="remember" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Remember me
-                </Label>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="confirmPassword" 
+                    type="password" 
+                    className="pl-10"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
+                <UserPlus className="mr-2 h-4 w-4" />
+                {isLoading ? "Submitting..." : "Request Account"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary font-medium hover:underline">
-                Sign Up
+              Already have an account?{" "}
+              <Link to="/" className="text-primary font-medium hover:underline">
+                Sign In
               </Link>
             </div>
             <div className="text-xs text-center text-muted-foreground">
@@ -155,4 +162,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default SignUp;
