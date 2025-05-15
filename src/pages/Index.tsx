@@ -3,56 +3,65 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { FileSearch } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 p-4">
-      <div className="max-w-3xl text-center">
-        <div className="flex justify-center mb-6">
-          <div className="bg-primary/10 p-4 rounded-full">
-            <FileSearch className="h-16 w-16 text-primary" />
-          </div>
-        </div>
-        
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-4">
-          GovMetric Municipal Lien Search
-        </h1>
-        
-        <p className="text-xl text-gray-600 mb-8">
-          Your one-stop solution for accurate and efficient municipal lien searches
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild size="lg" className="rounded-full px-8">
-            <Link to="/dashboard">Dashboard</Link>
-          </Button>
-          
-          <Button asChild variant="outline" size="lg" className="rounded-full px-8">
-            <Link to="/orders">New Search</Link>
-          </Button>
-        </div>
-        
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">Quick Search Requests</h3>
-            <p className="text-gray-600">
-              Submit municipal lien search requests with just a few clicks by providing property address, parcel ID, and county information.
-            </p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f6f8fa]">
+      <div className="w-full max-w-md px-4">
+        <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+          <div className="bg-primary py-6 px-8 text-center">
+            <div className="flex justify-center mb-4">
+              <FileSearch className="h-12 w-12 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">
+              GovMetric Municipal Lien Search
+            </h1>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">Search Tracking</h3>
-            <p className="text-gray-600">
-              Track your search requests in real-time with comprehensive status updates and history.
-            </p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">Profile Management</h3>
-            <p className="text-gray-600">
-              Manage your company information and preferred search parameters in one place.
-            </p>
-          </div>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="text-center mb-6">
+                <p className="text-gray-600">
+                  Sign in to access your account
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="Enter your email" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" placeholder="Enter your password" />
+                </div>
+                
+                <div className="pt-2">
+                  <Button asChild className="w-full py-5 rounded-md">
+                    <Link to="/dashboard">Sign In</Link>
+                  </Button>
+                </div>
+                
+                <div className="text-center">
+                  <Button variant="link" asChild className="text-primary">
+                    <Link to="/dashboard">Forgot Password?</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="mt-8 text-center">
+          <p className="text-gray-600 text-sm">
+            Don't have an account? <Button variant="link" asChild className="text-primary p-0">
+              <Link to="/dashboard">Create Account</Link>
+            </Button>
+          </p>
         </div>
       </div>
     </div>
