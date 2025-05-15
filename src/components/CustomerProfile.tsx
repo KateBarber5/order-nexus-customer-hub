@@ -6,11 +6,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Lock } from 'lucide-react';
 
 const CustomerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [customer, setCustomer] = useState(mockCustomer);
   const [formData, setFormData] = useState(mockCustomer);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [passwords, setPasswords] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,6 +46,35 @@ const CustomerProfile = () => {
   const handleCancel = () => {
     setFormData(customer);
     setIsEditing(false);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswords(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setPasswordError('');
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwords.newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
+      return;
+    }
+    
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    
+    // Here you would typically call an API to update the password
+    toast.success('Password changed successfully!');
+    setIsDialogOpen(false);
+    setPasswords({ newPassword: '', confirmPassword: '' });
+    setPasswordError('');
   };
 
   return (
@@ -138,7 +183,7 @@ const CustomerProfile = () => {
           </div>
         </CardContent>
         
-        <CardFooter className={`flex ${isEditing ? "justify-between" : "justify-end"}`}>
+        <CardFooter className={`flex ${isEditing ? "justify-between" : "justify-between"}`}>
           {isEditing ? (
             <>
               <Button variant="outline" type="button" onClick={handleCancel}>
@@ -149,9 +194,57 @@ const CustomerProfile = () => {
               </Button>
             </>
           ) : (
-            <Button type="button" onClick={() => setIsEditing(true)}>
-              Edit Profile
-            </Button>
+            <>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" type="button">
+                    <Lock className="mr-2 h-4 w-4" />
+                    Change Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogDescription>
+                      Enter your new password below. Password must be at least 8 characters long.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handlePasswordSubmit} className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        value={passwords.newPassword}
+                        onChange={handlePasswordChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={passwords.confirmPassword}
+                        onChange={handlePasswordChange}
+                        required
+                      />
+                    </div>
+                    {passwordError && (
+                      <p className="text-sm font-medium text-destructive">{passwordError}</p>
+                    )}
+                    <DialogFooter>
+                      <Button type="submit">Update Password</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button type="button" onClick={() => setIsEditing(true)}>
+                Edit Profile
+              </Button>
+            </>
           )}
         </CardFooter>
       </form>
