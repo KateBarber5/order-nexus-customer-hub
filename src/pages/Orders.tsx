@@ -2,6 +2,8 @@
 import React from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
+import { Button } from '@/components/ui/button';
+import { Package } from 'lucide-react';
 
 const Orders = () => {
   // Updated list of municipalities that can be ordered
@@ -26,7 +28,13 @@ const Orders = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="page-title">Place New Order</h1>
+      <div className="flex flex-wrap items-center justify-between mb-4">
+        <h1 className="page-title">Place New Order</h1>
+        <Button variant="outline" className="flex items-center gap-2">
+          <Package size={18} />
+          Bulk Order Placement
+        </Button>
+      </div>
       <div className="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto">
         {/* Municipalities List */}
         <div className="w-full md:w-1/3 lg:w-1/4">
