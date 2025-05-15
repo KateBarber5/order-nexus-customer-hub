@@ -65,13 +65,13 @@ const Index = () => {
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
           <div className="bg-primary/10 p-2 rounded-full">
-            <img src="/lovable-uploads/829d43d8-e043-4c8c-b657-7e9b89890be2.png" alt="GovMetric Logo" className="h-12" />
+            <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-12" />
           </div>
         </div>
         
         <Card className="w-full">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">GovMetric</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
             <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>
