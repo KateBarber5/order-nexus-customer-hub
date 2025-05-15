@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -29,7 +28,7 @@ const Navigation = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-8" />
+                <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-10" />
               </Link>
             </div>
             
