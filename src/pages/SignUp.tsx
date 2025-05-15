@@ -51,15 +51,19 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#645DF3] via-[#B9BDE7] to-[#BDC0FA] p-4">
+      <div className="w-full max-w-md relative">
+        {/* Decorative elements */}
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-[#5D56E8]/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#645DF3]/30 rounded-full blur-3xl"></div>
+        
+        <div className="flex justify-center mb-6 relative z-10">
           <div className="p-2">
             <img src="/lovable-uploads/9cb58a68-adb4-4c17-8fb6-0a76b736dede.png" alt="GovMetric Logo" className="h-26" />
           </div>
         </div>
         
-        <Card className="w-full">
+        <Card className="w-full backdrop-blur-sm bg-white/90 border border-white/20 shadow-xl">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">

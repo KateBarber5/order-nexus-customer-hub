@@ -61,16 +61,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#645DF3] via-[#B9BDE7] to-[#BDC0FA] p-4">
+      <div className="w-full max-w-md relative">
+        {/* Decorative elements */}
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-[#5D56E8]/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#645DF3]/30 rounded-full blur-3xl"></div>
+        
+        <div className="flex justify-center mb-6 relative z-10">
           {/* Adjusted logo size */}
           <div className="p-2">
             <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-26" />
           </div>
         </div>
         
-        <Card className="w-full">
+        <Card className="w-full backdrop-blur-sm bg-white/90 border border-white/20 shadow-xl">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
             <CardDescription className="text-center">
