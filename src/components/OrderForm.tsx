@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,20 +43,9 @@ const OrderForm = () => {
     }));
   };
 
-  const validateForm = () => {
-    // Check if either address is provided OR both parcelId and county are provided
-    if (formData.address.trim()) {
-      return true;
-    } else if (formData.parcelId.trim() && formData.county.trim()) {
-      return true;
-    }
-    
-    return false;
-  };
-
   const handleProceedToReview = () => {
-    if (!validateForm()) {
-      toast.error('Please enter either a Property Address OR both Parcel ID and County');
+    if (!formData.address || !formData.parcelId || !formData.county) {
+      toast.error('Please fill out all required fields');
       return;
     }
     setCurrentStep('review');
@@ -134,26 +124,20 @@ const OrderForm = () => {
                 </div>
               </div>
               
-              {formData.address && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
-                  <div className="col-span-2 font-medium">{formData.address}</div>
-                </div>
-              )}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
+                <div className="col-span-2 font-medium">{formData.address}</div>
+              </div>
               
-              {formData.parcelId && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-1 text-sm text-muted-foreground">Parcel ID / Folio Number</div>
-                  <div className="col-span-2 font-medium">{formData.parcelId}</div>
-                </div>
-              )}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">Parcel ID / Folio Number</div>
+                <div className="col-span-2 font-medium">{formData.parcelId}</div>
+              </div>
               
-              {formData.county && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-1 text-sm text-muted-foreground">County</div>
-                  <div className="col-span-2 font-medium">{formData.county}</div>
-                </div>
-              )}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 text-sm text-muted-foreground">County</div>
+                <div className="col-span-2 font-medium">{formData.county}</div>
+              </div>
             </div>
           </CardContent>
           
@@ -182,7 +166,7 @@ const OrderForm = () => {
       <CardHeader>
         <CardTitle>Request Municipal Lien Search</CardTitle>
         <CardDescription>
-          Enter either a Property Address OR a Parcel ID and County
+          Fill out the form below to request a new municipal lien search
         </CardDescription>
       </CardHeader>
       <form onSubmit={(e) => { e.preventDefault(); handleProceedToReview(); }}>
@@ -213,48 +197,40 @@ const OrderForm = () => {
           </div>
           
           <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="address">Property Address</Label>
-              <span className="ml-1 text-sm text-muted-foreground">(OR provide Parcel ID and County below)</span>
-            </div>
+            <Label htmlFor="address">Property Address</Label>
             <Textarea
               id="address"
               name="address"
               placeholder="Enter complete property address"
               value={formData.address}
               onChange={handleChange}
+              required
               className="min-h-[100px]"
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
-                <span className="ml-1 text-sm text-muted-foreground">(Required with County)</span>
-              </div>
-              <Input
-                id="parcelId"
-                name="parcelId"
-                placeholder="Enter parcel identification number"
-                value={formData.parcelId}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="county">County</Label>
-                <span className="ml-1 text-sm text-muted-foreground">(Required with Parcel ID)</span>
-              </div>
-              <Input
-                id="county"
-                name="county"
-                placeholder="Enter county name"
-                value={formData.county}
-                onChange={handleChange}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
+            <Input
+              id="parcelId"
+              name="parcelId"
+              placeholder="Enter parcel identification number"
+              value={formData.parcelId}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="county">County</Label>
+            <Input
+              id="county"
+              name="county"
+              placeholder="Enter county name"
+              value={formData.county}
+              onChange={handleChange}
+              required
+            />
           </div>
         </CardContent>
         
