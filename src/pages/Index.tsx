@@ -64,8 +64,9 @@ const Index = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="bg-primary/10 p-2 rounded-full">
-            <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-12" />
+          {/* Removed background color and increased logo size */}
+          <div className="p-2">
+            <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="Logo" className="h-16" />
           </div>
         </div>
         
