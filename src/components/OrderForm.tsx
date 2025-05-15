@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -212,7 +211,9 @@ const OrderForm = () => {
                 <RadioGroupItem value="full" id="full-report" />
                 <Label htmlFor="full-report" className="font-medium cursor-pointer flex-1">
                   <div>Full Report</div>
-                  <p className="font-normal text-sm text-muted-foreground">Comprehensive search with complete details</p>
+                  <p className="font-normal text-sm text-muted-foreground">
+                    A Full Report includes everything in the Card Report—property appraiser data and current tax information—plus any additional municipal data such as open code enforcement cases, active or expired permits, and, where available, utility account status. This comprehensive option is designed for transactions or reviews requiring a deeper understanding of potential municipal obligations or compliance issues tied to the property. Please note, if a department is not listed on the report, there are no online resources for that particular county/municipality.
+                  </p>
                 </Label>
               </div>
               
@@ -220,7 +221,9 @@ const OrderForm = () => {
                 <RadioGroupItem value="card" id="card-report" />
                 <Label htmlFor="card-report" className="font-medium cursor-pointer flex-1">
                   <div>Card Report</div>
-                  <p className="font-normal text-sm text-muted-foreground">Summary report with essential information</p>
+                  <p className="font-normal text-sm text-muted-foreground">
+                    A Card Report includes the most recent property record (or "property card") as provided by the county property appraiser, along with current ad valorem tax information. This report is ideal for quick reference to ownership, assessed values, and tax status.
+                  </p>
                 </Label>
               </div>
             </RadioGroup>
