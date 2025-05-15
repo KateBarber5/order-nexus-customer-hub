@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,9 +67,9 @@ const Index = () => {
         <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#645DF3]/30 rounded-full blur-3xl"></div>
         
         <div className="flex justify-center mb-6 relative z-10">
-          {/* Updated logo with new image and h-16 height class */}
+          {/* Updated logo with increased height to h-20 */}
           <div className="p-2">
-            <img src="/lovable-uploads/fd821935-e446-4482-8a82-2cdfc6b0305e.png" alt="GovMetric Logo" className="h-16" />
+            <img src="/lovable-uploads/fd821935-e446-4482-8a82-2cdfc6b0305e.png" alt="GovMetric Logo" className="h-20" />
           </div>
         </div>
         
