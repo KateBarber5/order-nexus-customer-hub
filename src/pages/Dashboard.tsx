@@ -25,22 +25,11 @@ const Dashboard = () => {
     })
     .slice(0, 10);
 
-  // Recent completed orders for the card
-  const recentCompletedOrders = mockOrders
-    .filter(order => order.status === 'delivered')
-    .sort((a, b) => {
-      // Using optional chaining and nullish coalescing to avoid TypeScript errors
-      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-      return dateB - dateA;
-    })
-    .slice(0, 5);
-
   return (
     <DashboardLayout>
       <div className="flex justify-between items-center mb-6">
         <h1 className="page-title">Dashboard</h1>
-        <Button size="lg" asChild className="gap-2">
+        <Button size="lg" variant="green" asChild className="gap-2">
           <Link to="/orders">
             <Plus className="h-5 w-5" />
             Place New Order
@@ -66,61 +55,6 @@ const Dashboard = () => {
           title="Cancelled Orders" 
           value={cancelledOrders.toString()}
         />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Recent Completed Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentCompletedOrders.length > 0 ? (
-                recentCompletedOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between border-b pb-2">
-                    <div>
-                      <p className="font-medium">{order.address}</p>
-                      <p className="text-sm text-muted-foreground">{order.updatedAt}</p>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/history?id=${order.id}`}>View Details</Link>
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">No completed orders yet.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Button className="w-full justify-start" asChild>
-                <Link to="/orders">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Create New Order
-                </Link>
-              </Button>
-              <Button className="w-full justify-start" variant="outline" asChild>
-                <Link to="/history">
-                  <Clock className="mr-2 h-4 w-4" />
-                  View Order History
-                </Link>
-              </Button>
-              <Button className="w-full justify-start" variant="outline" asChild>
-                <Link to="/profile">
-                  <Users className="mr-2 h-4 w-4" />
-                  Update Profile
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Card>
