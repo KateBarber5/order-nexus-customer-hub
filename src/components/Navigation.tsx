@@ -24,7 +24,7 @@ const Navigation = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <FileSearch className="h-8 w-8 text-primary" />
+                <img src="/lovable-uploads/f4f5a45d-725c-449d-a9ed-aae40a746a0f.png" alt="GovMetric Logo" className="h-8" />
                 <span className="ml-2 text-xl font-bold text-gray-900">GovMetric</span>
               </Link>
             </div>
