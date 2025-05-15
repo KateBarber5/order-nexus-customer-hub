@@ -18,7 +18,7 @@ const DashboardLayout = ({ children, className }: DashboardLayoutProps) => {
         </div>
       </main>
       <footer className="py-4 text-center text-sm text-gray-500 border-t">
-        <p>&copy; {new Date().getFullYear()} Municipal Lien Search. All rights reserved.</p>
+        <p>&copy; 2025 GovMetric. All rights reserved.</p>
       </footer>
     </div>
   );
