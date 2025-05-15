@@ -53,8 +53,8 @@ const SignUp = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="bg-primary/10 p-2 rounded-full">
-            <img src="/lovable-uploads/829d43d8-e043-4c8c-b657-7e9b89890be2.png" alt="GovMetric Logo" className="h-12" />
+          <div className="p-2">
+            <img src="/lovable-uploads/829d43d8-e043-4c8c-b657-7e9b89890be2.png" alt="GovMetric Logo" className="h-26" />
           </div>
         </div>
         
