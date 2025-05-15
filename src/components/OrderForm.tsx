@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, HelpCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface OrderFormData {
   address: string;
@@ -211,7 +216,19 @@ const OrderForm = () => {
               <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
                 <RadioGroupItem value="full" id="full-report" />
                 <Label htmlFor="full-report" className="font-medium cursor-pointer flex-1">
-                  <div>Full Report</div>
+                  <div className="flex items-center gap-2">
+                    Full Report
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm text-xs">
+                          A Full Report includes everything in the Card Report—property appraiser data and current tax information—plus any additional municipal data such as open code enforcement cases, active or expired permits, and, where available, utility account status. This comprehensive option is designed for transactions or reviews requiring a deeper understanding of potential municipal obligations or compliance issues tied to the property. Please note, if a department is not listed on the report, there are no online resources for that particular county/municipality.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <p className="font-normal text-sm text-muted-foreground">Comprehensive search with complete details</p>
                 </Label>
               </div>
@@ -219,7 +236,19 @@ const OrderForm = () => {
               <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
                 <RadioGroupItem value="card" id="card-report" />
                 <Label htmlFor="card-report" className="font-medium cursor-pointer flex-1">
-                  <div>Card Report</div>
+                  <div className="flex items-center gap-2">
+                    Card Report
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm text-xs">
+                          A Card Report includes the most recent property record (or "property card") as provided by the county property appraiser, along with current ad valorem tax information. This report is ideal for quick reference to ownership, assessed values, and tax status.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <p className="font-normal text-sm text-muted-foreground">Summary report with essential information</p>
                 </Label>
               </div>
