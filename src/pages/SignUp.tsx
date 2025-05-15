@@ -63,7 +63,7 @@ const SignUp = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">
-              Enter your information to request access
+              Enter your information to create an account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -150,7 +150,7 @@ const SignUp = () => {
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 <UserPlus className="mr-2 h-4 w-4" />
-                {isLoading ? "Submitting..." : "Request Account"}
+                {isLoading ? "Submitting..." : "Create Account"}
               </Button>
             </form>
           </CardContent>
