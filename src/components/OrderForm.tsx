@@ -14,6 +14,7 @@ interface OrderFormData {
   parcelId: string;
   county: string;
   productType: 'full' | 'card';
+  searchType: 'address' | 'parcel';
 }
 
 const OrderForm = () => {
@@ -21,7 +22,8 @@ const OrderForm = () => {
     address: '',
     parcelId: '',
     county: '',
-    productType: 'full'
+    productType: 'full',
+    searchType: 'address'
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,11 +45,27 @@ const OrderForm = () => {
     }));
   };
 
+  const handleSearchTypeChange = (value: 'address' | 'parcel') => {
+    setFormData(prev => ({
+      ...prev,
+      searchType: value
+    }));
+  };
+
   const handleProceedToReview = () => {
-    if (!formData.address || !formData.parcelId || !formData.county) {
-      toast.error('Please fill out all required fields');
-      return;
+    // Validation based on search type
+    if (formData.searchType === 'address') {
+      if (!formData.address) {
+        toast.error('Please enter a property address');
+        return;
+      }
+    } else {
+      if (!formData.parcelId || !formData.county) {
+        toast.error('Please enter both Parcel ID and County');
+        return;
+      }
     }
+    
     setCurrentStep('review');
   };
 
@@ -75,7 +93,8 @@ const OrderForm = () => {
           address: '',
           parcelId: '',
           county: '',
-          productType: 'full'
+          productType: 'full',
+          searchType: 'address'
         });
         setCurrentStep('details');
         setIsSuccess(false);
@@ -125,19 +144,30 @@ const OrderForm = () => {
               </div>
               
               <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
-                <div className="col-span-2 font-medium">{formData.address}</div>
+                <div className="col-span-1 text-sm text-muted-foreground">Search Type</div>
+                <div className="col-span-2 font-medium">
+                  {formData.searchType === 'address' ? 'Property Address' : 'Parcel ID & County'}
+                </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 text-sm text-muted-foreground">Parcel ID / Folio Number</div>
-                <div className="col-span-2 font-medium">{formData.parcelId}</div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 text-sm text-muted-foreground">County</div>
-                <div className="col-span-2 font-medium">{formData.county}</div>
-              </div>
+              {formData.searchType === 'address' ? (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
+                  <div className="col-span-2 font-medium">{formData.address}</div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-1 text-sm text-muted-foreground">Parcel ID / Folio Number</div>
+                    <div className="col-span-2 font-medium">{formData.parcelId}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-1 text-sm text-muted-foreground">County</div>
+                    <div className="col-span-2 font-medium">{formData.county}</div>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
           
@@ -196,42 +226,71 @@ const OrderForm = () => {
             </RadioGroup>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="address">Property Address</Label>
-            <Textarea
-              id="address"
-              name="address"
-              placeholder="Enter complete property address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-              className="min-h-[100px]"
-            />
+          <div className="space-y-4">
+            <Label className="text-base font-medium">Search By</Label>
+            <RadioGroup 
+              value={formData.searchType} 
+              onValueChange={(value) => handleSearchTypeChange(value as 'address' | 'parcel')}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
+                <RadioGroupItem value="address" id="address-search" />
+                <Label htmlFor="address-search" className="font-medium cursor-pointer flex-1">
+                  <div>Property Address</div>
+                  <p className="font-normal text-sm text-muted-foreground">Search using the full property address</p>
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
+                <RadioGroupItem value="parcel" id="parcel-search" />
+                <Label htmlFor="parcel-search" className="font-medium cursor-pointer flex-1">
+                  <div>Parcel ID & County</div>
+                  <p className="font-normal text-sm text-muted-foreground">Search using parcel identification and county</p>
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
-            <Input
-              id="parcelId"
-              name="parcelId"
-              placeholder="Enter parcel identification number"
-              value={formData.parcelId}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="county">County</Label>
-            <Input
-              id="county"
-              name="county"
-              placeholder="Enter county name"
-              value={formData.county}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {formData.searchType === 'address' ? (
+            <div className="space-y-2">
+              <Label htmlFor="address">Property Address</Label>
+              <Textarea
+                id="address"
+                name="address"
+                placeholder="Enter complete property address"
+                value={formData.address}
+                onChange={handleChange}
+                required
+                className="min-h-[100px]"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
+                <Input
+                  id="parcelId"
+                  name="parcelId"
+                  placeholder="Enter parcel identification number"
+                  value={formData.parcelId}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="county">County</Label>
+                <Input
+                  id="county"
+                  name="county"
+                  placeholder="Enter county name"
+                  value={formData.county}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </>
+          )}
         </CardContent>
         
         <CardFooter>
