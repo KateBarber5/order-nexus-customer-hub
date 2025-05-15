@@ -17,8 +17,9 @@ const Dashboard = () => {
   const recentCompletedOrders = mockOrders
     .filter(order => order.status.includes('completed'))
     .sort((a, b) => {
-      const dateA = a.statusDate ? new Date(a.statusDate).getTime() : 0;
-      const dateB = b.statusDate ? new Date(b.statusDate).getTime() : 0;
+      // Using optional chaining and nullish coalescing to avoid TypeScript errors
+      const dateA = a.date ? new Date(a.date).getTime() : 0;
+      const dateB = b.date ? new Date(b.date).getTime() : 0;
       return dateB - dateA;
     })
     .slice(0, 5);
@@ -58,8 +59,8 @@ const Dashboard = () => {
                 recentCompletedOrders.map((order) => (
                   <div key={order.id} className="flex items-center justify-between border-b pb-2">
                     <div>
-                      <p className="font-medium">{order.property.address}</p>
-                      <p className="text-sm text-muted-foreground">{order.statusDate}</p>
+                      <p className="font-medium">{order.address}</p>
+                      <p className="text-sm text-muted-foreground">{order.date}</p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/history?id=${order.id}`}>View Details</Link>
