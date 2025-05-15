@@ -1,101 +1,156 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Link, useNavigate } from 'react-router-dom';
+import { FileSearch, Lock, Mail } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // Simulate authentication (in a real app, this would call an API)
+    setTimeout(() => {
+      // This is just for demonstration
+      // In a real app, you would verify credentials against a backend
+      if (email === 'demo@example.com' && password === 'password') {
+        // Store login state
+        if (rememberMe) {
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userEmail', email);
+        } else {
+          sessionStorage.setItem('isLoggedIn', 'true');
+          sessionStorage.setItem('userEmail', email);
+        }
+        
+        toast({
+          title: "Success",
+          description: "Login successful! Redirecting to dashboard...",
+        });
+        
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Authentication failed",
+          description: "Invalid email or password. Try demo@example.com / password",
+          variant: "destructive",
+        });
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <nav className="bg-white p-4 border-b">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center">
-            <img 
-              src="/lovable-uploads/41971a8a-631f-46dc-bd50-7845e8f464c6.png" 
-              alt="GovMetric Logo" 
-              className="h-8" 
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" asChild>
-              <Link to="/dashboard">Login</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/signup">Sign Up</Link>
-            </Button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 p-4">
+      <div className="w-full max-w-md">
+        <div className="flex justify-center mb-6">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <img src="/lovable-uploads/829d43d8-e043-4c8c-b657-7e9b89890be2.png" alt="GovMetric Logo" className="h-12" />
           </div>
         </div>
-      </nav>
-
-      <main className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="max-w-3xl w-full text-center space-y-8">
-          <div className="mb-8">
-            <img 
-              src="/lovable-uploads/41971a8a-631f-46dc-bd50-7845e8f464c6.png" 
-              alt="GovMetric Logo" 
-              className="mx-auto h-16" 
-            />
-            <h1 className="text-4xl font-bold mt-6 text-gray-800">
-              Municipal Lien Search Platform
-            </h1>
-            <p className="mt-4 text-xl text-gray-600">
-              Comprehensive lien searches for real estate transactions
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FeatureCard 
-              title="Fast Turnaround" 
-              description="Get your lien search results quickly to close deals faster."
-            />
-            <FeatureCard 
-              title="Comprehensive Data" 
-              description="Our searches include all municipal debts, liens, and violations."
-            />
-            <FeatureCard 
-              title="Expert Support" 
-              description="Our team of experts is ready to assist with any questions."
-            />
-          </div>
-          
-          <div className="mt-12">
-            <Button size="lg" asChild>
-              <Link to="/dashboard">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </main>
-
-      <footer className="border-t bg-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <img 
-                src="/lovable-uploads/41971a8a-631f-46dc-bd50-7845e8f464c6.png" 
-                alt="GovMetric Logo" 
-                className="h-8" 
-              />
+        
+        <Card className="w-full">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">GovMetric</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    className="pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoading}
+                />
+                <Label htmlFor="remember" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Remember me
+                </Label>
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-center text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary font-medium hover:underline">
+                Sign Up
+              </Link>
             </div>
-            <div className="flex flex-wrap gap-6 justify-center">
-              <Link to="#" className="text-gray-600 hover:text-gray-900">About</Link>
-              <Link to="#" className="text-gray-600 hover:text-gray-900">Contact</Link>
-              <Link to="#" className="text-gray-600 hover:text-gray-900">Privacy Policy</Link>
-              <Link to="#" className="text-gray-600 hover:text-gray-900">Terms of Service</Link>
+            <div className="text-xs text-center text-muted-foreground">
+              By continuing, you agree to our{" "}
+              <Link to="/terms" className="hover:underline">
+                Terms of Service
+              </Link>
+              {" "}and{" "}
+              <Link to="/privacy" className="hover:underline">
+                Privacy Policy
+              </Link>
             </div>
-          </div>
-          <div className="text-center mt-6 text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} GovMetric Municipal Lien Search. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-const FeatureCard = ({ title, description }: { title: string; description: string }) => {
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <h3 className="text-xl font-semibold mb-3 text-gray-800">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };

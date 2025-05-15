@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import { mockOrders } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,19 +19,8 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 
 const OrderHistory = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const statusFromUrl = queryParams.get('status');
-  
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState(statusFromUrl || 'all');
-  
-  // Update statusFilter when URL parameter changes
-  useEffect(() => {
-    if (statusFromUrl) {
-      setStatusFilter(statusFromUrl);
-    }
-  }, [statusFromUrl]);
+  const [statusFilter, setStatusFilter] = useState('all');
   
   const filteredOrders = mockOrders.filter(order => {
     const matchesSearch = 
