@@ -54,7 +54,7 @@ const SignUp = () => {
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
           <div className="p-2">
-            <img src="/lovable-uploads/829d43d8-e043-4c8c-b657-7e9b89890be2.png" alt="GovMetric Logo" className="h-26" />
+            <img src="/lovable-uploads/9cb58a68-adb4-4c17-8fb6-0a76b736dede.png" alt="GovMetric Logo" className="h-26" />
           </div>
         </div>
         
