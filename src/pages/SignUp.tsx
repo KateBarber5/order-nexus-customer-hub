@@ -59,7 +59,7 @@ const SignUp = () => {
         
         <div className="flex justify-center mb-6 relative z-10">
           <div className="p-2">
-            <img src="/lovable-uploads/9cb58a68-adb4-4c17-8fb6-0a76b736dede.png" alt="GovMetric Logo" className="h-26" />
+            <img src="/lovable-uploads/faa2ec17-b47d-4458-848e-14fbdf899415.png" alt="GovMetric Logo" className="h-16" />
           </div>
         </div>
         
