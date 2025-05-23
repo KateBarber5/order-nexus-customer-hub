@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { mockOrders } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const OrderHistory = () => {
   const location = useLocation();
@@ -32,6 +41,10 @@ const OrderHistory = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   
   // Update status filter when URL changes
   useEffect(() => {
@@ -67,6 +80,22 @@ const OrderHistory = () => {
     
     return matchesSearch && matchesStatus && matchesDateRange;
   });
+
+  // Calculate pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
+  // Handle pagination changes
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(parseInt(value));
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
@@ -183,58 +212,133 @@ const OrderHistory = () => {
         )}
       </div>
       
-      {/* Table section - keep existing code for table display */}
+      {/* Table section */}
       {filteredOrders.length === 0 ? (
         <div className="text-center py-12 border rounded-lg bg-gray-50">
           <p className="text-muted-foreground">No searches found matching your criteria.</p>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Property Address</TableHead>
-                <TableHead>Parcel ID</TableHead>
-                <TableHead>County</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">#{order.id}</TableCell>
-                  <TableCell>{order.address}</TableCell>
-                  <TableCell className="font-mono">{order.parcelId}</TableCell>
-                  <TableCell>{order.county}</TableCell>
-                  <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={order.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewOrder(order)}
-                      >
-                        View
-                      </Button>
-                      {order.status === 'delivered' && (
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <FileText className="h-4 w-4" />
-                          Download
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
+        <>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Property Address</TableHead>
+                  <TableHead>Parcel ID</TableHead>
+                  <TableHead>County</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {currentOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell>{order.address}</TableCell>
+                    <TableCell className="font-mono">{order.parcelId}</TableCell>
+                    <TableCell>{order.county}</TableCell>
+                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={order.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewOrder(order)}
+                        >
+                          View
+                        </Button>
+                        {order.status === 'delivered' && (
+                          <Button variant="outline" size="sm" className="flex items-center gap-1">
+                            <FileText className="h-4 w-4" />
+                            Download
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {/* Pagination controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <Select 
+                value={itemsPerPage.toString()} 
+                onValueChange={handleItemsPerPageChange}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue>{itemsPerPage}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredOrders.length)} of {filteredOrders.length}
+              </span>
+            </div>
+            
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)} 
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    // Show first page, last page, and pages around current page
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink 
+                            isActive={currentPage === page}
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    // Show ellipsis
+                    else if (
+                      page === 2 || 
+                      page === totalPages - 1
+                    ) {
+                      return <PaginationItem key={page}>...</PaginationItem>;
+                    }
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+        </>
       )}
 
       {selectedOrder && (
