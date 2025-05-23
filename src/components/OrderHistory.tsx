@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { mockOrders } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
@@ -84,14 +83,14 @@ const OrderHistory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <Label htmlFor="search" className="sr-only">Search</Label>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className="md:col-span-1">
+          <Label htmlFor="search" className="mb-2 block text-sm font-medium">Search</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               id="search"
-              placeholder="Search by address, parcel ID, or county"
+              placeholder="Address, parcel ID, county"
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -99,8 +98,8 @@ const OrderHistory = () => {
           </div>
         </div>
         
-        <div className="w-full md:w-48">
-          <Label htmlFor="status-filter" className="sr-only">Filter by Status</Label>
+        <div>
+          <Label htmlFor="status-filter" className="mb-2 block text-sm font-medium">Status</Label>
           <Select
             value={statusFilter}
             onValueChange={setStatusFilter}
@@ -119,8 +118,8 @@ const OrderHistory = () => {
           </Select>
         </div>
         
-        <div className="w-full md:w-56">
-          <Label htmlFor="date-filter" className="mb-2 block text-sm font-medium">Start Date</Label>
+        <div>
+          <Label htmlFor="date-filter-start" className="mb-2 block text-sm font-medium">Order Created Date Start</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -147,8 +146,8 @@ const OrderHistory = () => {
           </Popover>
         </div>
         
-        <div className="w-full md:w-56">
-          <Label htmlFor="date-filter-end" className="mb-2 block text-sm font-medium">End Date</Label>
+        <div>
+          <Label htmlFor="date-filter-end" className="mb-2 block text-sm font-medium">Order Created Date End</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -176,7 +175,7 @@ const OrderHistory = () => {
         </div>
         
         {(startDate || endDate) && (
-          <div className="flex items-end">
+          <div className="md:col-span-4 flex justify-end">
             <Button variant="outline" size="sm" onClick={clearDateFilters}>
               Clear Dates
             </Button>
@@ -184,6 +183,7 @@ const OrderHistory = () => {
         )}
       </div>
       
+      {/* Table section - keep existing code for table display */}
       {filteredOrders.length === 0 ? (
         <div className="text-center py-12 border rounded-lg bg-gray-50">
           <p className="text-muted-foreground">No searches found matching your criteria.</p>
