@@ -4,12 +4,16 @@ import { mockOrders } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Search } from 'lucide-react';
+import { Search, Calendar as CalendarIcon } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import OrderDetails from './OrderDetails';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -18,7 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDistanceToNow } from 'date-fns';
 
 const OrderHistory = () => {
   const location = useLocation();
@@ -28,6 +31,8 @@ const OrderHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState(statusFromUrl || 'all');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   
   // Update status filter when URL changes
   useEffect(() => {
@@ -37,20 +42,32 @@ const OrderHistory = () => {
   }, [statusFromUrl]);
   
   const filteredOrders = mockOrders.filter(order => {
+    // Text search filter
     const matchesSearch = 
       order.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.parcelId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.county.toLowerCase().includes(searchTerm.toLowerCase());
-      
+    
+    // Status filter
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // Date range filter
+    let matchesDateRange = true;
+    if (startDate) {
+      const orderDate = new Date(order.createdAt);
+      const filterStartDate = new Date(startDate);
+      filterStartDate.setHours(0, 0, 0, 0);
+      matchesDateRange = orderDate >= filterStartDate;
+    }
+    if (endDate && matchesDateRange) {
+      const orderDate = new Date(order.createdAt);
+      const filterEndDate = new Date(endDate);
+      filterEndDate.setHours(23, 59, 59, 999); // Set to end of day
+      matchesDateRange = orderDate <= filterEndDate;
+    }
+    
+    return matchesSearch && matchesStatus && matchesDateRange;
   });
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return formatDistanceToNow(date, { addSuffix: true });
-  };
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
@@ -58,6 +75,11 @@ const OrderHistory = () => {
 
   const handleCloseModal = () => {
     setSelectedOrder(null);
+  };
+
+  const clearDateFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
   };
 
   return (
@@ -96,6 +118,70 @@ const OrderHistory = () => {
             </SelectContent>
           </Select>
         </div>
+        
+        <div className="w-full md:w-56">
+          <Label htmlFor="date-filter" className="mb-2 block text-sm font-medium">Start Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date-filter-start"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !startDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={setStartDate}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        <div className="w-full md:w-56">
+          <Label htmlFor="date-filter-end" className="mb-2 block text-sm font-medium">End Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date-filter-end"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !endDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={setEndDate}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        {(startDate || endDate) && (
+          <div className="flex items-end">
+            <Button variant="outline" size="sm" onClick={clearDateFilters}>
+              Clear Dates
+            </Button>
+          </div>
+        )}
       </div>
       
       {filteredOrders.length === 0 ? (
@@ -107,11 +193,11 @@ const OrderHistory = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Search ID</TableHead>
+                <TableHead>Order ID</TableHead>
                 <TableHead>Property Address</TableHead>
                 <TableHead>Parcel ID</TableHead>
                 <TableHead>County</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -123,7 +209,7 @@ const OrderHistory = () => {
                   <TableCell>{order.address}</TableCell>
                   <TableCell className="font-mono">{order.parcelId}</TableCell>
                   <TableCell>{order.county}</TableCell>
-                  <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>
