@@ -3,7 +3,7 @@ import React from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Users, CheckCircle, Clock, X, Plus } from 'lucide-react';
+import { FileText, Users, CheckCircle, Clock, X, Plus, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { mockOrders } from '@/data/mockData';
 import StatusBadge from '@/components/StatusBadge';
@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 const Dashboard = () => {
   // Count metrics
   const pendingOrders = mockOrders.filter(order => order.status === 'pending').length;
+  const processingOrders = mockOrders.filter(order => order.status === 'processing').length;
   const completedOrders = mockOrders.filter(order => order.status === 'delivered').length;
   const cancelledOrders = mockOrders.filter(order => order.status === 'cancelled').length;
   
@@ -37,23 +38,30 @@ const Dashboard = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mb-8">
         <MetricCard 
           icon={<CheckCircle className="h-8 w-8 text-green-500" />} 
           title="Completed Orders" 
           value={completedOrders.toString()}
-          linkTo="/history"
+          linkTo="/history?status=delivered"
+        />
+        <MetricCard 
+          icon={<RefreshCw className="h-8 w-8 text-blue-500" />} 
+          title="Processing Orders" 
+          value={processingOrders.toString()}
+          linkTo="/history?status=processing"
         />
         <MetricCard 
           icon={<Clock className="h-8 w-8 text-orange-500" />} 
           title="Pending Orders" 
           value={pendingOrders.toString()}
-          linkTo="/orders"
+          linkTo="/history?status=pending"
         />
         <MetricCard 
           icon={<X className="h-8 w-8 text-red-500" />} 
           title="Cancelled Orders" 
           value={cancelledOrders.toString()}
+          linkTo="/history?status=cancelled"
         />
       </div>
 
