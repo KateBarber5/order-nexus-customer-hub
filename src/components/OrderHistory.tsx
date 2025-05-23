@@ -9,6 +9,7 @@ import StatusBadge from './StatusBadge';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import OrderDetails from './OrderDetails';
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ const OrderHistory = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState(statusFromUrl || 'all');
+  const [selectedOrder, setSelectedOrder] = useState(null);
   
   // Update status filter when URL changes
   useEffect(() => {
@@ -48,6 +50,14 @@ const OrderHistory = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return formatDistanceToNow(date, { addSuffix: true });
+  };
+
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOrder(null);
   };
 
   return (
@@ -119,7 +129,11 @@ const OrderHistory = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewOrder(order)}
+                      >
                         View
                       </Button>
                       {order.status === 'delivered' && (
@@ -135,6 +149,10 @@ const OrderHistory = () => {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {selectedOrder && (
+        <OrderDetails order={selectedOrder} onClose={handleCloseModal} />
       )}
     </div>
   );
