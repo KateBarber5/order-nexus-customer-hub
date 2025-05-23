@@ -60,12 +60,6 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> For properties with units or apartments, please enter the Parcel ID and County to ensure accurate results.
-              </p>
-            </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-1">Property Address</h3>
