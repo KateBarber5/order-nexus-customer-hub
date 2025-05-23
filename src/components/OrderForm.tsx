@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -257,13 +256,14 @@ const OrderForm = () => {
           </div>
           
           <div className="space-y-4">
+            <Label className="text-base font-medium">Search By</Label>
+            
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <p className="text-sm text-blue-800">
                 <strong>Note:</strong> For properties with units or apartments, please enter the Parcel ID and County to ensure accurate results.
               </p>
             </div>
             
-            <Label className="text-base font-medium">Search By</Label>
             <RadioGroup 
               value={formData.searchType} 
               onValueChange={(value) => handleSearchTypeChange(value as 'address' | 'parcel')}
