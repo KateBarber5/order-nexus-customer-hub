@@ -86,6 +86,7 @@ const Dashboard = () => {
               <TableRow>
                 <TableHead>Order ID</TableHead>
                 <TableHead>Address</TableHead>
+                <TableHead>Parcel ID</TableHead>
                 <TableHead>County</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
@@ -97,6 +98,7 @@ const Dashboard = () => {
                 <TableRow key={order.id}>
                   <TableCell className="font-mono">{order.id}</TableCell>
                   <TableCell>{order.address}</TableCell>
+                  <TableCell className="font-mono">{order.parcelId}</TableCell>
                   <TableCell>{order.county}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
