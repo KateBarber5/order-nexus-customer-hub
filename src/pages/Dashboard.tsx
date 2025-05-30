@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,8 +87,8 @@ const Dashboard = () => {
                 <TableHead>Address</TableHead>
                 <TableHead>Parcel ID</TableHead>
                 <TableHead>County</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -100,10 +99,10 @@ const Dashboard = () => {
                   <TableCell>{order.address}</TableCell>
                   <TableCell className="font-mono">{order.parcelId}</TableCell>
                   <TableCell>{order.county}</TableCell>
+                  <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>
-                  <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <Button 
                       variant="outline" 
