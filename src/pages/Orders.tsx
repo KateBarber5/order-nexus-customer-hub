@@ -53,7 +53,8 @@ const Orders = () => {
         {/* Cities and Counties List */}
         <div className="w-full lg:w-1/4">
           <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-medium mb-3 border-b pb-2">Available Cities and Counties</h2>
+            <h2 className="text-lg font-medium mb-2 border-b pb-2">Available Cities and Counties</h2>
+            <p className="text-sm text-gray-600 mb-3">Select an option below to view the available services</p>
             <div className="max-h-[500px] overflow-y-auto">
               <ul className="space-y-1">
                 {municipalities.map((municipality, index) => (
