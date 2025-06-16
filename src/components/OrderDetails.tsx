@@ -36,7 +36,7 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-3xl p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-6xl p-6" onClick={(e) => e.stopPropagation()}>
         <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Order #{order.id} Details</CardTitle>
@@ -60,66 +60,77 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Property Address</h3>
-                <p className="text-lg">{order.address}</p>
-              </div>
-              
-              {order.parcelId && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Parcel ID</h3>
-                  <p className="text-lg font-mono">{order.parcelId}</p>
-                </div>
-              )}
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">County</h3>
-                <p className="text-lg">{order.county}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Created Date</h3>
-                <p className="text-lg">{format(new Date(order.createdAt), 'MMM d, yyyy')}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
-                <StatusBadge status={order.status} className="text-sm" />
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-2">Documents</h3>
-              <div className="space-y-2">
-                {order.status === 'delivered' ? (
-                  mockDocuments.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between border rounded-md p-3">
-                      <div className="flex items-center">
-                        <FileText className="h-5 w-5 text-primary mr-3" />
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.type} • {doc.size} • {format(doc.date, 'MMM d, yyyy')}
-                          </p>
-                        </div>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => handleDownload(doc.name)}
-                      >
-                        Download
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 border rounded-md bg-gray-50">
-                    <p className="text-muted-foreground">
-                      Documents will be available when the order is completed.
-                    </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left side - Order Information */}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Property Address</h3>
+                    <p className="text-lg">{order.address}</p>
                   </div>
-                )}
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">County</h3>
+                    <p className="text-lg">{order.county}</p>
+                  </div>
+                  
+                  {order.parcelId && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Parcel ID</h3>
+                      <p className="text-lg font-mono">{order.parcelId}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Report Type</h3>
+                    <p className="text-lg">Municipal Lien Search</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Created Date</h3>
+                    <p className="text-lg">{format(new Date(order.createdAt), 'MMM d, yyyy')}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
+                    <StatusBadge status={order.status} className="text-sm" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right side - Documents */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">Documents</h3>
+                <div className="space-y-3">
+                  {order.status === 'delivered' ? (
+                    mockDocuments.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between border rounded-md p-3">
+                        <div className="flex items-center">
+                          <FileText className="h-5 w-5 text-primary mr-3" />
+                          <div>
+                            <p className="font-medium">{doc.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {doc.type} • {doc.size} • {format(doc.date, 'MMM d, yyyy')}
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleDownload(doc.name)}
+                        >
+                          Download
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 border rounded-md bg-gray-50">
+                      <p className="text-muted-foreground">
+                        Documents will be available when the order is completed.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
