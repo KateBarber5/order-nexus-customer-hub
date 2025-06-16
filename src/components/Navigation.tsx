@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut } from 'lucide-react';
+import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ const Navigation = () => {
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { name: 'Place New Order', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
     { name: 'Order History', path: '/history', icon: <History className="h-5 w-5" /> },
+    { name: 'Admin', path: '/admin', icon: <Settings className="h-5 w-5" /> },
   ];
 
   const handleLogout = () => {
