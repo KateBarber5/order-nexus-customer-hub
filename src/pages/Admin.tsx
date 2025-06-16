@@ -6,6 +6,17 @@ import AdminReportFilters from '@/components/AdminReportFilters';
 import AdminOrderTable from '@/components/AdminOrderTable';
 import AdminOrderAccordion from '@/components/AdminOrderAccordion';
 
+interface OrderData {
+  id: string;
+  customer: string;
+  address: string;
+  county: string;
+  status: string;
+  amount: number;
+  orderDate: string;
+  paidStatus: string;
+}
+
 const Admin = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -24,15 +35,15 @@ const Admin = () => {
     { customer: 'Sarah Wilson', email: 'sarah@example.com', orderCount: 9, totalAmount: 1400, lastOrderDate: '2024-04-15' },
   ];
 
-  // Mock customer order data for specific customer reports
-  const mockCustomerOrderData = [
-    { id: 'ORD-001', customer: 'John Doe', address: '123 Main St, Anytown, CA', county: 'Los Angeles', status: 'delivered', amount: 150, orderDate: '2024-01-15', paidStatus: 'paid' },
-    { id: 'ORD-002', customer: 'John Doe', address: '456 Oak Ave, Anytown, CA', county: 'Los Angeles', status: 'completed', amount: 200, orderDate: '2024-02-10', paidStatus: 'paid' },
-    { id: 'ORD-003', customer: 'Jane Smith', address: '789 Pine St, Somewhere, CA', county: 'San Diego', status: 'shipped', amount: 175, orderDate: '2024-02-20', paidStatus: 'unpaid' },
-    { id: 'ORD-004', customer: 'Bob Johnson', address: '321 Elm Dr, Nowhere, CA', county: 'Orange', status: 'processing', amount: 125, orderDate: '2024-03-10', paidStatus: 'pending' },
-    { id: 'ORD-005', customer: 'John Doe', address: '654 Maple Ln, Anytown, CA', county: 'Los Angeles', status: 'delivered', amount: 300, orderDate: '2024-03-15', paidStatus: 'paid' },
-    { id: 'ORD-006', customer: 'Alice Williams', address: '987 Cedar St, Elsewhere, CA', county: 'Riverside', status: 'pending', amount: 225, orderDate: '2024-03-25', paidStatus: 'unpaid' },
-  ];
+  // Mock customer order data for specific customer reports - using state to allow updates
+  const [mockCustomerOrderData, setMockCustomerOrderData] = useState<OrderData[]>([
+    { id: 'ORD-001', customer: 'John Doe', address: '123 Main St, Anytown, CA', county: 'Los Angeles', status: 'delivered', amount: 150, orderDate: '2024-01-15', paidStatus: 'Paid' },
+    { id: 'ORD-002', customer: 'John Doe', address: '456 Oak Ave, Anytown, CA', county: 'Los Angeles', status: 'completed', amount: 200, orderDate: '2024-02-10', paidStatus: 'Paid' },
+    { id: 'ORD-003', customer: 'Jane Smith', address: '789 Pine St, Somewhere, CA', county: 'San Diego', status: 'shipped', amount: 175, orderDate: '2024-02-20', paidStatus: 'Unpaid' },
+    { id: 'ORD-004', customer: 'Bob Johnson', address: '321 Elm Dr, Nowhere, CA', county: 'Orange', status: 'processing', amount: 125, orderDate: '2024-03-10', paidStatus: 'Unpaid' },
+    { id: 'ORD-005', customer: 'John Doe', address: '654 Maple Ln, Anytown, CA', county: 'Los Angeles', status: 'delivered', amount: 300, orderDate: '2024-03-15', paidStatus: 'Paid' },
+    { id: 'ORD-006', customer: 'Alice Williams', address: '987 Cedar St, Elsewhere, CA', county: 'Riverside', status: 'pending', amount: 225, orderDate: '2024-03-25', paidStatus: 'Unpaid' },
+  ]);
 
   // Get unique customers for dropdown
   const uniqueCustomers = [...new Set(mockCustomerOrderData.map(order => order.customer))];
@@ -58,7 +69,7 @@ const Admin = () => {
         orders: orders
       };
     });
-  }, []);
+  }, [mockCustomerOrderData]);
 
   // Filter data based on report type, date range, and customer
   const filteredData = useMemo(() => {
@@ -110,12 +121,20 @@ const Admin = () => {
         return true;
       });
     }
-  }, [startDate, endDate, selectedCustomer, reportType]);
+  }, [startDate, endDate, selectedCustomer, reportType, mockCustomerOrderData]);
 
   const handleMarkOrdersAsPaid = (customerName: string) => {
+    setMockCustomerOrderData(prevData => 
+      prevData.map(order => 
+        order.customer === customerName && order.paidStatus === 'Unpaid'
+          ? { ...order, paidStatus: 'Paid' }
+          : order
+      )
+    );
+    
     toast({
       title: "Orders Marked as Paid",
-      description: `All orders for ${customerName} have been marked as paid.`,
+      description: `All unpaid orders for ${customerName} have been marked as paid.`,
     });
   };
 
@@ -313,7 +332,7 @@ const Admin = () => {
           </CardHeader>
           <CardContent>
             {isCustomerOrderReport ? (
-              <AdminOrderTable data={filteredData} />
+              <AdminOrderTable data={filteredData as OrderData[]} />
             ) : (
               <AdminOrderAccordion 
                 customerOrdersGrouped={customerOrdersGrouped}
