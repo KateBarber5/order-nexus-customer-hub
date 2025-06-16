@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { FileText, Download, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,6 +39,29 @@ const Admin = () => {
 
   // Get unique customers for dropdown
   const uniqueCustomers = [...new Set(mockCustomerOrderData.map(order => order.customer))];
+
+  // Get customer orders grouped by customer
+  const customerOrdersGrouped = useMemo(() => {
+    const grouped = mockCustomerOrderData.reduce((acc, order) => {
+      if (!acc[order.customer]) {
+        acc[order.customer] = [];
+      }
+      acc[order.customer].push(order);
+      return acc;
+    }, {} as Record<string, typeof mockCustomerOrderData>);
+
+    // Calculate summary data for each customer
+    return Object.entries(grouped).map(([customerName, orders]) => {
+      const customerInfo = mockOrderData.find(data => data.customer === customerName);
+      return {
+        customer: customerName,
+        email: customerInfo?.email || 'N/A',
+        orderCount: orders.length,
+        totalAmount: orders.reduce((sum, order) => sum + order.amount, 0),
+        orders: orders
+      };
+    });
+  }, []);
 
   // Filter data based on report type, date range, and customer
   const filteredData = useMemo(() => {
@@ -356,8 +380,8 @@ const Admin = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              {isCustomerOrderReport ? (
+            {isCustomerOrderReport ? (
+              <div className="overflow-x-auto">
                 <table className="w-full border-collapse border border-gray-300">
                   <thead>
                     <tr className="bg-gray-50">
@@ -386,45 +410,76 @@ const Admin = () => {
                     ))}
                   </tbody>
                 </table>
-              ) : (
-                <table className="w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 px-4 py-2 text-left">Customer Name</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Order Count</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Total Amount</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredData.map((row, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-2">{row.customer}</td>
-                        <td className="border border-gray-300 px-4 py-2">{row.email}</td>
-                        <td className="border border-gray-300 px-4 py-2">{row.orderCount}</td>
-                        <td className="border border-gray-300 px-4 py-2">${row.totalAmount}</td>
-                        <td className="border border-gray-300 px-4 py-2">
+              </div>
+            ) : (
+              <Accordion type="multiple" className="w-full">
+                {customerOrdersGrouped.map((customerData, index) => (
+                  <AccordionItem key={customerData.customer} value={`customer-${index}`}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex justify-between items-center w-full mr-4">
+                        <div className="flex items-center gap-4">
+                          <span className="font-medium">{customerData.customer}</span>
+                          <span className="text-sm text-gray-600">{customerData.email}</span>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <span className="text-sm">Orders: {customerData.orderCount}</span>
+                          <span className="text-sm">Total: ${customerData.totalAmount}</span>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleMarkOrdersAsPaid(row.customer)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkOrdersAsPaid(customerData.customer);
+                            }}
                             className="text-sm"
                           >
                             Mark Orders as Paid
                           </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              {filteredData.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No records found for the selected criteria.
-                </div>
-              )}
-            </div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="pt-4">
+                        <h4 className="font-medium mb-3">Customer Orders</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse border border-gray-200">
+                            <thead>
+                              <tr className="bg-gray-50">
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Order ID</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Address</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Parcel ID</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">County</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Status</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Amount</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Order Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {customerData.orders.map((order) => (
+                                <tr key={order.id} className="hover:bg-gray-50">
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.id}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.address}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.parcelId}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.county}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.status}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">${order.amount}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.orderDate}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+            {filteredData.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No records found for the selected criteria.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
