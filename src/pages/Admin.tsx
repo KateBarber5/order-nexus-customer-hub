@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -92,6 +91,13 @@ const Admin = () => {
     }
   }, [startDate, endDate, selectedCustomer, reportType]);
 
+  const handleMarkOrdersAsPaid = (customerName: string) => {
+    toast({
+      title: "Orders Marked as Paid",
+      description: `All orders for ${customerName} have been marked as paid.`,
+    });
+  };
+
   const generateCSV = () => {
     let headers, csvContent;
     
@@ -104,11 +110,11 @@ const Admin = () => {
         )
       ].join('\n');
     } else {
-      headers = ['Customer Name', 'Email', 'Order Count', 'Total Amount', 'Last Order Date'];
+      headers = ['Customer Name', 'Email', 'Order Count', 'Total Amount'];
       csvContent = [
         headers.join(','),
         ...filteredData.map(row => 
-          `"${row.customer}","${row.email}",${row.orderCount},${row.totalAmount},"${row.lastOrderDate}"`
+          `"${row.customer}","${row.email}",${row.orderCount},${row.totalAmount}`
         )
       ].join('\n');
     }
@@ -168,7 +174,6 @@ const Admin = () => {
               <th>Email</th>
               <th>Order Count</th>
               <th>Total Amount</th>
-              <th>Last Order Date</th>
             </tr>
           </thead>
           <tbody>
@@ -178,7 +183,6 @@ const Admin = () => {
                 <td>${row.email}</td>
                 <td>${row.orderCount}</td>
                 <td>$${row.totalAmount}</td>
-                <td>${row.lastOrderDate}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -260,7 +264,7 @@ const Admin = () => {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="page-title">Admin Dashboard</h1>
+        <h1 className="page-title">Admin</h1>
         
         <Card className="mb-6">
           <CardHeader>
@@ -390,7 +394,7 @@ const Admin = () => {
                       <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Order Count</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Total Amount</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Last Order Date</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -400,7 +404,16 @@ const Admin = () => {
                         <td className="border border-gray-300 px-4 py-2">{row.email}</td>
                         <td className="border border-gray-300 px-4 py-2">{row.orderCount}</td>
                         <td className="border border-gray-300 px-4 py-2">${row.totalAmount}</td>
-                        <td className="border border-gray-300 px-4 py-2">{row.lastOrderDate}</td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleMarkOrdersAsPaid(row.customer)}
+                            className="text-sm"
+                          >
+                            Mark Orders as Paid
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
