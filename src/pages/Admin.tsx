@@ -29,12 +29,12 @@ const Admin = () => {
 
   // Mock customer order data for specific customer reports
   const mockCustomerOrderData = [
-    { id: 'ORD-001', customer: 'John Doe', address: '123 Main St, Anytown, CA', parcelId: 'P12345', county: 'Los Angeles', status: 'delivered', amount: 150, orderDate: '2024-01-15' },
-    { id: 'ORD-002', customer: 'John Doe', address: '456 Oak Ave, Anytown, CA', parcelId: 'P12346', county: 'Los Angeles', status: 'completed', amount: 200, orderDate: '2024-02-10' },
-    { id: 'ORD-003', customer: 'Jane Smith', address: '789 Pine St, Somewhere, CA', parcelId: 'P12347', county: 'San Diego', status: 'shipped', amount: 175, orderDate: '2024-02-20' },
-    { id: 'ORD-004', customer: 'Bob Johnson', address: '321 Elm Dr, Nowhere, CA', parcelId: 'P12348', county: 'Orange', status: 'processing', amount: 125, orderDate: '2024-03-10' },
-    { id: 'ORD-005', customer: 'John Doe', address: '654 Maple Ln, Anytown, CA', parcelId: 'P12349', county: 'Los Angeles', status: 'delivered', amount: 300, orderDate: '2024-03-15' },
-    { id: 'ORD-006', customer: 'Alice Williams', address: '987 Cedar St, Elsewhere, CA', parcelId: 'P12350', county: 'Riverside', status: 'pending', amount: 225, orderDate: '2024-03-25' },
+    { id: 'ORD-001', customer: 'John Doe', address: '123 Main St, Anytown, CA', parcelId: 'P12345', county: 'Los Angeles', status: 'delivered', amount: 150, orderDate: '2024-01-15', paidStatus: 'paid' },
+    { id: 'ORD-002', customer: 'John Doe', address: '456 Oak Ave, Anytown, CA', parcelId: 'P12346', county: 'Los Angeles', status: 'completed', amount: 200, orderDate: '2024-02-10', paidStatus: 'paid' },
+    { id: 'ORD-003', customer: 'Jane Smith', address: '789 Pine St, Somewhere, CA', parcelId: 'P12347', county: 'San Diego', status: 'shipped', amount: 175, orderDate: '2024-02-20', paidStatus: 'unpaid' },
+    { id: 'ORD-004', customer: 'Bob Johnson', address: '321 Elm Dr, Nowhere, CA', parcelId: 'P12348', county: 'Orange', status: 'processing', amount: 125, orderDate: '2024-03-10', paidStatus: 'pending' },
+    { id: 'ORD-005', customer: 'John Doe', address: '654 Maple Ln, Anytown, CA', parcelId: 'P12349', county: 'Los Angeles', status: 'delivered', amount: 300, orderDate: '2024-03-15', paidStatus: 'paid' },
+    { id: 'ORD-006', customer: 'Alice Williams', address: '987 Cedar St, Elsewhere, CA', parcelId: 'P12350', county: 'Riverside', status: 'pending', amount: 225, orderDate: '2024-03-25', paidStatus: 'unpaid' },
   ];
 
   // Get unique customers for dropdown
@@ -126,11 +126,11 @@ const Admin = () => {
     let headers, csvContent;
     
     if (reportType === 'customer-order') {
-      headers = ['Order ID', 'Customer Name', 'Address', 'Parcel ID', 'County', 'Status', 'Amount', 'Order Date'];
+      headers = ['Order ID', 'Customer Name', 'Address', 'County', 'Status', 'Amount', 'Order Date', 'Paid Status'];
       csvContent = [
         headers.join(','),
         ...filteredData.map(row => 
-          `"${row.id}","${row.customer}","${row.address}","${row.parcelId}","${row.county}","${row.status}",${row.amount},"${row.orderDate}"`
+          `"${row.id}","${row.customer}","${row.address}","${row.county}","${row.status}",${row.amount},"${row.orderDate}","${row.paidStatus}"`
         )
       ].join('\n');
     } else {
@@ -167,11 +167,11 @@ const Admin = () => {
               <th>Order ID</th>
               <th>Customer Name</th>
               <th>Address</th>
-              <th>Parcel ID</th>
               <th>County</th>
               <th>Status</th>
               <th>Amount</th>
               <th>Order Date</th>
+              <th>Paid Status</th>
             </tr>
           </thead>
           <tbody>
@@ -180,11 +180,11 @@ const Admin = () => {
                 <td>${row.id}</td>
                 <td>${row.customer}</td>
                 <td>${row.address}</td>
-                <td>${row.parcelId}</td>
                 <td>${row.county}</td>
                 <td>${row.status}</td>
                 <td>$${row.amount}</td>
                 <td>${row.orderDate}</td>
+                <td>${row.paidStatus}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -388,11 +388,11 @@ const Admin = () => {
                       <th className="border border-gray-300 px-4 py-2 text-left">Order ID</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Customer Name</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Address</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Parcel ID</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">County</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Amount</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Order Date</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Paid Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -401,11 +401,11 @@ const Admin = () => {
                         <td className="border border-gray-300 px-4 py-2">{row.id}</td>
                         <td className="border border-gray-300 px-4 py-2">{row.customer}</td>
                         <td className="border border-gray-300 px-4 py-2">{row.address}</td>
-                        <td className="border border-gray-300 px-4 py-2">{row.parcelId}</td>
                         <td className="border border-gray-300 px-4 py-2">{row.county}</td>
                         <td className="border border-gray-300 px-4 py-2">{row.status}</td>
                         <td className="border border-gray-300 px-4 py-2">${row.amount}</td>
                         <td className="border border-gray-300 px-4 py-2">{row.orderDate}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.paidStatus}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -447,11 +447,11 @@ const Admin = () => {
                               <tr className="bg-gray-50">
                                 <th className="border border-gray-200 px-3 py-2 text-left text-sm">Order ID</th>
                                 <th className="border border-gray-200 px-3 py-2 text-left text-sm">Address</th>
-                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Parcel ID</th>
                                 <th className="border border-gray-200 px-3 py-2 text-left text-sm">County</th>
                                 <th className="border border-gray-200 px-3 py-2 text-left text-sm">Status</th>
                                 <th className="border border-gray-200 px-3 py-2 text-left text-sm">Amount</th>
                                 <th className="border border-gray-200 px-3 py-2 text-left text-sm">Order Date</th>
+                                <th className="border border-gray-200 px-3 py-2 text-left text-sm">Paid Status</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -459,11 +459,11 @@ const Admin = () => {
                                 <tr key={order.id} className="hover:bg-gray-50">
                                   <td className="border border-gray-200 px-3 py-2 text-sm">{order.id}</td>
                                   <td className="border border-gray-200 px-3 py-2 text-sm">{order.address}</td>
-                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.parcelId}</td>
                                   <td className="border border-gray-200 px-3 py-2 text-sm">{order.county}</td>
                                   <td className="border border-gray-200 px-3 py-2 text-sm">{order.status}</td>
                                   <td className="border border-gray-200 px-3 py-2 text-sm">${order.amount}</td>
                                   <td className="border border-gray-200 px-3 py-2 text-sm">{order.orderDate}</td>
+                                  <td className="border border-gray-200 px-3 py-2 text-sm">{order.paidStatus}</td>
                                 </tr>
                               ))}
                             </tbody>
