@@ -13,6 +13,7 @@ const Admin = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reportType, setReportType] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -26,42 +27,97 @@ const Admin = () => {
     { customer: 'Sarah Wilson', email: 'sarah@example.com', orderCount: 9, totalAmount: 1400, lastOrderDate: '2024-04-15' },
   ];
 
-  // Filter data based on date range
+  // Mock customer order data for specific customer reports
+  const mockCustomerOrderData = [
+    { id: 'ORD-001', customer: 'John Doe', address: '123 Main St, Anytown, CA', parcelId: 'P12345', county: 'Los Angeles', status: 'delivered', amount: 150, orderDate: '2024-01-15' },
+    { id: 'ORD-002', customer: 'John Doe', address: '456 Oak Ave, Anytown, CA', parcelId: 'P12346', county: 'Los Angeles', status: 'completed', amount: 200, orderDate: '2024-02-10' },
+    { id: 'ORD-003', customer: 'Jane Smith', address: '789 Pine St, Somewhere, CA', parcelId: 'P12347', county: 'San Diego', status: 'shipped', amount: 175, orderDate: '2024-02-20' },
+    { id: 'ORD-004', customer: 'Bob Johnson', address: '321 Elm Dr, Nowhere, CA', parcelId: 'P12348', county: 'Orange', status: 'processing', amount: 125, orderDate: '2024-03-10' },
+    { id: 'ORD-005', customer: 'John Doe', address: '654 Maple Ln, Anytown, CA', parcelId: 'P12349', county: 'Los Angeles', status: 'delivered', amount: 300, orderDate: '2024-03-15' },
+    { id: 'ORD-006', customer: 'Alice Williams', address: '987 Cedar St, Elsewhere, CA', parcelId: 'P12350', county: 'Riverside', status: 'pending', amount: 225, orderDate: '2024-03-25' },
+  ];
+
+  // Get unique customers for dropdown
+  const uniqueCustomers = [...new Set(mockCustomerOrderData.map(order => order.customer))];
+
+  // Filter data based on report type, date range, and customer
   const filteredData = useMemo(() => {
-    if (!startDate && !endDate) {
-      return mockOrderData;
-    }
-
-    return mockOrderData.filter(item => {
-      const itemDate = new Date(item.lastOrderDate);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-
-      if (start && end) {
-        return itemDate >= start && itemDate <= end;
-      } else if (start) {
-        return itemDate >= start;
-      } else if (end) {
-        return itemDate <= end;
+    if (reportType === 'customer-order') {
+      let customerOrders = mockCustomerOrderData;
+      
+      // Filter by customer if selected
+      if (selectedCustomer) {
+        customerOrders = customerOrders.filter(order => order.customer === selectedCustomer);
       }
-      return true;
-    });
-  }, [startDate, endDate]);
+      
+      // Filter by date range
+      if (startDate || endDate) {
+        customerOrders = customerOrders.filter(order => {
+          const orderDate = new Date(order.orderDate);
+          const start = startDate ? new Date(startDate) : null;
+          const end = endDate ? new Date(endDate) : null;
+
+          if (start && end) {
+            return orderDate >= start && orderDate <= end;
+          } else if (start) {
+            return orderDate >= start;
+          } else if (end) {
+            return orderDate <= end;
+          }
+          return true;
+        });
+      }
+      
+      return customerOrders;
+    } else {
+      // Original order summary data
+      if (!startDate && !endDate) {
+        return mockOrderData;
+      }
+
+      return mockOrderData.filter(item => {
+        const itemDate = new Date(item.lastOrderDate);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        if (start && end) {
+          return itemDate >= start && itemDate <= end;
+        } else if (start) {
+          return itemDate >= start;
+        } else if (end) {
+          return itemDate <= end;
+        }
+        return true;
+      });
+    }
+  }, [startDate, endDate, selectedCustomer, reportType]);
 
   const generateCSV = () => {
-    const headers = ['Customer Name', 'Email', 'Order Count', 'Total Amount', 'Last Order Date'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredData.map(row => 
-        `"${row.customer}","${row.email}",${row.orderCount},${row.totalAmount},"${row.lastOrderDate}"`
-      )
-    ].join('\n');
+    let headers, csvContent;
+    
+    if (reportType === 'customer-order') {
+      headers = ['Order ID', 'Customer Name', 'Address', 'Parcel ID', 'County', 'Status', 'Amount', 'Order Date'];
+      csvContent = [
+        headers.join(','),
+        ...filteredData.map(row => 
+          `"${row.id}","${row.customer}","${row.address}","${row.parcelId}","${row.county}","${row.status}",${row.amount},"${row.orderDate}"`
+        )
+      ].join('\n');
+    } else {
+      headers = ['Customer Name', 'Email', 'Order Count', 'Total Amount', 'Last Order Date'];
+      csvContent = [
+        headers.join(','),
+        ...filteredData.map(row => 
+          `"${row.customer}","${row.email}",${row.orderCount},${row.totalAmount},"${row.lastOrderDate}"`
+        )
+      ].join('\n');
+    }
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `order_report_${startDate}_to_${endDate}.csv`);
+    link.setAttribute('download', `${reportType === 'customer-order' ? 'customer_order' : 'order'}_report_${startDate}_to_${endDate}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -69,14 +125,70 @@ const Admin = () => {
   };
 
   const generatePDF = () => {
-    // For PDF generation, we'll create a simple HTML structure and use window.print
-    // In a real application, you might want to use a library like jsPDF or react-to-pdf
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      let tableContent, reportTitle;
+      
+      if (reportType === 'customer-order') {
+        reportTitle = selectedCustomer ? `Customer Order Report - ${selectedCustomer}` : 'Customer Order Report';
+        tableContent = `
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer Name</th>
+              <th>Address</th>
+              <th>Parcel ID</th>
+              <th>County</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th>Order Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredData.map(row => `
+              <tr>
+                <td>${row.id}</td>
+                <td>${row.customer}</td>
+                <td>${row.address}</td>
+                <td>${row.parcelId}</td>
+                <td>${row.county}</td>
+                <td>${row.status}</td>
+                <td>$${row.amount}</td>
+                <td>${row.orderDate}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+      } else {
+        reportTitle = 'Order Summary Report';
+        tableContent = `
+          <thead>
+            <tr>
+              <th>Customer Name</th>
+              <th>Email</th>
+              <th>Order Count</th>
+              <th>Total Amount</th>
+              <th>Last Order Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredData.map(row => `
+              <tr>
+                <td>${row.customer}</td>
+                <td>${row.email}</td>
+                <td>${row.orderCount}</td>
+                <td>$${row.totalAmount}</td>
+                <td>${row.lastOrderDate}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+      }
+      
       const htmlContent = `
         <html>
           <head>
-            <title>Order Report - ${startDate} to ${endDate}</title>
+            <title>${reportTitle} - ${startDate} to ${endDate}</title>
             <style>
               body { font-family: Arial, sans-serif; margin: 20px; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -86,31 +198,11 @@ const Admin = () => {
             </style>
           </head>
           <body>
-            <h1>Order Report</h1>
+            <h1>${reportTitle}</h1>
             <p><strong>Period:</strong> ${startDate} to ${endDate}</p>
+            ${selectedCustomer ? `<p><strong>Customer:</strong> ${selectedCustomer}</p>` : ''}
             <p><strong>Records Found:</strong> ${filteredData.length}</p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Customer Name</th>
-                  <th>Email</th>
-                  <th>Order Count</th>
-                  <th>Total Amount</th>
-                  <th>Last Order Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${filteredData.map(row => `
-                  <tr>
-                    <td>${row.customer}</td>
-                    <td>${row.email}</td>
-                    <td>${row.orderCount}</td>
-                    <td>$${row.totalAmount}</td>
-                    <td>${row.lastOrderDate}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
+            <table>${tableContent}</table>
           </body>
         </html>
       `;
@@ -130,26 +222,40 @@ const Admin = () => {
       return;
     }
 
+    if (reportType === 'customer-order' && !selectedCustomer) {
+      toast({
+        title: "Missing Customer Selection",
+        description: "Please select a customer for the Customer Order Report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     
     // Simulate API call delay
     setTimeout(() => {
-      if (reportType === 'csv') {
-        generateCSV();
-        toast({
-          title: "CSV Report Generated",
-          description: `Your CSV report has been downloaded successfully. Found ${filteredData.length} records.`,
-        });
-      } else if (reportType === 'pdf') {
-        generatePDF();
-        toast({
-          title: "PDF Report Generated",
-          description: `Your PDF report is ready for printing/saving. Found ${filteredData.length} records.`,
-        });
+      if (reportType === 'csv' || reportType === 'pdf' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf') {
+        const isCSV = reportType.includes('csv');
+        if (isCSV) {
+          generateCSV();
+          toast({
+            title: "CSV Report Generated",
+            description: `Your CSV report has been downloaded successfully. Found ${filteredData.length} records.`,
+          });
+        } else {
+          generatePDF();
+          toast({
+            title: "PDF Report Generated",
+            description: `Your PDF report is ready for printing/saving. Found ${filteredData.length} records.`,
+          });
+        }
       }
       setIsGenerating(false);
     }, 1000);
   };
+
+  const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
 
   return (
     <DashboardLayout>
@@ -163,10 +269,46 @@ const Admin = () => {
               Generate Reports
             </CardTitle>
             <CardDescription>
-              Generate CSV and PDF reports for order counts by customer for a specific time period.
+              Generate CSV and PDF reports for order data with customizable filters and date ranges.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="report-type">Report Type</Label>
+              <Select value={reportType} onValueChange={(value) => {
+                setReportType(value);
+                setSelectedCustomer(''); // Reset customer selection when changing report type
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select report type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">Order Summary - CSV</SelectItem>
+                  <SelectItem value="pdf">Order Summary - PDF</SelectItem>
+                  <SelectItem value="customer-order-csv">Customer Order Report - CSV</SelectItem>
+                  <SelectItem value="customer-order-pdf">Customer Order Report - PDF</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isCustomerOrderReport && (
+              <div className="space-y-2">
+                <Label htmlFor="customer-select">Select Customer</Label>
+                <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {uniqueCustomers.map((customer) => (
+                      <SelectItem key={customer} value={customer}>
+                        {customer}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-date">Start Date</Label>
@@ -188,19 +330,6 @@ const Admin = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="report-type">Report Type</Label>
-              <Select value={reportType} onValueChange={setReportType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select report type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="csv">CSV Report</SelectItem>
-                  <SelectItem value="pdf">PDF Report</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
             <Button 
               onClick={handleGenerateReport} 
               disabled={isGenerating}
@@ -216,39 +345,70 @@ const Admin = () => {
           <CardHeader>
             <CardTitle>Order Reporting</CardTitle>
             <CardDescription>
-              {startDate || endDate 
-                ? `Filtered results for the selected date range (${filteredData.length} records found)`
+              {startDate || endDate || selectedCustomer
+                ? `Filtered results for the selected criteria (${filteredData.length} records found)`
                 : `Sample data that would be included in the report (${filteredData.length} total records)`
               }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-300 px-4 py-2 text-left">Customer Name</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Order Count</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Total Amount</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Last Order Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((row, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2">{row.customer}</td>
-                      <td className="border border-gray-300 px-4 py-2">{row.email}</td>
-                      <td className="border border-gray-300 px-4 py-2">{row.orderCount}</td>
-                      <td className="border border-gray-300 px-4 py-2">${row.totalAmount}</td>
-                      <td className="border border-gray-300 px-4 py-2">{row.lastOrderDate}</td>
+              {isCustomerOrderReport ? (
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-300 px-4 py-2 text-left">Order ID</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Customer Name</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Address</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Parcel ID</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">County</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Amount</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Order Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((row, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-2">{row.id}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.customer}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.address}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.parcelId}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.county}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.status}</td>
+                        <td className="border border-gray-300 px-4 py-2">${row.amount}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.orderDate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-300 px-4 py-2 text-left">Customer Name</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Order Count</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Total Amount</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Last Order Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((row, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-2">{row.customer}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.email}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.orderCount}</td>
+                        <td className="border border-gray-300 px-4 py-2">${row.totalAmount}</td>
+                        <td className="border border-gray-300 px-4 py-2">{row.lastOrderDate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               {filteredData.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No records found for the selected date range.
+                  No records found for the selected criteria.
                 </div>
               )}
             </div>
