@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,20 +16,44 @@ const Admin = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  // Mock data for demonstration
+  // Mock data with dates for demonstration
   const mockOrderData = [
-    { customer: 'John Doe', email: 'john@example.com', orderCount: 15, totalAmount: 2500 },
-    { customer: 'Jane Smith', email: 'jane@example.com', orderCount: 8, totalAmount: 1200 },
-    { customer: 'Bob Johnson', email: 'bob@example.com', orderCount: 12, totalAmount: 1800 },
-    { customer: 'Alice Williams', email: 'alice@example.com', orderCount: 6, totalAmount: 900 },
+    { customer: 'John Doe', email: 'john@example.com', orderCount: 15, totalAmount: 2500, lastOrderDate: '2024-01-15' },
+    { customer: 'Jane Smith', email: 'jane@example.com', orderCount: 8, totalAmount: 1200, lastOrderDate: '2024-02-20' },
+    { customer: 'Bob Johnson', email: 'bob@example.com', orderCount: 12, totalAmount: 1800, lastOrderDate: '2024-03-10' },
+    { customer: 'Alice Williams', email: 'alice@example.com', orderCount: 6, totalAmount: 900, lastOrderDate: '2024-03-25' },
+    { customer: 'Mike Davis', email: 'mike@example.com', orderCount: 20, totalAmount: 3200, lastOrderDate: '2024-04-05' },
+    { customer: 'Sarah Wilson', email: 'sarah@example.com', orderCount: 9, totalAmount: 1400, lastOrderDate: '2024-04-15' },
   ];
 
+  // Filter data based on date range
+  const filteredData = useMemo(() => {
+    if (!startDate && !endDate) {
+      return mockOrderData;
+    }
+
+    return mockOrderData.filter(item => {
+      const itemDate = new Date(item.lastOrderDate);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
+      if (start && end) {
+        return itemDate >= start && itemDate <= end;
+      } else if (start) {
+        return itemDate >= start;
+      } else if (end) {
+        return itemDate <= end;
+      }
+      return true;
+    });
+  }, [startDate, endDate]);
+
   const generateCSV = () => {
-    const headers = ['Customer Name', 'Email', 'Order Count', 'Total Amount'];
+    const headers = ['Customer Name', 'Email', 'Order Count', 'Total Amount', 'Last Order Date'];
     const csvContent = [
       headers.join(','),
-      ...mockOrderData.map(row => 
-        `"${row.customer}","${row.email}",${row.orderCount},${row.totalAmount}`
+      ...filteredData.map(row => 
+        `"${row.customer}","${row.email}",${row.orderCount},${row.totalAmount},"${row.lastOrderDate}"`
       )
     ].join('\n');
 
@@ -64,6 +88,7 @@ const Admin = () => {
           <body>
             <h1>Order Report</h1>
             <p><strong>Period:</strong> ${startDate} to ${endDate}</p>
+            <p><strong>Records Found:</strong> ${filteredData.length}</p>
             <table>
               <thead>
                 <tr>
@@ -71,15 +96,17 @@ const Admin = () => {
                   <th>Email</th>
                   <th>Order Count</th>
                   <th>Total Amount</th>
+                  <th>Last Order Date</th>
                 </tr>
               </thead>
               <tbody>
-                ${mockOrderData.map(row => `
+                ${filteredData.map(row => `
                   <tr>
                     <td>${row.customer}</td>
                     <td>${row.email}</td>
                     <td>${row.orderCount}</td>
                     <td>$${row.totalAmount}</td>
+                    <td>${row.lastOrderDate}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -111,13 +138,13 @@ const Admin = () => {
         generateCSV();
         toast({
           title: "CSV Report Generated",
-          description: "Your CSV report has been downloaded successfully.",
+          description: `Your CSV report has been downloaded successfully. Found ${filteredData.length} records.`,
         });
       } else if (reportType === 'pdf') {
         generatePDF();
         toast({
           title: "PDF Report Generated",
-          description: "Your PDF report is ready for printing/saving.",
+          description: `Your PDF report is ready for printing/saving. Found ${filteredData.length} records.`,
         });
       }
       setIsGenerating(false);
@@ -187,9 +214,12 @@ const Admin = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Preview Data</CardTitle>
+            <CardTitle>Order Reporting</CardTitle>
             <CardDescription>
-              Sample data that would be included in the report
+              {startDate || endDate 
+                ? `Filtered results for the selected date range (${filteredData.length} records found)`
+                : `Sample data that would be included in the report (${filteredData.length} total records)`
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -201,19 +231,26 @@ const Admin = () => {
                     <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Order Count</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Total Amount</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Last Order Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {mockOrderData.map((row, index) => (
+                  {filteredData.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2">{row.customer}</td>
                       <td className="border border-gray-300 px-4 py-2">{row.email}</td>
                       <td className="border border-gray-300 px-4 py-2">{row.orderCount}</td>
                       <td className="border border-gray-300 px-4 py-2">${row.totalAmount}</td>
+                      <td className="border border-gray-300 px-4 py-2">{row.lastOrderDate}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {filteredData.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No records found for the selected date range.
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
