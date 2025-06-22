@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface OrderData {
   id: string;
@@ -14,9 +15,10 @@ interface OrderData {
 
 interface AdminOrderTableProps {
   data: OrderData[];
+  onMarkOrderAsPaid: (orderId: string) => void;
 }
 
-const AdminOrderTable = ({ data }: AdminOrderTableProps) => {
+const AdminOrderTable = ({ data, onMarkOrderAsPaid }: AdminOrderTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse border border-gray-300">
@@ -30,6 +32,7 @@ const AdminOrderTable = ({ data }: AdminOrderTableProps) => {
             <th className="border border-gray-300 px-4 py-2 text-left">Amount</th>
             <th className="border border-gray-300 px-4 py-2 text-left">Order Date</th>
             <th className="border border-gray-300 px-4 py-2 text-left">Paid Status</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -43,6 +46,16 @@ const AdminOrderTable = ({ data }: AdminOrderTableProps) => {
               <td className="border border-gray-300 px-4 py-2">${row.amount}</td>
               <td className="border border-gray-300 px-4 py-2">{row.orderDate}</td>
               <td className="border border-gray-300 px-4 py-2">{row.paidStatus}</td>
+              <td className="border border-gray-300 px-4 py-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={row.paidStatus === 'Paid'}
+                  onClick={() => onMarkOrderAsPaid(row.id)}
+                >
+                  Mark as Paid
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>

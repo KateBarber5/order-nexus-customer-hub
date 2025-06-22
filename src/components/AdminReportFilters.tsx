@@ -14,6 +14,7 @@ interface AdminReportFiltersProps {
   reportType: string;
   selectedCustomer: string;
   selectedCustomers: string[];
+  selectedPaidStatus: string;
   isGenerating: boolean;
   uniqueCustomers: string[];
   onStartDateChange: (date: string) => void;
@@ -21,6 +22,7 @@ interface AdminReportFiltersProps {
   onReportTypeChange: (type: string) => void;
   onCustomerChange: (customer: string) => void;
   onMultipleCustomersChange: (customers: string[]) => void;
+  onPaidStatusChange: (status: string) => void;
   onGenerateReport: () => void;
 }
 
@@ -30,6 +32,7 @@ const AdminReportFilters = ({
   reportType,
   selectedCustomer,
   selectedCustomers,
+  selectedPaidStatus,
   isGenerating,
   uniqueCustomers,
   onStartDateChange,
@@ -37,6 +40,7 @@ const AdminReportFilters = ({
   onReportTypeChange,
   onCustomerChange,
   onMultipleCustomersChange,
+  onPaidStatusChange,
   onGenerateReport,
 }: AdminReportFiltersProps) => {
   const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
@@ -103,6 +107,20 @@ const AdminReportFilters = ({
             onChange={onMultipleCustomersChange}
             placeholder="Select customers to filter..."
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="paid-status">Filter by Paid Status</Label>
+          <Select value={selectedPaidStatus} onValueChange={onPaidStatusChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select paid status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All</SelectItem>
+              <SelectItem value="Paid">Paid</SelectItem>
+              <SelectItem value="Unpaid">Unpaid</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

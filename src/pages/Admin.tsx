@@ -23,6 +23,7 @@ const Admin = () => {
   const [reportType, setReportType] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [selectedPaidStatus, setSelectedPaidStatus] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -72,7 +73,7 @@ const Admin = () => {
     });
   }, [mockCustomerOrderData]);
 
-  // Filter data based on report type, date range, and customer(s)
+  // Filter data based on report type, date range, customer(s), and paid status
   const filteredData = useMemo(() => {
     if (reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf') {
       let customerOrders = mockCustomerOrderData;
@@ -85,6 +86,11 @@ const Admin = () => {
       // Filter by multiple customers if selected
       if (selectedCustomers.length > 0) {
         customerOrders = customerOrders.filter(order => selectedCustomers.includes(order.customer));
+      }
+
+      // Filter by paid status if selected
+      if (selectedPaidStatus) {
+        customerOrders = customerOrders.filter(order => order.paidStatus === selectedPaidStatus);
       }
       
       // Filter by date range
@@ -134,17 +140,31 @@ const Admin = () => {
       
       return filteredOrderData;
     }
-  }, [startDate, endDate, selectedCustomer, selectedCustomers, reportType, mockCustomerOrderData]);
+  }, [startDate, endDate, selectedCustomer, selectedCustomers, selectedPaidStatus, reportType, mockCustomerOrderData]);
 
-  // Filter customerOrdersGrouped based on selected customers
+  // Filter customerOrdersGrouped based on selected customers and paid status
   const filteredCustomerOrdersGrouped = useMemo(() => {
+    let filtered = customerOrdersGrouped;
+    
     if (selectedCustomers.length > 0) {
-      return customerOrdersGrouped.filter(customerData => 
+      filtered = filtered.filter(customerData => 
         selectedCustomers.includes(customerData.customer)
       );
     }
-    return customerOrdersGrouped;
-  }, [customerOrdersGrouped, selectedCustomers]);
+
+    if (selectedPaidStatus) {
+      filtered = filtered.map(customerData => ({
+        ...customerData,
+        orders: customerData.orders.filter(order => order.paidStatus === selectedPaidStatus),
+        orderCount: customerData.orders.filter(order => order.paidStatus === selectedPaidStatus).length,
+        totalAmount: customerData.orders
+          .filter(order => order.paidStatus === selectedPaidStatus)
+          .reduce((sum, order) => sum + order.amount, 0)
+      })).filter(customerData => customerData.orders.length > 0);
+    }
+
+    return filtered;
+  }, [customerOrdersGrouped, selectedCustomers, selectedPaidStatus]);
 
   const handleMarkOrdersAsPaid = (customerName: string) => {
     setMockCustomerOrderData(prevData => 
@@ -158,6 +178,22 @@ const Admin = () => {
     toast({
       title: "Orders Marked as Paid",
       description: `All unpaid orders for ${customerName} have been marked as paid.`,
+    });
+  };
+
+  const handleMarkOrderAsPaid = (orderId: string) => {
+    setMockCustomerOrderData(prevData => 
+      prevData.map(order => 
+        order.id === orderId
+          ? { ...order, paidStatus: 'Paid' }
+          : order
+      )
+    );
+    
+    const order = mockCustomerOrderData.find(o => o.id === orderId);
+    toast({
+      title: "Order Marked as Paid",
+      description: `Order ${orderId} has been marked as paid.`,
     });
   };
 
@@ -269,6 +305,7 @@ const Admin = () => {
             <p><strong>Period:</strong> ${startDate} to ${endDate}</p>
             ${selectedCustomer ? `<p><strong>Customer:</strong> ${selectedCustomer}</p>` : ''}
             ${selectedCustomers.length > 0 ? `<p><strong>Filtered Customers:</strong> ${selectedCustomers.join(', ')}</p>` : ''}
+            ${selectedPaidStatus ? `<p><strong>Filtered Paid Status:</strong> ${selectedPaidStatus}</p>` : ''}
             <p><strong>Records Found:</strong> ${filteredData.length}</p>
             <table>${tableContent}</table>
           </body>
@@ -336,6 +373,7 @@ const Admin = () => {
           reportType={reportType}
           selectedCustomer={selectedCustomer}
           selectedCustomers={selectedCustomers}
+          selectedPaidStatus={selectedPaidStatus}
           isGenerating={isGenerating}
           uniqueCustomers={uniqueCustomers}
           onStartDateChange={setStartDate}
@@ -343,6 +381,7 @@ const Admin = () => {
           onReportTypeChange={setReportType}
           onCustomerChange={setSelectedCustomer}
           onMultipleCustomersChange={setSelectedCustomers}
+          onPaidStatusChange={setSelectedPaidStatus}
           onGenerateReport={handleGenerateReport}
         />
 
@@ -350,7 +389,7 @@ const Admin = () => {
           <CardHeader>
             <CardTitle>Order Reporting</CardTitle>
             <CardDescription>
-              {startDate || endDate || selectedCustomer || selectedCustomers.length > 0
+              {startDate || endDate || selectedCustomer || selectedCustomers.length > 0 || selectedPaidStatus
                 ? `Filtered results for the selected criteria (${filteredData.length} records found)`
                 : `Sample data that would be included in the report (${filteredData.length} total records)`
               }
@@ -358,11 +397,15 @@ const Admin = () => {
           </CardHeader>
           <CardContent>
             {isCustomerOrderReport ? (
-              <AdminOrderTable data={filteredData as OrderData[]} />
+              <AdminOrderTable 
+                data={filteredData as OrderData[]} 
+                onMarkOrderAsPaid={handleMarkOrderAsPaid}
+              />
             ) : (
               <AdminOrderAccordion 
                 customerOrdersGrouped={filteredCustomerOrdersGrouped}
                 onMarkOrdersAsPaid={handleMarkOrdersAsPaid}
+                onMarkOrderAsPaid={handleMarkOrderAsPaid}
               />
             )}
             {filteredData.length === 0 && (

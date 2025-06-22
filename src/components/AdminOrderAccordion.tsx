@@ -25,9 +25,10 @@ interface CustomerOrderData {
 interface AdminOrderAccordionProps {
   customerOrdersGrouped: CustomerOrderData[];
   onMarkOrdersAsPaid: (customerName: string) => void;
+  onMarkOrderAsPaid: (orderId: string) => void;
 }
 
-const AdminOrderAccordion = ({ customerOrdersGrouped, onMarkOrdersAsPaid }: AdminOrderAccordionProps) => {
+const AdminOrderAccordion = ({ customerOrdersGrouped, onMarkOrdersAsPaid, onMarkOrderAsPaid }: AdminOrderAccordionProps) => {
   return (
     <Accordion type="multiple" className="w-full">
       {customerOrdersGrouped.map((customerData, index) => {
@@ -73,6 +74,7 @@ const AdminOrderAccordion = ({ customerOrdersGrouped, onMarkOrdersAsPaid }: Admi
                         <th className="border border-gray-200 px-3 py-2 text-left text-sm">Amount</th>
                         <th className="border border-gray-200 px-3 py-2 text-left text-sm">Order Date</th>
                         <th className="border border-gray-200 px-3 py-2 text-left text-sm">Paid Status</th>
+                        <th className="border border-gray-200 px-3 py-2 text-left text-sm">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -85,6 +87,16 @@ const AdminOrderAccordion = ({ customerOrdersGrouped, onMarkOrdersAsPaid }: Admi
                           <td className="border border-gray-200 px-3 py-2 text-sm">${order.amount}</td>
                           <td className="border border-gray-200 px-3 py-2 text-sm">{order.orderDate}</td>
                           <td className="border border-gray-200 px-3 py-2 text-sm">{order.paidStatus}</td>
+                          <td className="border border-gray-200 px-3 py-2 text-sm">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={order.paidStatus === 'Paid'}
+                              onClick={() => onMarkOrderAsPaid(order.id)}
+                            >
+                              Mark as Paid
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
