@@ -22,6 +22,7 @@ const Admin = () => {
   const [endDate, setEndDate] = useState('');
   const [reportType, setReportType] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -71,7 +72,7 @@ const Admin = () => {
     });
   }, [mockCustomerOrderData]);
 
-  // Filter data based on report type, date range, and customer
+  // Filter data based on report type, date range, and customer(s)
   const filteredData = useMemo(() => {
     if (reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf') {
       let customerOrders = mockCustomerOrderData;
@@ -79,6 +80,11 @@ const Admin = () => {
       // Filter by customer if selected
       if (selectedCustomer) {
         customerOrders = customerOrders.filter(order => order.customer === selectedCustomer);
+      }
+      
+      // Filter by multiple customers if selected
+      if (selectedCustomers.length > 0) {
+        customerOrders = customerOrders.filter(order => selectedCustomers.includes(order.customer));
       }
       
       // Filter by date range
@@ -101,27 +107,44 @@ const Admin = () => {
       
       return customerOrders;
     } else {
-      // Original order summary data
-      if (!startDate && !endDate) {
-        return mockOrderData;
+      let filteredOrderData = mockOrderData;
+      
+      // Filter by multiple customers if selected
+      if (selectedCustomers.length > 0) {
+        filteredOrderData = filteredOrderData.filter(item => selectedCustomers.includes(item.customer));
       }
+      
+      // Filter by date range
+      if (startDate || endDate) {
+        filteredOrderData = filteredOrderData.filter(item => {
+          const itemDate = new Date(item.lastOrderDate);
+          const start = startDate ? new Date(startDate) : null;
+          const end = endDate ? new Date(endDate) : null;
 
-      return mockOrderData.filter(item => {
-        const itemDate = new Date(item.lastOrderDate);
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-
-        if (start && end) {
-          return itemDate >= start && itemDate <= end;
-        } else if (start) {
-          return itemDate >= start;
-        } else if (end) {
-          return itemDate <= end;
-        }
-        return true;
-      });
+          if (start && end) {
+            return itemDate >= start && itemDate <= end;
+          } else if (start) {
+            return itemDate >= start;
+          } else if (end) {
+            return itemDate <= end;
+          }
+          return true;
+        });
+      }
+      
+      return filteredOrderData;
     }
-  }, [startDate, endDate, selectedCustomer, reportType, mockCustomerOrderData]);
+  }, [startDate, endDate, selectedCustomer, selectedCustomers, reportType, mockCustomerOrderData]);
+
+  // Filter customerOrdersGrouped based on selected customers
+  const filteredCustomerOrdersGrouped = useMemo(() => {
+    if (selectedCustomers.length > 0) {
+      return customerOrdersGrouped.filter(customerData => 
+        selectedCustomers.includes(customerData.customer)
+      );
+    }
+    return customerOrdersGrouped;
+  }, [customerOrdersGrouped, selectedCustomers]);
 
   const handleMarkOrdersAsPaid = (customerName: string) => {
     setMockCustomerOrderData(prevData => 
@@ -245,6 +268,7 @@ const Admin = () => {
             <h1>${reportTitle}</h1>
             <p><strong>Period:</strong> ${startDate} to ${endDate}</p>
             ${selectedCustomer ? `<p><strong>Customer:</strong> ${selectedCustomer}</p>` : ''}
+            ${selectedCustomers.length > 0 ? `<p><strong>Filtered Customers:</strong> ${selectedCustomers.join(', ')}</p>` : ''}
             <p><strong>Records Found:</strong> ${filteredData.length}</p>
             <table>${tableContent}</table>
           </body>
@@ -311,12 +335,14 @@ const Admin = () => {
           endDate={endDate}
           reportType={reportType}
           selectedCustomer={selectedCustomer}
+          selectedCustomers={selectedCustomers}
           isGenerating={isGenerating}
           uniqueCustomers={uniqueCustomers}
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
           onReportTypeChange={setReportType}
           onCustomerChange={setSelectedCustomer}
+          onMultipleCustomersChange={setSelectedCustomers}
           onGenerateReport={handleGenerateReport}
         />
 
@@ -324,7 +350,7 @@ const Admin = () => {
           <CardHeader>
             <CardTitle>Order Reporting</CardTitle>
             <CardDescription>
-              {startDate || endDate || selectedCustomer
+              {startDate || endDate || selectedCustomer || selectedCustomers.length > 0
                 ? `Filtered results for the selected criteria (${filteredData.length} records found)`
                 : `Sample data that would be included in the report (${filteredData.length} total records)`
               }
@@ -335,7 +361,7 @@ const Admin = () => {
               <AdminOrderTable data={filteredData as OrderData[]} />
             ) : (
               <AdminOrderAccordion 
-                customerOrdersGrouped={customerOrdersGrouped}
+                customerOrdersGrouped={filteredCustomerOrdersGrouped}
                 onMarkOrdersAsPaid={handleMarkOrdersAsPaid}
               />
             )}

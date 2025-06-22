@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { FileText, Download } from 'lucide-react';
 
 interface AdminReportFiltersProps {
@@ -12,12 +13,14 @@ interface AdminReportFiltersProps {
   endDate: string;
   reportType: string;
   selectedCustomer: string;
+  selectedCustomers: string[];
   isGenerating: boolean;
   uniqueCustomers: string[];
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
   onReportTypeChange: (type: string) => void;
   onCustomerChange: (customer: string) => void;
+  onMultipleCustomersChange: (customers: string[]) => void;
   onGenerateReport: () => void;
 }
 
@@ -26,15 +29,22 @@ const AdminReportFilters = ({
   endDate,
   reportType,
   selectedCustomer,
+  selectedCustomers,
   isGenerating,
   uniqueCustomers,
   onStartDateChange,
   onEndDateChange,
   onReportTypeChange,
   onCustomerChange,
+  onMultipleCustomersChange,
   onGenerateReport,
 }: AdminReportFiltersProps) => {
   const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
+
+  const customerOptions: Option[] = uniqueCustomers.map(customer => ({
+    label: customer,
+    value: customer
+  }));
 
   return (
     <Card className="mb-6">
@@ -53,6 +63,7 @@ const AdminReportFilters = ({
           <Select value={reportType} onValueChange={(value) => {
             onReportTypeChange(value);
             onCustomerChange(''); // Reset customer selection when changing report type
+            onMultipleCustomersChange([]); // Reset multiple customer selection
           }}>
             <SelectTrigger>
               <SelectValue placeholder="Select report type" />
@@ -83,6 +94,16 @@ const AdminReportFilters = ({
             </Select>
           </div>
         )}
+
+        <div className="space-y-2">
+          <Label htmlFor="customer-filter">Filter by Customers</Label>
+          <MultiSelect
+            options={customerOptions}
+            selected={selectedCustomers}
+            onChange={onMultipleCustomersChange}
+            placeholder="Select customers to filter..."
+          />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
