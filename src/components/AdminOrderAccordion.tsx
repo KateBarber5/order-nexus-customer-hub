@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -53,7 +54,7 @@ const AdminOrderAccordion = ({ customerOrdersGrouped, onMarkOrdersAsPaid }: Admi
                     }}
                     className="text-sm"
                   >
-                    Mark Orders as Paid
+                    Mark All Orders as Paid
                   </Button>
                 </div>
               </div>
