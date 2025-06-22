@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -116,7 +115,7 @@ const AdminReportFilters = ({
               <SelectValue placeholder="Select paid status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="Paid">Paid</SelectItem>
               <SelectItem value="Unpaid">Unpaid</SelectItem>
             </SelectContent>

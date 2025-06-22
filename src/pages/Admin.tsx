@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,8 +89,8 @@ const Admin = () => {
         customerOrders = customerOrders.filter(order => selectedCustomers.includes(order.customer));
       }
 
-      // Filter by paid status if selected
-      if (selectedPaidStatus) {
+      // Filter by paid status if selected (change empty string check to "all" check)
+      if (selectedPaidStatus && selectedPaidStatus !== 'all') {
         customerOrders = customerOrders.filter(order => order.paidStatus === selectedPaidStatus);
       }
       
@@ -152,7 +153,7 @@ const Admin = () => {
       );
     }
 
-    if (selectedPaidStatus) {
+    if (selectedPaidStatus && selectedPaidStatus !== 'all') {
       filtered = filtered.map(customerData => ({
         ...customerData,
         orders: customerData.orders.filter(order => order.paidStatus === selectedPaidStatus),
