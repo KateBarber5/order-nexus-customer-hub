@@ -79,7 +79,7 @@ const Orders = () => {
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
         {/* Cities and Counties List */}
         <div className="w-full lg:w-1/4">
-          <div className="bg-white rounded-lg shadow h-[800px] flex flex-col">
+          <div className="bg-white rounded-lg shadow h-[600px] flex flex-col">
             <div className="p-4 border-b">
               <h2 className="text-lg font-medium mb-2">Available Cities and Counties</h2>
               <p className="text-sm text-gray-600">Select an option below to view the available services</p>
@@ -117,7 +117,7 @@ const Orders = () => {
         {/* Available Services Section */}
         {selectedCounty && selectedMunicipality && (
           <div className="w-full lg:w-1/4">
-            <div className="bg-white rounded-lg shadow p-4 h-[800px] flex flex-col">
+            <div className="bg-white rounded-lg shadow p-4 h-[600px] flex flex-col">
               <div className="border-b pb-3 mb-4">
                 <h2 className="text-lg font-medium mb-2">
                   Available Services - {selectedMunicipality}, {selectedCounty}
