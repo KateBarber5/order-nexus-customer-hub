@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
@@ -31,13 +30,29 @@ const Orders = () => {
     'Wakulla': ['Sopchoppy', 'St. Marks']
   };
 
-  // Services with their available product types
-  const availableServices = [
-    { name: 'Code', fullReport: true, cardReport: false },
-    { name: 'Permits', fullReport: true, cardReport: false },
-    { name: 'Liens', fullReport: true, cardReport: true },
-    { name: 'Utilities', fullReport: true, cardReport: false }
-  ];
+  // Get services based on selected municipality - some municipalities don't offer Full Report
+  const getAvailableServices = (municipality: string | null) => {
+    if (!municipality) return [];
+    
+    // Municipalities that only offer Card Report (no Full Report)
+    const cardReportOnlyMunicipalities = [
+      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
+      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
+      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
+      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
+    ];
+    
+    const isCardReportOnly = cardReportOnlyMunicipalities.includes(municipality);
+    
+    return [
+      { name: 'Code', fullReport: !isCardReportOnly, cardReport: false },
+      { name: 'Permits', fullReport: !isCardReportOnly, cardReport: false },
+      { name: 'Liens', fullReport: !isCardReportOnly, cardReport: true },
+      { name: 'Utilities', fullReport: !isCardReportOnly, cardReport: false }
+    ];
+  };
+
+  const availableServices = getAvailableServices(selectedMunicipality);
 
   const handleCountySelect = (county: string) => {
     setSelectedCounty(county);
