@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
@@ -46,6 +47,10 @@ const Orders = () => {
   const handleMunicipalitySelect = (municipality: string) => {
     setSelectedMunicipality(municipality);
   };
+
+  // Check if any service supports Full Report or Card Report
+  const hasFullReport = availableServices.some(service => service.fullReport);
+  const hasCardReport = availableServices.some(service => service.cardReport);
 
   return (
     <DashboardLayout>
@@ -103,12 +108,16 @@ const Orders = () => {
                   Available Services - {selectedMunicipality}, {selectedCounty}
                 </h2>
                 <div className="flex gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Full Report Available
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Card Report Available
-                  </span>
+                  {hasFullReport && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Full Report Available
+                    </span>
+                  )}
+                  {hasCardReport && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Card Report Available
+                    </span>
+                  )}
                 </div>
               </div>
               <ScrollArea className="flex-1">
