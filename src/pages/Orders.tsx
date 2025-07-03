@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
@@ -99,9 +98,19 @@ const Orders = () => {
         {selectedCounty && selectedMunicipality && (
           <div className="w-full lg:w-1/4">
             <div className="bg-white rounded-lg shadow p-4 h-[800px] flex flex-col">
-              <h2 className="text-lg font-medium mb-3 border-b pb-2">
-                Available Services - {selectedMunicipality}, {selectedCounty}
-              </h2>
+              <div className="border-b pb-3 mb-4">
+                <h2 className="text-lg font-medium mb-2">
+                  Available Services - {selectedMunicipality}, {selectedCounty}
+                </h2>
+                <div className="flex gap-2">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Full Report Available
+                  </span>
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Card Report Available
+                  </span>
+                </div>
+              </div>
               <ScrollArea className="flex-1">
                 <ul className="space-y-3">
                   {availableServices.map((service, index) => (
@@ -109,25 +118,9 @@ const Orders = () => {
                       key={index} 
                       className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="flex items-center mb-2">
+                      <div className="flex items-center">
                         <CheckCircle size={16} className="text-green-500 mr-2" />
                         <span className="text-sm font-medium">{service.name}</span>
-                      </div>
-                      <div className="flex gap-2 ml-6">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          service.fullReport 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-500'
-                        }`}>
-                          Full Report
-                        </span>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          service.cardReport 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-gray-100 text-gray-500'
-                        }`}>
-                          Card Report
-                        </span>
                       </div>
                     </li>
                   ))}
