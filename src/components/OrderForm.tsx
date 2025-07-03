@@ -223,71 +223,6 @@ const OrderForm = () => {
       <form onSubmit={(e) => { e.preventDefault(); handleProceedToReview(); }}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <Label className="text-base font-medium">Product Type</Label>
-            {!isSearchCriteriaFilled() && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-                <p className="text-sm text-amber-800">
-                  Please fill in the search criteria below to select a product type.
-                </p>
-              </div>
-            )}
-            <RadioGroup 
-              value={formData.productType} 
-              onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              disabled={!isSearchCriteriaFilled()}
-            >
-              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isSearchCriteriaFilled() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
-                <RadioGroupItem 
-                  value="full" 
-                  id="full-report" 
-                  disabled={!isSearchCriteriaFilled()}
-                />
-                <Label htmlFor="full-report" className={`font-medium flex-1 ${isSearchCriteriaFilled() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                  <div className="flex items-center gap-2">
-                    Full Report
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-sm text-xs">
-                          A Full Report includes everything in the Card Report—property appraiser data and current tax information—plus any additional municipal data such as open code enforcement cases, active or expired permits, and, where available, utility account status. This comprehensive option is designed for transactions or reviews requiring a deeper understanding of potential municipal obligations or compliance issues tied to the property. Please note, if a department is not listed on the report, there are no online resources for that particular county/municipality.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <p className="font-normal text-sm text-muted-foreground">Comprehensive search with complete details</p>
-                </Label>
-              </div>
-              
-              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isSearchCriteriaFilled() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
-                <RadioGroupItem 
-                  value="card" 
-                  id="card-report" 
-                  disabled={!isSearchCriteriaFilled()}
-                />
-                <Label htmlFor="card-report" className={`font-medium flex-1 ${isSearchCriteriaFilled() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                  <div className="flex items-center gap-2">
-                    Card Report
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-sm text-xs">
-                          A Card Report includes the most recent property record (or "property card") as provided by the county property appraiser, along with current ad valorem tax information. This report is ideal for quick reference to ownership, assessed values, and tax status.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <p className="font-normal text-sm text-muted-foreground">Summary report with essential information</p>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <div className="space-y-4">
             <Label className="text-base font-medium">Search By</Label>
             
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
@@ -359,6 +294,71 @@ const OrderForm = () => {
               </div>
             </>
           )}
+
+          <div className="space-y-4">
+            <Label className="text-base font-medium">Product Type</Label>
+            {!isSearchCriteriaFilled() && (
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                <p className="text-sm text-amber-800">
+                  Please fill in the search criteria above to select a product type.
+                </p>
+              </div>
+            )}
+            <RadioGroup 
+              value={formData.productType} 
+              onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              disabled={!isSearchCriteriaFilled()}
+            >
+              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isSearchCriteriaFilled() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+                <RadioGroupItem 
+                  value="full" 
+                  id="full-report" 
+                  disabled={!isSearchCriteriaFilled()}
+                />
+                <Label htmlFor="full-report" className={`font-medium flex-1 ${isSearchCriteriaFilled() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                  <div className="flex items-center gap-2">
+                    Full Report
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm text-xs">
+                          A Full Report includes everything in the Card Report—property appraiser data and current tax information—plus any additional municipal data such as open code enforcement cases, active or expired permits, and, where available, utility account status. This comprehensive option is designed for transactions or reviews requiring a deeper understanding of potential municipal obligations or compliance issues tied to the property. Please note, if a department is not listed on the report, there are no online resources for that particular county/municipality.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <p className="font-normal text-sm text-muted-foreground">Comprehensive search with complete details</p>
+                </Label>
+              </div>
+              
+              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isSearchCriteriaFilled() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+                <RadioGroupItem 
+                  value="card" 
+                  id="card-report" 
+                  disabled={!isSearchCriteriaFilled()}
+                />
+                <Label htmlFor="card-report" className={`font-medium flex-1 ${isSearchCriteriaFilled() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                  <div className="flex items-center gap-2">
+                    Card Report
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm text-xs">
+                          A Card Report includes the most recent property record (or "property card") as provided by the county property appraiser, along with current ad valorem tax information. This report is ideal for quick reference to ownership, assessed values, and tax status.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <p className="font-normal text-sm text-muted-foreground">Summary report with essential information</p>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
         </CardContent>
         
         <CardFooter>
