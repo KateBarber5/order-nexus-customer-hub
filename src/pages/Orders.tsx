@@ -4,6 +4,7 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Package, CheckCircle } from 'lucide-react';
 
 const Orders = () => {
@@ -59,45 +60,49 @@ const Orders = () => {
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
         {/* Cities and Counties List */}
         <div className="w-full lg:w-1/4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-medium mb-2 border-b pb-2">Available Cities and Counties</h2>
-            <p className="text-sm text-gray-600 mb-3">Select an option below to view the available services</p>
-            <div className="space-y-4">
-              {Object.entries(countiesWithMunicipalities).map(([county, municipalities]) => (
-                <div key={county} className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">{county}</label>
-                  <Select 
-                    value={selectedCounty === county ? selectedMunicipality || '' : ''} 
-                    onValueChange={(value) => {
-                      handleCountySelect(county);
-                      handleMunicipalitySelect(value);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select municipality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {municipalities.map((municipality) => (
-                        <SelectItem key={municipality} value={municipality}>
-                          {municipality}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+          <div className="bg-white rounded-lg shadow h-[800px] flex flex-col">
+            <div className="p-4 border-b">
+              <h2 className="text-lg font-medium mb-2">Available Cities and Counties</h2>
+              <p className="text-sm text-gray-600">Select an option below to view the available services</p>
             </div>
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {Object.entries(countiesWithMunicipalities).map(([county, municipalities]) => (
+                  <div key={county} className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">{county}</label>
+                    <Select 
+                      value={selectedCounty === county ? selectedMunicipality || '' : ''} 
+                      onValueChange={(value) => {
+                        handleCountySelect(county);
+                        handleMunicipalitySelect(value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select municipality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {municipalities.map((municipality) => (
+                          <SelectItem key={municipality} value={municipality}>
+                            {municipality}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         </div>
 
         {/* Available Services Section */}
         {selectedCounty && selectedMunicipality && (
           <div className="w-full lg:w-1/4">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white rounded-lg shadow p-4 h-[800px] flex flex-col">
               <h2 className="text-lg font-medium mb-3 border-b pb-2">
                 Available Services - {selectedMunicipality}, {selectedCounty}
               </h2>
-              <div className="max-h-[500px] overflow-y-auto">
+              <ScrollArea className="flex-1">
                 <ul className="space-y-2">
                   {availableServices.map((service, index) => (
                     <li 
@@ -109,7 +114,7 @@ const Orders = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </ScrollArea>
             </div>
           </div>
         )}
