@@ -31,12 +31,12 @@ const Orders = () => {
     'Wakulla': ['Sopchoppy', 'St. Marks']
   };
 
-  // Default services available for all municipalities
+  // Services with their available product types
   const availableServices = [
-    'Code',
-    'Permits',
-    'Liens',
-    'Utilities'
+    { name: 'Code', fullReport: true, cardReport: false },
+    { name: 'Permits', fullReport: true, cardReport: false },
+    { name: 'Liens', fullReport: true, cardReport: true },
+    { name: 'Utilities', fullReport: true, cardReport: false }
   ];
 
   const handleCountySelect = (county: string) => {
@@ -103,14 +103,32 @@ const Orders = () => {
                 Available Services - {selectedMunicipality}, {selectedCounty}
               </h2>
               <ScrollArea className="flex-1">
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {availableServices.map((service, index) => (
                     <li 
                       key={index} 
-                      className="flex items-center px-2 py-2 hover:bg-gray-50 rounded cursor-pointer text-sm border border-gray-200 transition-colors"
+                      className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
                     >
-                      <CheckCircle size={16} className="text-green-500 mr-2" />
-                      {service}
+                      <div className="flex items-center mb-2">
+                        <CheckCircle size={16} className="text-green-500 mr-2" />
+                        <span className="text-sm font-medium">{service.name}</span>
+                      </div>
+                      <div className="flex gap-2 ml-6">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          service.fullReport 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          Full Report
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          service.cardReport 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          Card Report
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
