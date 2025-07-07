@@ -11,6 +11,7 @@ import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Subscriptions from "./pages/Subscriptions";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/billing" element={<Billing />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

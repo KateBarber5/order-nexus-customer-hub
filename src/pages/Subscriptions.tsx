@@ -1,11 +1,13 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Phone } from 'lucide-react';
 
 const Subscriptions = () => {
+  const navigate = useNavigate();
+
   const plans = [
     {
       name: 'Per Order',
@@ -74,15 +76,20 @@ const Subscriptions = () => {
     }
   ];
 
-  const handleSubscriptionClick = (planName: string) => {
+  const handleSubscriptionClick = (planName: string, planPrice: string, planPeriod: string) => {
     if (planName === 'Organization') {
       // Handle contact sales
       console.log('Contact sales for Organization plan');
       // You could open a modal, redirect to contact form, etc.
     } else {
-      // Handle subscription selection
-      console.log(`Selected ${planName} plan`);
-      // Implement subscription logic here
+      // Navigate to billing page with plan details
+      navigate('/billing', {
+        state: {
+          planName,
+          planPrice,
+          planPeriod
+        }
+      });
     }
   };
 
@@ -142,7 +149,7 @@ const Subscriptions = () => {
                 <Button
                   variant={plan.buttonColor as any}
                   className="w-full"
-                  onClick={() => handleSubscriptionClick(plan.name)}
+                  onClick={() => handleSubscriptionClick(plan.name, plan.price, plan.period)}
                 >
                   {plan.isContactPlan && <Phone className="h-4 w-4 mr-2" />}
                   {plan.buttonText}
