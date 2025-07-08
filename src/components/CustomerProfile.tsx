@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { mockCustomer } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
@@ -39,13 +38,21 @@ const CustomerProfile = () => {
     status: 'Active'
   });
 
+  // Mock stored card data (last 4 digits)
+  const [storedCard] = useState({
+    last4: '4242',
+    brand: 'Visa',
+    expiryMonth: '12',
+    expiryYear: '2027'
+  });
+
   const [cardData, setCardData] = useState({
     cardNumber: '',
     expiryDate: '',
     cvv: '',
     cardholderName: ''
   });
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -301,7 +308,6 @@ const CustomerProfile = () => {
           </TabsContent>
 
           <TabsContent value="subscription" className="space-y-6">
-            {/* Subscription Overview */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -331,7 +337,6 @@ const CustomerProfile = () => {
               </CardContent>
             </Card>
 
-            {/* Orders Usage */}
             <Card>
               <CardHeader>
                 <CardTitle>Orders Usage</CardTitle>
@@ -370,6 +375,26 @@ const CustomerProfile = () => {
                 <CardDescription>Update your credit card information</CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Current Card Display */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="h-8 w-8 text-gray-600" />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {storedCard.brand} ending in {storedCard.last4}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Expires {storedCard.expiryMonth}/{storedCard.expiryYear}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-green-600 font-medium">
+                      Current Card
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleCardSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
