@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { mockCustomer } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
@@ -360,6 +361,9 @@ const CustomerProfile = () => {
                   </div>
                   <p className="text-sm text-gray-600">
                     You have {subscriptionData.ordersTotal - subscriptionData.ordersUsed} orders remaining this month
+                  </p>
+                  <p className="text-xs text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-200">
+                    Any orders exceeding the monthly limit will be charged the flat rate of $10 per order.
                   </p>
                 </div>
               </CardContent>
