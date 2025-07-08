@@ -1,11 +1,12 @@
-
 import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import AdminReportFilters from '@/components/AdminReportFilters';
 import AdminOrderTable from '@/components/AdminOrderTable';
 import AdminOrderAccordion from '@/components/AdminOrderAccordion';
+import AdminSubscriptionsGrid from '@/components/AdminSubscriptionsGrid';
 
 interface OrderData {
   id: string;
@@ -365,57 +366,70 @@ const Admin = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <h1 className="page-title">Admin</h1>
         
-        <AdminReportFilters
-          startDate={startDate}
-          endDate={endDate}
-          reportType={reportType}
-          selectedCustomer={selectedCustomer}
-          selectedCustomers={selectedCustomers}
-          selectedPaidStatus={selectedPaidStatus}
-          isGenerating={isGenerating}
-          uniqueCustomers={uniqueCustomers}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          onReportTypeChange={setReportType}
-          onCustomerChange={setSelectedCustomer}
-          onMultipleCustomersChange={setSelectedCustomers}
-          onPaidStatusChange={setSelectedPaidStatus}
-          onGenerateReport={handleGenerateReport}
-        />
+        <Tabs defaultValue="order-reporting" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="order-reporting">Order Reporting</TabsTrigger>
+            <TabsTrigger value="client-subscriptions">Client Subscriptions</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="order-reporting" className="space-y-6">
+            <AdminReportFilters
+              startDate={startDate}
+              endDate={endDate}
+              reportType={reportType}
+              selectedCustomer={selectedCustomer}
+              selectedCustomers={selectedCustomers}
+              selectedPaidStatus={selectedPaidStatus}
+              isGenerating={isGenerating}
+              uniqueCustomers={uniqueCustomers}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onReportTypeChange={setReportType}
+              onCustomerChange={setSelectedCustomer}
+              onMultipleCustomersChange={setSelectedCustomers}
+              onPaidStatusChange={setSelectedPaidStatus}
+              onGenerateReport={handleGenerateReport}
+            />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Order Reporting</CardTitle>
-            <CardDescription>
-              {startDate || endDate || selectedCustomer || selectedCustomers.length > 0 || selectedPaidStatus
-                ? `Filtered results for the selected criteria (${filteredData.length} records found)`
-                : `Sample data that would be included in the report (${filteredData.length} total records)`
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isCustomerOrderReport ? (
-              <AdminOrderTable 
-                data={filteredData as OrderData[]} 
-                onMarkOrderAsPaid={handleMarkOrderAsPaid}
-              />
-            ) : (
-              <AdminOrderAccordion 
-                customerOrdersGrouped={filteredCustomerOrdersGrouped}
-                onMarkOrdersAsPaid={handleMarkOrdersAsPaid}
-                onMarkOrderAsPaid={handleMarkOrderAsPaid}
-              />
-            )}
-            {filteredData.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No records found for the selected criteria.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Reporting</CardTitle>
+                <CardDescription>
+                  {startDate || endDate || selectedCustomer || selectedCustomers.length > 0 || selectedPaidStatus
+                    ? `Filtered results for the selected criteria (${filteredData.length} records found)`
+                    : `Sample data that would be included in the report (${filteredData.length} total records)`
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isCustomerOrderReport ? (
+                  <AdminOrderTable 
+                    data={filteredData as OrderData[]} 
+                    onMarkOrderAsPaid={handleMarkOrderAsPaid}
+                  />
+                ) : (
+                  <AdminOrderAccordion 
+                    customerOrdersGrouped={filteredCustomerOrdersGrouped}
+                    onMarkOrdersAsPaid={handleMarkOrdersAsPaid}
+                    onMarkOrderAsPaid={handleMarkOrderAsPaid}
+                  />
+                )}
+                {filteredData.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No records found for the selected criteria.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="client-subscriptions">
+            <AdminSubscriptionsGrid />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
