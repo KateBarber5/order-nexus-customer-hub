@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -6,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, CreditCard, Calendar, Lock } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ArrowLeft, CreditCard, Calendar, Lock, Building } from 'lucide-react';
 
 const Billing = () => {
   const location = useLocation();
@@ -17,11 +17,19 @@ const Billing = () => {
   const selectedPrice = location.state?.planPrice || 'Custom';
   const selectedPeriod = location.state?.planPeriod || 'pricing';
 
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [formData, setFormData] = useState({
+    // Credit Card fields
     cardNumber: '',
     expiryDate: '',
     cvv: '',
     cardholderName: '',
+    // ACH fields
+    accountNumber: '',
+    routingNumber: '',
+    accountType: 'checking',
+    accountHolderName: '',
+    // Shared billing address fields
     billingAddress: '',
     city: '',
     state: '',
@@ -39,7 +47,7 @@ const Billing = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle payment processing here
-    console.log('Processing payment for:', selectedPlan, formData);
+    console.log('Processing payment for:', selectedPlan, 'Method:', paymentMethod, formData);
     // Redirect to success page or dashboard
   };
 
@@ -88,65 +96,150 @@ const Billing = () => {
                 Payment Information
               </CardTitle>
               <CardDescription>
-                Enter your credit card details to complete your subscription
+                Choose your payment method and enter your details
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Credit Card Information */}
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardholderName">Cardholder Name</Label>
-                    <Input
-                      id="cardholderName"
-                      name="cardholderName"
-                      value={formData.cardholderName}
-                      onChange={handleInputChange}
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      placeholder="1234 5678 9012 3456"
-                      maxLength={19}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input
-                        id="expiryDate"
-                        name="expiryDate"
-                        value={formData.expiryDate}
-                        onChange={handleInputChange}
-                        placeholder="MM/YY"
-                        maxLength={5}
-                        required
-                      />
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Payment Method</Label>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="card" id="card" />
+                      <Label htmlFor="card" className="flex items-center cursor-pointer">
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Credit Card
+                      </Label>
                     </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        name="cvv"
-                        value={formData.cvv}
-                        onChange={handleInputChange}
-                        placeholder="123"
-                        maxLength={4}
-                        required
-                      />
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="ach" id="ach" />
+                      <Label htmlFor="ach" className="flex items-center cursor-pointer">
+                        <Building className="h-4 w-4 mr-2" />
+                        ACH Bank Transfer
+                      </Label>
                     </div>
-                  </div>
+                  </RadioGroup>
                 </div>
+
+                {/* Credit Card Information */}
+                {paymentMethod === 'card' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="cardholderName">Cardholder Name</Label>
+                      <Input
+                        id="cardholderName"
+                        name="cardholderName"
+                        value={formData.cardholderName}
+                        onChange={handleInputChange}
+                        placeholder="John Doe"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="cardNumber">Card Number</Label>
+                      <Input
+                        id="cardNumber"
+                        name="cardNumber"
+                        value={formData.cardNumber}
+                        onChange={handleInputChange}
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="expiryDate">Expiry Date</Label>
+                        <Input
+                          id="expiryDate"
+                          name="expiryDate"
+                          value={formData.expiryDate}
+                          onChange={handleInputChange}
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cvv">CVV</Label>
+                        <Input
+                          id="cvv"
+                          name="cvv"
+                          value={formData.cvv}
+                          onChange={handleInputChange}
+                          placeholder="123"
+                          maxLength={4}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ACH Information */}
+                {paymentMethod === 'ach' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                      <Input
+                        id="accountHolderName"
+                        name="accountHolderName"
+                        value={formData.accountHolderName}
+                        onChange={handleInputChange}
+                        placeholder="John Doe"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="routingNumber">Routing Number</Label>
+                      <Input
+                        id="routingNumber"
+                        name="routingNumber"
+                        value={formData.routingNumber}
+                        onChange={handleInputChange}
+                        placeholder="123456789"
+                        maxLength={9}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="accountNumber">Account Number</Label>
+                      <Input
+                        id="accountNumber"
+                        name="accountNumber"
+                        value={formData.accountNumber}
+                        onChange={handleInputChange}
+                        placeholder="1234567890"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Account Type</Label>
+                      <RadioGroup value={formData.accountType} onValueChange={(value) => setFormData(prev => ({ ...prev, accountType: value }))}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="checking" id="checking" />
+                          <Label htmlFor="checking" className="cursor-pointer">Checking</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="savings" id="savings" />
+                          <Label htmlFor="savings" className="cursor-pointer">Savings</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> ACH payments may take 3-5 business days to process. Your subscription will be activated once payment is confirmed.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Billing Address */}
                 <div className="pt-4 border-t">
