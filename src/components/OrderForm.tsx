@@ -42,6 +42,60 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [currentStep, setCurrentStep] = useState<'details' | 'review'>('details');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
+  const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
+
+  // Mock municipality data by county
+  const getMockMunicipalities = (county: string) => {
+    const municipalitiesByCounty: { [key: string]: string[] } = {
+      'Miami-Dade': ['Miami', 'Miami Beach', 'Coral Gables', 'Homestead', 'Aventura'],
+      'Broward': ['Fort Lauderdale', 'Hollywood', 'Pembroke Pines', 'Coral Springs', 'Miramar'],
+      'Palm Beach': ['West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington'],
+      'Orange': ['Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden'],
+      'Hillsborough': ['Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz'],
+      'Pinellas': ['St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin'],
+      'Duval': ['Jacksonville', 'Atlantic Beach', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin'],
+      'Lee': ['Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel'],
+      'Polk': ['Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales'],
+      'Brevard': ['Melbourne', 'Palm Bay', 'Titusville', 'Cocoa', 'Rockledge']
+    };
+
+    const normalizedCounty = county.toLowerCase().replace(/\s+/g, '');
+    const matchingKey = Object.keys(municipalitiesByCounty).find(key => 
+      key.toLowerCase().replace(/\s+/g, '').includes(normalizedCounty) ||
+      normalizedCounty.includes(key.toLowerCase().replace(/\s+/g, ''))
+    );
+
+    return matchingKey ? municipalitiesByCounty[matchingKey] : ['Generic City', 'Sample Municipality', 'Test Town'];
+  };
+
+  // Mock municipality lookup
+  const handleMunicipalityLookup = async () => {
+    if (!formData.parcelId || !formData.county) {
+      toast.error('Please enter both Parcel ID and County');
+      return;
+    }
+
+    setIsLookingUpMunicipality(true);
+    
+    // 10 second loading simulation
+    setTimeout(() => {
+      const municipalities = getMockMunicipalities(formData.county);
+      const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)];
+      
+      setFormData(prev => ({
+        ...prev,
+        identifiedMunicipality: randomMunicipality,
+        identifiedCounty: formData.county
+      }));
+      
+      if (onAddressLookup) {
+        onAddressLookup(randomMunicipality, formData.county);
+      }
+      
+      toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
+      setIsLookingUpMunicipality(false);
+    }, 10000);
+  };
 
   // Debounced address lookup
   useEffect(() => {
@@ -87,9 +141,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
-      return formData.address.trim() !== '';
+      return formData.address.trim() !== '' && formData.identifiedMunicipality;
     } else {
-      return formData.parcelId.trim() !== '' && formData.county.trim() !== '';
+      return formData.parcelId.trim() !== '' && formData.county.trim() !== '' && formData.identifiedMunicipality;
     }
   };
 
@@ -137,6 +191,10 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     } else {
       if (!formData.parcelId || !formData.county) {
         toast.error('Please enter both Parcel ID and County');
+        return;
+      }
+      if (!formData.identifiedMunicipality) {
+        toast.error('Please search for municipality first');
         return;
       }
     }
@@ -256,6 +314,15 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                     <div className="col-span-1 text-sm text-muted-foreground">County</div>
                     <div className="col-span-2 font-medium">{formData.county}</div>
                   </div>
+                  
+                  {formData.identifiedMunicipality && formData.identifiedCounty && (
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 text-sm text-muted-foreground">Identified Municipality</div>
+                      <div className="col-span-2 font-medium text-green-600">
+                        City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -352,31 +419,59 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               )}
             </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
-                <Input
-                  id="parcelId"
-                  name="parcelId"
-                  placeholder="Enter parcel identification number"
-                  value={formData.parcelId}
-                  onChange={handleChange}
-                  required
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
+                  <Input
+                    id="parcelId"
+                    name="parcelId"
+                    placeholder="Enter parcel identification number"
+                    value={formData.parcelId}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="county">County</Label>
+                  <Input
+                    id="county"
+                    name="county"
+                    placeholder="Enter county name"
+                    value={formData.county}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="county">County</Label>
-                <Input
-                  id="county"
-                  name="county"
-                  placeholder="Enter county name"
-                  value={formData.county}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="flex justify-center">
+                <Button 
+                  type="button" 
+                  onClick={handleMunicipalityLookup}
+                  disabled={!formData.parcelId || !formData.county || isLookingUpMunicipality}
+                  className="w-full md:w-auto"
+                >
+                  {isLookingUpMunicipality ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Searching Municipality...
+                    </>
+                  ) : (
+                    'Search Municipality'
+                  )}
+                </Button>
               </div>
-            </>
+              
+              {formData.identifiedMunicipality && formData.identifiedCounty && (
+                <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                  <p className="text-sm text-green-800">
+                    <strong>Municipality Identified:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           <div className="space-y-4">
@@ -384,7 +479,10 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
             {!isSearchCriteriaFilled() && (
               <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
                 <p className="text-sm text-amber-800">
-                  Please fill in the search criteria above to select a product type.
+                  {formData.searchType === 'address' 
+                    ? 'Please enter an address and wait for validation to select a product type.'
+                    : 'Please enter parcel information and search for municipality to select a product type.'
+                  }
                 </p>
               </div>
             )}
