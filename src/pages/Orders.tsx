@@ -80,7 +80,7 @@ const Orders = () => {
         {/* Available Services Section - Only show when municipality is identified */}
         {displayCounty && displayMunicipality && (
           <div className="w-full lg:w-1/3">
-            <div className="bg-white rounded-lg shadow p-4 h-[600px] flex flex-col">
+            <div className="bg-white rounded-lg shadow p-4 h-fit">
               <div className="border-b pb-3 mb-4">
                 <h2 className="text-lg font-medium mb-2">
                   Available Services - {displayMunicipality}, {displayCounty}
@@ -93,7 +93,7 @@ const Orders = () => {
                 </div>
                 
                 {/* Report Type Availability Cards */}
-                <div className="grid grid-cols-1 gap-3 mb-4">
+                <div className="grid grid-cols-1 gap-3">
                   {hasFullReport && (
                     <Card className="border-green-200 bg-green-50">
                       <CardContent className="p-4">
@@ -167,50 +167,6 @@ const Orders = () => {
                   )}
                 </div>
               </div>
-              
-              <ScrollArea className="flex-1">
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Data Service Availability by Report Type:</h3>
-                  {availableServices.map((service, index) => (
-                    <Card key={index} className="border border-gray-200">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <CheckCircle size={16} className="text-green-500 mr-2" />
-                            <span className="text-sm font-medium">{service.name}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2 text-xs">
-                          {service.fullReport ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300">
-                              <FileText size={10} className="mr-1" />
-                              Full Report
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-gray-400 border-gray-300">
-                              <FileText size={10} className="mr-1" />
-                              Full Report N/A
-                            </Badge>
-                          )}
-                          
-                          {service.cardReport ? (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-300">
-                              <CreditCard size={10} className="mr-1" />
-                              Card Report
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-gray-400 border-gray-300">
-                              <CreditCard size={10} className="mr-1" />
-                              Card Report N/A
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </ScrollArea>
             </div>
           </div>
         )}
