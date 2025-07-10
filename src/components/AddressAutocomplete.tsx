@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 
 interface AddressAutocompleteProps {
@@ -19,7 +19,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   className,
   isLoading
 }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -44,9 +44,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isGoogleLoaded && textareaRef.current && !autocompleteRef.current && window.google) {
+    if (isGoogleLoaded && inputRef.current && !autocompleteRef.current && window.google) {
       // Initialize autocomplete
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(textareaRef.current, {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' }, // Restrict to US addresses
         fields: ['formatted_address', 'address_components', 'geometry']
@@ -68,14 +68,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     };
   }, [isGoogleLoaded, onChange]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
   };
 
   return (
     <div className="relative">
-      <Textarea
-        ref={textareaRef}
+      <Input
+        ref={inputRef}
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
@@ -83,7 +83,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         disabled={!isGoogleLoaded}
       />
       {(isLoading || !isGoogleLoaded) && (
-        <div className="absolute right-3 top-3">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
         </div>
       )}
