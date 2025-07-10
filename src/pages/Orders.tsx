@@ -58,6 +58,11 @@ const Orders = () => {
         </Button>
       </div>
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
+        {/* Order Form */}
+        <div className={`w-full ${displayCounty && displayMunicipality ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-300`}>
+          <OrderForm onAddressLookup={handleAddressLookup} />
+        </div>
+        
         {/* Available Services Section - Only show when municipality is identified */}
         {displayCounty && displayMunicipality && (
           <div className="w-full lg:w-1/3">
@@ -103,11 +108,6 @@ const Orders = () => {
             </div>
           </div>
         )}
-        
-        {/* Order Form */}
-        <div className={`w-full ${displayCounty && displayMunicipality ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-300`}>
-          <OrderForm onAddressLookup={handleAddressLookup} />
-        </div>
       </div>
     </DashboardLayout>
   );
