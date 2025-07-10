@@ -28,7 +28,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       try {
         // Note: You'll need to set up a Google API key in your project
         const loader = new Loader({
-          apiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY',
+          apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
           version: 'weekly',
           libraries: ['places']
         });
@@ -44,9 +44,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isGoogleLoaded && textareaRef.current && !autocompleteRef.current) {
+    if (isGoogleLoaded && textareaRef.current && !autocompleteRef.current && window.google) {
       // Initialize autocomplete
-      autocompleteRef.current = new google.maps.places.Autocomplete(textareaRef.current, {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(textareaRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' }, // Restrict to US addresses
         fields: ['formatted_address', 'address_components', 'geometry']
@@ -62,8 +62,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
 
     return () => {
-      if (autocompleteRef.current) {
-        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
   }, [isGoogleLoaded, onChange]);
