@@ -53,6 +53,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
+  const [hasValidatedAddress, setHasValidatedAddress] = useState(false);
 
   // Define all municipalities that we service - this should match the logic in Orders.tsx
   const getServicedMunicipalities = () => {
@@ -140,9 +141,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     }, 10000);
   };
 
-  // Debounced address lookup
+  // Debounced address lookup - only run once
   useEffect(() => {
-    if (formData.searchType === 'address' && formData.address.length > 10) {
+    if (formData.searchType === 'address' && formData.address.length > 10 && !hasValidatedAddress) {
       const timeoutId = setTimeout(async () => {
         setIsLookingUpAddress(true);
         try {
@@ -153,6 +154,8 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               identifiedMunicipality: result.municipality,
               identifiedCounty: result.county
             }));
+            
+            setHasValidatedAddress(true);
             
             if (onAddressLookup) {
               onAddressLookup(result.municipality, result.county);
@@ -184,7 +187,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [formData.address, formData.searchType, onAddressLookup]);
+  }, [formData.address, formData.searchType, onAddressLookup, hasValidatedAddress]);
 
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
@@ -233,6 +236,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       identifiedMunicipality: undefined,
       identifiedCounty: undefined
     }));
+    
+    // Reset address validation flag
+    setHasValidatedAddress(false);
     
     if (onAddressLookup) {
       onAddressLookup('', '');
@@ -294,6 +300,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         });
         setCurrentStep('details');
         setIsSuccess(false);
+        setHasValidatedAddress(false);
         
         if (onAddressLookup) {
           onAddressLookup('', '');
