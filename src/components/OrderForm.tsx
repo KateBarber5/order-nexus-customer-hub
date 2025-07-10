@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,13 +6,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, HelpCircle } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Loader2 } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { lookupAddress } from '@/services/smartyStreetsService';
 
 interface OrderFormData {
   address: string;
@@ -21,9 +21,15 @@ interface OrderFormData {
   county: string;
   productType: 'full' | 'card';
   searchType: 'address' | 'parcel';
+  identifiedMunicipality?: string;
+  identifiedCounty?: string;
 }
 
-const OrderForm = () => {
+interface OrderFormProps {
+  onAddressLookup?: (municipality: string, county: string) => void;
+}
+
+const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [formData, setFormData] = useState<OrderFormData>({
     address: '',
     parcelId: '',
@@ -35,8 +41,50 @@ const OrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<'details' | 'review'>('details');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
 
-  // Check if search criteria is filled
+  // Debounced address lookup
+  useEffect(() => {
+    if (formData.searchType === 'address' && formData.address.length > 10) {
+      const timeoutId = setTimeout(async () => {
+        setIsLookingUpAddress(true);
+        try {
+          const result = await lookupAddress(formData.address);
+          if (result && result.isValid) {
+            setFormData(prev => ({
+              ...prev,
+              identifiedMunicipality: result.municipality,
+              identifiedCounty: result.county
+            }));
+            
+            if (onAddressLookup) {
+              onAddressLookup(result.municipality, result.county);
+            }
+            
+            toast.success(`Address validated: ${result.municipality}, ${result.county}`);
+          } else {
+            setFormData(prev => ({
+              ...prev,
+              identifiedMunicipality: undefined,
+              identifiedCounty: undefined
+            }));
+            
+            if (onAddressLookup) {
+              onAddressLookup('', '');
+            }
+          }
+        } catch (error) {
+          console.error('Address lookup failed:', error);
+          toast.error('Failed to validate address');
+        } finally {
+          setIsLookingUpAddress(false);
+        }
+      }, 1500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [formData.address, formData.searchType, onAddressLookup]);
+
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
       return formData.address.trim() !== '';
@@ -69,8 +117,14 @@ const OrderForm = () => {
       // Clear search fields when switching types
       address: '',
       parcelId: '',
-      county: ''
+      county: '',
+      identifiedMunicipality: undefined,
+      identifiedCounty: undefined
     }));
+    
+    if (onAddressLookup) {
+      onAddressLookup('', '');
+    }
   };
 
   const handleProceedToReview = () => {
@@ -119,6 +173,10 @@ const OrderForm = () => {
         });
         setCurrentStep('details');
         setIsSuccess(false);
+        
+        if (onAddressLookup) {
+          onAddressLookup('', '');
+        }
       }, 5000);
     }, 1500);
   };
@@ -172,10 +230,21 @@ const OrderForm = () => {
               </div>
               
               {formData.searchType === 'address' ? (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
-                  <div className="col-span-2 font-medium">{formData.address}</div>
-                </div>
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-1 text-sm text-muted-foreground">Property Address</div>
+                    <div className="col-span-2 font-medium">{formData.address}</div>
+                  </div>
+                  
+                  {formData.identifiedMunicipality && formData.identifiedCounty && (
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 text-sm text-muted-foreground">Identified Location</div>
+                      <div className="col-span-2 font-medium text-green-600">
+                        {formData.identifiedMunicipality}, {formData.identifiedCounty}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
                   <div className="grid grid-cols-3 gap-4">
@@ -257,15 +326,30 @@ const OrderForm = () => {
           {formData.searchType === 'address' ? (
             <div className="space-y-2">
               <Label htmlFor="address">Property Address</Label>
-              <Textarea
-                id="address"
-                name="address"
-                placeholder="Enter complete property address"
-                value={formData.address}
-                onChange={handleChange}
-                required
-                className="min-h-[100px]"
-              />
+              <div className="relative">
+                <Textarea
+                  id="address"
+                  name="address"
+                  placeholder="Enter complete property address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  className="min-h-[100px]"
+                />
+                {isLookingUpAddress && (
+                  <div className="absolute right-3 top-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
+              
+              {formData.identifiedMunicipality && formData.identifiedCounty && (
+                <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                  <p className="text-sm text-green-800">
+                    <strong>Address Validated:</strong> {formData.identifiedMunicipality}, {formData.identifiedCounty}
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <>

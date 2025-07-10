@@ -1,14 +1,16 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Package, CheckCircle } from 'lucide-react';
+import { Package, CheckCircle, MapPin } from 'lucide-react';
 
 const Orders = () => {
   const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
   const [selectedMunicipality, setSelectedMunicipality] = useState<string | null>(null);
+  const [identifiedLocation, setIdentifiedLocation] = useState<{municipality: string, county: string} | null>(null);
   
   // Counties and their municipalities
   const countiesWithMunicipalities = {
@@ -52,8 +54,6 @@ const Orders = () => {
     ];
   };
 
-  const availableServices = getAvailableServices(selectedMunicipality);
-
   const handleCountySelect = (county: string) => {
     setSelectedCounty(county);
     setSelectedMunicipality(null); // Reset municipality when county changes
@@ -62,6 +62,23 @@ const Orders = () => {
   const handleMunicipalitySelect = (municipality: string) => {
     setSelectedMunicipality(municipality);
   };
+
+  const handleAddressLookup = (municipality: string, county: string) => {
+    if (municipality && county) {
+      setIdentifiedLocation({ municipality, county });
+      setSelectedCounty(county);
+      setSelectedMunicipality(municipality);
+    } else {
+      setIdentifiedLocation(null);
+      setSelectedCounty(null);
+      setSelectedMunicipality(null);
+    }
+  };
+
+  // Use identified location or manually selected location
+  const displayMunicipality = identifiedLocation?.municipality || selectedMunicipality;
+  const displayCounty = identifiedLocation?.county || selectedCounty;
+  const availableServices = getAvailableServices(displayMunicipality);
 
   // Check if any service supports Full Report or Card Report
   const hasFullReport = availableServices.some(service => service.fullReport);
@@ -83,6 +100,14 @@ const Orders = () => {
             <div className="p-4 border-b">
               <h2 className="text-lg font-medium mb-2">Available Cities and Counties</h2>
               <p className="text-sm text-gray-600">Select an option below to view the available services</p>
+              {identifiedLocation && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <div className="flex items-center gap-2 text-sm text-green-800">
+                    <MapPin size={16} />
+                    <span className="font-medium">Auto-identified from address</span>
+                  </div>
+                </div>
+              )}
             </div>
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
@@ -94,6 +119,7 @@ const Orders = () => {
                       onValueChange={(value) => {
                         handleCountySelect(county);
                         handleMunicipalitySelect(value);
+                        setIdentifiedLocation(null); // Clear auto-identification when manually selecting
                       }}
                     >
                       <SelectTrigger className="w-full">
@@ -115,13 +141,21 @@ const Orders = () => {
         </div>
 
         {/* Available Services Section */}
-        {selectedCounty && selectedMunicipality && (
+        {displayCounty && displayMunicipality && (
           <div className="w-full lg:w-1/4">
             <div className="bg-white rounded-lg shadow p-4 h-[600px] flex flex-col">
               <div className="border-b pb-3 mb-4">
                 <h2 className="text-lg font-medium mb-2">
-                  Available Services - {selectedMunicipality}, {selectedCounty}
+                  Available Services - {displayMunicipality}, {displayCounty}
                 </h2>
+                {identifiedLocation && (
+                  <div className="mb-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <MapPin size={12} className="mr-1" />
+                      Auto-identified
+                    </span>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   {hasFullReport && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -155,8 +189,8 @@ const Orders = () => {
         )}
         
         {/* Order Form */}
-        <div className={`w-full ${selectedCounty && selectedMunicipality ? 'lg:w-1/2' : 'lg:w-3/4'} transition-all duration-300`}>
-          <OrderForm />
+        <div className={`w-full ${displayCounty && displayMunicipality ? 'lg:w-1/2' : 'lg:w-3/4'} transition-all duration-300`}>
+          <OrderForm onAddressLookup={handleAddressLookup} />
         </div>
       </div>
     </DashboardLayout>
