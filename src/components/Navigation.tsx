@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings, CreditCard } from 'lucide-react';
+import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings, CreditCard, Map } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,7 @@ const Navigation = () => {
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { name: 'Place New Order', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
     { name: 'Order History', path: '/history', icon: <History className="h-5 w-5" /> },
+    { name: 'Florida Map', path: '/florida-map', icon: <Map className="h-5 w-5" /> },
     { name: 'Subscriptions', path: '/subscriptions', icon: <CreditCard className="h-5 w-5" /> },
     { name: 'Admin', path: '/admin', icon: <Settings className="h-5 w-5" /> },
   ];

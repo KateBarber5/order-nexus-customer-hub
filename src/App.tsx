@@ -15,6 +15,7 @@ import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
+import FloridaMap from "./pages/FloridaMap";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/billing" element={<Billing />} />
+          <Route path="/florida-map" element={<FloridaMap />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
