@@ -240,7 +240,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-1 text-sm text-muted-foreground">Identified Location</div>
                       <div className="col-span-2 font-medium text-green-600">
-                        {formData.identifiedMunicipality}, {formData.identifiedCounty}
+                        City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
                       </div>
                     </div>
                   )}
@@ -346,7 +346,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               {formData.identifiedMunicipality && formData.identifiedCounty && (
                 <div className="bg-green-50 border border-green-200 rounded-md p-3">
                   <p className="text-sm text-green-800">
-                    <strong>Address Validated:</strong> {formData.identifiedMunicipality}, {formData.identifiedCounty}
+                    <strong>Address Validated:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
                   </p>
                 </div>
               )}
