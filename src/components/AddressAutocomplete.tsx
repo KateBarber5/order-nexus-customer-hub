@@ -26,9 +26,17 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   useEffect(() => {
     const initializeGooglePlaces = async () => {
       try {
-        // Note: You'll need to set up a Google API key in your project
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        
+        // Only try to load Google Maps if we have a valid API key
+        if (!apiKey || apiKey.trim() === '') {
+          console.log('Google Maps API key not found, using basic input instead');
+          setIsGoogleLoaded(false);
+          return;
+        }
+
         const loader = new Loader({
-          apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+          apiKey: apiKey,
           version: 'weekly',
           libraries: ['places']
         });
@@ -37,6 +45,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         setIsGoogleLoaded(true);
       } catch (error) {
         console.error('Failed to load Google Places API:', error);
+        setIsGoogleLoaded(false);
       }
     };
 
@@ -80,16 +89,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         onChange={handleChange}
         placeholder={placeholder}
         className={className}
-        disabled={!isGoogleLoaded}
       />
-      {(isLoading || !isGoogleLoaded) && (
+      {isLoading && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        </div>
-      )}
-      {!isGoogleLoaded && (
-        <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center rounded-md">
-          <span className="text-sm text-gray-600">Loading address autocomplete...</span>
         </div>
       )}
     </div>
