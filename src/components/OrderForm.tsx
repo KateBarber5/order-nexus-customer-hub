@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -14,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { lookupAddress } from '@/services/smartyStreetsService';
+import AddressAutocomplete from './AddressAutocomplete';
 
 interface OrderFormData {
   address: string;
@@ -145,6 +145,13 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     } else {
       return formData.parcelId.trim() !== '' && formData.county.trim() !== '' && formData.identifiedMunicipality;
     }
+  };
+
+  const handleAddressChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      address: value
+    }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -393,22 +400,13 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
           {formData.searchType === 'address' ? (
             <div className="space-y-2">
               <Label htmlFor="address">Property Address</Label>
-              <div className="relative">
-                <Textarea
-                  id="address"
-                  name="address"
-                  placeholder="Enter complete property address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  className="min-h-[100px]"
-                />
-                {isLookingUpAddress && (
-                  <div className="absolute right-3 top-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  </div>
-                )}
-              </div>
+              <AddressAutocomplete
+                value={formData.address}
+                onChange={handleAddressChange}
+                placeholder="Enter complete property address"
+                className="min-h-[100px]"
+                isLoading={isLookingUpAddress}
+              />
               
               {formData.identifiedMunicipality && formData.identifiedCounty && (
                 <div className="bg-green-50 border border-green-200 rounded-md p-3">
