@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import OrderForm from '@/components/OrderForm';
@@ -33,6 +32,30 @@ const Orders = () => {
     ];
   };
 
+  // Check if municipality is serviced - this should match the logic in OrderForm.tsx
+  const isMunicipalityServiced = (municipality: string) => {
+    const servicedMunicipalities = [
+      // Full service municipalities (both Full Report and Card Report)
+      'Miami', 'Coral Gables', 'Homestead', 'Aventura',
+      'Fort Lauderdale', 'Pembroke Pines', 'Coral Springs', 'Miramar',
+      'West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington',
+      'Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden',
+      'Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz',
+      'St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin',
+      'Jacksonville', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin',
+      'Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel',
+      'Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales',
+      'Melbourne', 'Rockledge',
+      
+      // Card Report only municipalities
+      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
+      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
+      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
+      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
+    ];
+    return servicedMunicipalities.includes(municipality);
+  };
+
   const handleAddressLookup = (municipality: string, county: string) => {
     if (municipality && county) {
       setIdentifiedLocation({ municipality, county });
@@ -62,6 +85,9 @@ const Orders = () => {
     { name: 'Tax Records', icon: Receipt }
   ];
 
+  // Check if we should show the Available Services section
+  const shouldShowAvailableServices = displayCounty && displayMunicipality && isMunicipalityServiced(displayMunicipality);
+
   return (
     <DashboardLayout>
       <div className="flex flex-wrap items-center justify-between mb-4">
@@ -73,12 +99,12 @@ const Orders = () => {
       </div>
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
         {/* Order Form */}
-        <div className={`w-full ${displayCounty && displayMunicipality ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-300`}>
+        <div className={`w-full ${shouldShowAvailableServices ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-300`}>
           <OrderForm onAddressLookup={handleAddressLookup} />
         </div>
         
-        {/* Available Services Section - Only show when municipality is identified */}
-        {displayCounty && displayMunicipality && (
+        {/* Available Services Section - Only show when municipality is identified AND serviced */}
+        {shouldShowAvailableServices && (
           <div className="w-full lg:w-1/3">
             <div className="bg-white rounded-lg shadow p-4 h-fit">
               <div className="border-b pb-3 mb-4">

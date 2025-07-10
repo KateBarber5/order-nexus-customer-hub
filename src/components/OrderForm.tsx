@@ -12,6 +12,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { lookupAddress } from '@/services/smartyStreetsService';
 import AddressAutocomplete from './AddressAutocomplete';
 
@@ -43,6 +52,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
+  const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
 
   // Define all municipalities that we service - this should match the logic in Orders.tsx
   const getServicedMunicipalities = () => {
@@ -124,7 +134,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       if (isMunicipalityServiced(randomMunicipality)) {
         toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
       } else {
-        toast.info(`Municipality identified: ${randomMunicipality}, ${formData.county} County - Service not available`);
+        setShowUnsupportedDialog(true);
       }
       setIsLookingUpMunicipality(false);
     }, 10000);
@@ -151,7 +161,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
             if (isMunicipalityServiced(result.municipality)) {
               toast.success(`Address validated: ${result.municipality}, ${result.county}`);
             } else {
-              toast.info(`Address validated: ${result.municipality}, ${result.county} - Service not available`);
+              setShowUnsupportedDialog(true);
             }
           } else {
             setFormData(prev => ({
@@ -402,235 +412,226 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Request Municipal Lien Search</CardTitle>
-        <CardDescription>
-          Fill out the form below to request a new municipal lien search
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={(e) => { e.preventDefault(); handleProceedToReview(); }}>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Search By</Label>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> For properties with units or apartments, please enter the Parcel ID and County to ensure accurate results.
-              </p>
-            </div>
-            
-            <RadioGroup 
-              value={formData.searchType} 
-              onValueChange={(value) => handleSearchTypeChange(value as 'address' | 'parcel')}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
-                <RadioGroupItem value="address" id="address-search" />
-                <Label htmlFor="address-search" className="font-medium cursor-pointer flex-1">
-                  <div>Property Address</div>
-                  <p className="font-normal text-sm text-muted-foreground">Search using the full property address</p>
-                </Label>
-              </div>
-              
-              <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
-                <RadioGroupItem value="parcel" id="parcel-search" />
-                <Label htmlFor="parcel-search" className="font-medium cursor-pointer flex-1">
-                  <div>Parcel ID & County</div>
-                  <p className="font-normal text-sm text-muted-foreground">Search using parcel identification and county</p>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
-          {formData.searchType === 'address' ? (
-            <div className="space-y-2">
-              <Label htmlFor="address">Property Address</Label>
-              <AddressAutocomplete
-                value={formData.address}
-                onChange={handleAddressChange}
-                placeholder="Enter complete property address"
-                className="min-h-[100px]"
-                isLoading={isLookingUpAddress}
-              />
-              
-              {formData.identifiedMunicipality && formData.identifiedCounty && (
-                <div className={`border rounded-md p-3 ${
-                  isMunicipalityServiced(formData.identifiedMunicipality) 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-red-50 border-red-200'
-                }`}>
-                  <p className={`text-sm ${
-                    isMunicipalityServiced(formData.identifiedMunicipality) 
-                      ? 'text-green-800' 
-                      : 'text-red-800'
-                  }`}>
-                    <strong>Address Validated:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
-                    {!isMunicipalityServiced(formData.identifiedMunicipality) && (
-                      <>
-                        <br />
-                        <strong>We're sorry, we do not currently offer any products in this municipality.</strong>
-                      </>
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Request Municipal Lien Search</CardTitle>
+          <CardDescription>
+            Fill out the form below to request a new municipal lien search
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={(e) => { e.preventDefault(); handleProceedToReview(); }}>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
-                  <Input
-                    id="parcelId"
-                    name="parcelId"
-                    placeholder="Enter parcel identification number"
-                    value={formData.parcelId}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="county">County</Label>
-                  <Input
-                    id="county"
-                    name="county"
-                    placeholder="Enter county name"
-                    value={formData.county}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-center">
-                <Button 
-                  type="button" 
-                  onClick={handleMunicipalityLookup}
-                  disabled={!formData.parcelId || !formData.county || isLookingUpMunicipality}
-                  className="w-full md:w-auto"
-                >
-                  {isLookingUpMunicipality ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Searching Municipality...
-                    </>
-                  ) : (
-                    'Search Municipality'
-                  )}
-                </Button>
-              </div>
-              
-              {formData.identifiedMunicipality && formData.identifiedCounty && (
-                <div className={`border rounded-md p-3 ${
-                  isMunicipalityServiced(formData.identifiedMunicipality) 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-red-50 border-red-200'
-                }`}>
-                  <p className={`text-sm ${
-                    isMunicipalityServiced(formData.identifiedMunicipality) 
-                      ? 'text-green-800' 
-                      : 'text-red-800'
-                  }`}>
-                    <strong>Municipality Identified:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
-                    {!isMunicipalityServiced(formData.identifiedMunicipality) && (
-                      <>
-                        <br />
-                        <strong>We're sorry, we do not currently offer any products in this municipality.</strong>
-                      </>
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Product Type</Label>
-            {!isProductSelectionAllowed() && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-                <p className="text-sm text-amber-800">
-                  {!isSearchCriteriaFilled() ? (
-                    formData.searchType === 'address' 
-                      ? 'Please enter an address and wait for validation to select a product type.'
-                      : 'Please enter parcel information and search for municipality to select a product type.'
-                  ) : (
-                    formData.identifiedMunicipality && !isMunicipalityServiced(formData.identifiedMunicipality)
-                      ? 'Product selection is not available for this municipality.'
-                      : 'Please complete the search criteria above.'
-                  )}
+              <Label className="text-base font-medium">Search By</Label>
+            
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> For properties with units or apartments, please enter the Parcel ID and County to ensure accurate results.
                 </p>
               </div>
+            
+              <RadioGroup 
+                value={formData.searchType} 
+                onValueChange={(value) => handleSearchTypeChange(value as 'address' | 'parcel')}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
+                  <RadioGroupItem value="address" id="address-search" />
+                  <Label htmlFor="address-search" className="font-medium cursor-pointer flex-1">
+                    <div>Property Address</div>
+                    <p className="font-normal text-sm text-muted-foreground">Search using the full property address</p>
+                  </Label>
+                </div>
+              
+                <div className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary">
+                  <RadioGroupItem value="parcel" id="parcel-search" />
+                  <Label htmlFor="parcel-search" className="font-medium cursor-pointer flex-1">
+                    <div>Parcel ID & County</div>
+                    <p className="font-normal text-sm text-muted-foreground">Search using parcel identification and county</p>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          
+            {formData.searchType === 'address' ? (
+              <div className="space-y-2">
+                <Label htmlFor="address">Property Address</Label>
+                <AddressAutocomplete
+                  value={formData.address}
+                  onChange={handleAddressChange}
+                  placeholder="Enter complete property address"
+                  className="min-h-[100px]"
+                  isLoading={isLookingUpAddress}
+                />
+                
+                {formData.identifiedMunicipality && formData.identifiedCounty && isMunicipalityServiced(formData.identifiedMunicipality) && (
+                  <div className="border rounded-md p-3 bg-green-50 border-green-200">
+                    <p className="text-sm text-green-800">
+                      <strong>Address Validated:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="parcelId">Parcel ID / Folio Number</Label>
+                    <Input
+                      id="parcelId"
+                      name="parcelId"
+                      placeholder="Enter parcel identification number"
+                      value={formData.parcelId}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                
+                  <div className="space-y-2">
+                    <Label htmlFor="county">County</Label>
+                    <Input
+                      id="county"
+                      name="county"
+                      placeholder="Enter county name"
+                      value={formData.county}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+              
+                <div className="flex justify-center">
+                  <Button 
+                    type="button" 
+                    onClick={handleMunicipalityLookup}
+                    disabled={!formData.parcelId || !formData.county || isLookingUpMunicipality}
+                    className="w-full md:w-auto"
+                  >
+                    {isLookingUpMunicipality ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Searching Municipality...
+                      </>
+                    ) : (
+                      'Search Municipality'
+                    )}
+                  </Button>
+                </div>
+                
+                {formData.identifiedMunicipality && formData.identifiedCounty && isMunicipalityServiced(formData.identifiedMunicipality) && (
+                  <div className="border rounded-md p-3 bg-green-50 border-green-200">
+                    <p className="text-sm text-green-800">
+                      <strong>Municipality Identified:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
-            <RadioGroup 
-              value={formData.productType} 
-              onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Product Type</Label>
+              {!isProductSelectionAllowed() && (
+                <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                  <p className="text-sm text-amber-800">
+                    {!isSearchCriteriaFilled() ? (
+                      formData.searchType === 'address' 
+                        ? 'Please enter an address and wait for validation to select a product type.'
+                        : 'Please enter parcel information and search for municipality to select a product type.'
+                    ) : (
+                      formData.identifiedMunicipality && !isMunicipalityServiced(formData.identifiedMunicipality)
+                        ? 'Product selection is not available for this municipality.'
+                        : 'Please complete the search criteria above.'
+                    )}
+                  </p>
+                </div>
+              )}
+              <RadioGroup 
+                value={formData.productType} 
+                onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                disabled={!isProductSelectionAllowed()}
+              >
+                <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+                  <RadioGroupItem 
+                    value="full" 
+                    id="full-report" 
+                    disabled={!isProductSelectionAllowed()}
+                  />
+                  <Label htmlFor="full-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                    <div className="flex items-center gap-2">
+                      Full Report
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle size={16} className="text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm text-xs">
+                            A Full Report includes everything in the Card Report—property appraiser data and current tax information—plus any additional municipal data such as open code enforcement cases, active or expired permits, and, where available, utility account status. This comprehensive option is designed for transactions or reviews requiring a deeper understanding of potential municipal obligations or compliance issues tied to the property. Please note, if a department is not listed on the report, there are no online resources for that particular county/municipality.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <p className="font-normal text-sm text-muted-foreground">Comprehensive search with complete details</p>
+                  </Label>
+                </div>
+              
+                <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+                  <RadioGroupItem 
+                    value="card" 
+                    id="card-report" 
+                    disabled={!isProductSelectionAllowed()}
+                  />
+                  <Label htmlFor="card-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                    <div className="flex items-center gap-2">
+                      Card Report
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle size={16} className="text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm text-xs">
+                            A Card Report includes the most recent property record (or "property card") as provided by the county property appraiser, along with current ad valorem tax information. This report is ideal for quick reference to ownership, assessed values, and tax status.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <p className="font-normal text-sm text-muted-foreground">Summary report with essential information</p>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </CardContent>
+          
+          <CardFooter>
+            <Button 
+              type="submit" 
+              className="w-full md:w-auto"
               disabled={!isProductSelectionAllowed()}
             >
-              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
-                <RadioGroupItem 
-                  value="full" 
-                  id="full-report" 
-                  disabled={!isProductSelectionAllowed()}
-                />
-                <Label htmlFor="full-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                  <div className="flex items-center gap-2">
-                    Full Report
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-sm text-xs">
-                          A Full Report includes everything in the Card Report—property appraiser data and current tax information—plus any additional municipal data such as open code enforcement cases, active or expired permits, and, where available, utility account status. This comprehensive option is designed for transactions or reviews requiring a deeper understanding of potential municipal obligations or compliance issues tied to the property. Please note, if a department is not listed on the report, there are no online resources for that particular county/municipality.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <p className="font-normal text-sm text-muted-foreground">Comprehensive search with complete details</p>
-                </Label>
-              </div>
-              
-              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
-                <RadioGroupItem 
-                  value="card" 
-                  id="card-report" 
-                  disabled={!isProductSelectionAllowed()}
-                />
-                <Label htmlFor="card-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                  <div className="flex items-center gap-2">
-                    Card Report
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle size={16} className="text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-sm text-xs">
-                          A Card Report includes the most recent property record (or "property card") as provided by the county property appraiser, along with current ad valorem tax information. This report is ideal for quick reference to ownership, assessed values, and tax status.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <p className="font-normal text-sm text-muted-foreground">Summary report with essential information</p>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </CardContent>
-        
-        <CardFooter>
-          <Button 
-            type="submit" 
-            className="w-full md:w-auto"
-            disabled={!isProductSelectionAllowed()}
-          >
-            Review Order
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+              Review Order
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+
+      <AlertDialog open={showUnsupportedDialog} onOpenChange={setShowUnsupportedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Service Not Available</AlertDialogTitle>
+            <AlertDialogDescription>
+              We're sorry, we do not currently offer any products in {formData.identifiedMunicipality}, {formData.identifiedCounty} County. 
+              Please try a different address or contact us for more information about future service availability.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowUnsupportedDialog(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
