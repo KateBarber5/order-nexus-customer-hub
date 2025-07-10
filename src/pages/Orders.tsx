@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, CheckCircle, MapPin, FileText, CreditCard } from 'lucide-react';
+import { Package, CheckCircle, MapPin, FileText, CreditCard, Building, Shield, Gavel, FileSpreadsheet, Receipt } from 'lucide-react';
 
 const Orders = () => {
   const [identifiedLocation, setIdentifiedLocation] = useState<{municipality: string, county: string} | null>(null);
@@ -50,6 +50,18 @@ const Orders = () => {
   const hasFullReport = availableServices.some(service => service.fullReport);
   const hasCardReport = availableServices.some(service => service.cardReport);
 
+  // Define data services for each product type
+  const fullReportServices = [
+    { name: 'Code', icon: Building },
+    { name: 'Permits', icon: Shield },
+    { name: 'Liens', icon: Gavel }
+  ];
+
+  const cardReportServices = [
+    { name: 'Property Appraiser Sheet', icon: FileSpreadsheet },
+    { name: 'Tax Records', icon: Receipt }
+  ];
+
   return (
     <DashboardLayout>
       <div className="flex flex-wrap items-center justify-between mb-4">
@@ -81,19 +93,33 @@ const Orders = () => {
                 </div>
                 
                 {/* Report Type Availability Cards */}
-                <div className="grid grid-cols-1 gap-2 mb-3">
+                <div className="grid grid-cols-1 gap-3 mb-4">
                   {hasFullReport && (
                     <Card className="border-green-200 bg-green-50">
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-2">
-                          <FileText size={16} className="text-green-600" />
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FileText size={20} className="text-green-600" />
                           <div className="flex-1">
-                            <div className="font-medium text-green-800">Full Report Available</div>
+                            <div className="font-semibold text-green-800 text-base">Full Report Available</div>
                             <div className="text-xs text-green-600">Complete detailed report with all available data</div>
                           </div>
                           <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-300">
                             Premium
                           </Badge>
+                        </div>
+                        
+                        {/* Full Report Data Services */}
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-green-700 mb-2">Included Data Services:</div>
+                          {fullReportServices.map((service, index) => {
+                            const IconComponent = service.icon;
+                            return (
+                              <div key={index} className="flex items-center gap-2 text-xs text-green-700">
+                                <IconComponent size={12} />
+                                <span>{service.name}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
@@ -101,16 +127,30 @@ const Orders = () => {
                   
                   {hasCardReport && (
                     <Card className="border-blue-200 bg-blue-50">
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-2">
-                          <CreditCard size={16} className="text-blue-600" />
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CreditCard size={20} className="text-blue-600" />
                           <div className="flex-1">
-                            <div className="font-medium text-blue-800">Card Report Available</div>
+                            <div className="font-semibold text-blue-800 text-base">Card Report Available</div>
                             <div className="text-xs text-blue-600">Summarized report with key information</div>
                           </div>
                           <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-300">
                             Basic
                           </Badge>
+                        </div>
+                        
+                        {/* Card Report Data Services */}
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-blue-700 mb-2">Included Data Services:</div>
+                          {cardReportServices.map((service, index) => {
+                            const IconComponent = service.icon;
+                            return (
+                              <div key={index} className="flex items-center gap-2 text-xs text-blue-700">
+                                <IconComponent size={12} />
+                                <span>{service.name}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
@@ -130,7 +170,7 @@ const Orders = () => {
               
               <ScrollArea className="flex-1">
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Available Data Services:</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Data Service Availability by Report Type:</h3>
                   {availableServices.map((service, index) => (
                     <Card key={index} className="border border-gray-200">
                       <CardContent className="p-3">
