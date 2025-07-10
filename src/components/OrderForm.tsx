@@ -44,6 +44,35 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
 
+  // Define all municipalities that we service - this should match the logic in Orders.tsx
+  const getServicedMunicipalities = () => {
+    return [
+      // Full service municipalities (both Full Report and Card Report)
+      'Miami', 'Coral Gables', 'Homestead', 'Aventura',
+      'Fort Lauderdale', 'Pembroke Pines', 'Coral Springs', 'Miramar',
+      'West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington',
+      'Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden',
+      'Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz',
+      'St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin',
+      'Jacksonville', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin',
+      'Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel',
+      'Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales',
+      'Melbourne', 'Rockledge',
+      
+      // Card Report only municipalities
+      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
+      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
+      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
+      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
+    ];
+  };
+
+  // Check if municipality is serviced
+  const isMunicipalityServiced = (municipality: string) => {
+    const servicedMunicipalities = getServicedMunicipalities();
+    return servicedMunicipalities.includes(municipality);
+  };
+
   // Mock municipality data by county
   const getMockMunicipalities = (county: string) => {
     const municipalitiesByCounty: { [key: string]: string[] } = {
@@ -92,7 +121,11 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         onAddressLookup(randomMunicipality, formData.county);
       }
       
-      toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
+      if (isMunicipalityServiced(randomMunicipality)) {
+        toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
+      } else {
+        toast.info(`Municipality identified: ${randomMunicipality}, ${formData.county} County - Service not available`);
+      }
       setIsLookingUpMunicipality(false);
     }, 10000);
   };
@@ -115,7 +148,11 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               onAddressLookup(result.municipality, result.county);
             }
             
-            toast.success(`Address validated: ${result.municipality}, ${result.county}`);
+            if (isMunicipalityServiced(result.municipality)) {
+              toast.success(`Address validated: ${result.municipality}, ${result.county}`);
+            } else {
+              toast.info(`Address validated: ${result.municipality}, ${result.county} - Service not available`);
+            }
           } else {
             setFormData(prev => ({
               ...prev,
@@ -147,6 +184,10 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     }
   };
 
+  const isProductSelectionAllowed = () => {
+    return isSearchCriteriaFilled() && formData.identifiedMunicipality && isMunicipalityServiced(formData.identifiedMunicipality);
+  };
+
   const handleAddressChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -163,7 +204,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   };
 
   const handleProductTypeChange = (value: 'full' | 'card') => {
-    if (isSearchCriteriaFilled()) {
+    if (isProductSelectionAllowed()) {
       setFormData(prev => ({
         ...prev,
         productType: value
@@ -204,6 +245,11 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         toast.error('Please search for municipality first');
         return;
       }
+    }
+    
+    if (!isProductSelectionAllowed()) {
+      toast.error('Products are not available for this municipality');
+      return;
     }
     
     setCurrentStep('review');
@@ -409,9 +455,23 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               />
               
               {formData.identifiedMunicipality && formData.identifiedCounty && (
-                <div className="bg-green-50 border border-green-200 rounded-md p-3">
-                  <p className="text-sm text-green-800">
+                <div className={`border rounded-md p-3 ${
+                  isMunicipalityServiced(formData.identifiedMunicipality) 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <p className={`text-sm ${
+                    isMunicipalityServiced(formData.identifiedMunicipality) 
+                      ? 'text-green-800' 
+                      : 'text-red-800'
+                  }`}>
                     <strong>Address Validated:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                    {!isMunicipalityServiced(formData.identifiedMunicipality) && (
+                      <>
+                        <br />
+                        <strong>We're sorry, we do not currently offer any products in this municipality.</strong>
+                      </>
+                    )}
                   </p>
                 </div>
               )}
@@ -463,9 +523,23 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               </div>
               
               {formData.identifiedMunicipality && formData.identifiedCounty && (
-                <div className="bg-green-50 border border-green-200 rounded-md p-3">
-                  <p className="text-sm text-green-800">
+                <div className={`border rounded-md p-3 ${
+                  isMunicipalityServiced(formData.identifiedMunicipality) 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <p className={`text-sm ${
+                    isMunicipalityServiced(formData.identifiedMunicipality) 
+                      ? 'text-green-800' 
+                      : 'text-red-800'
+                  }`}>
                     <strong>Municipality Identified:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                    {!isMunicipalityServiced(formData.identifiedMunicipality) && (
+                      <>
+                        <br />
+                        <strong>We're sorry, we do not currently offer any products in this municipality.</strong>
+                      </>
+                    )}
                   </p>
                 </div>
               )}
@@ -474,13 +548,18 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
           <div className="space-y-4">
             <Label className="text-base font-medium">Product Type</Label>
-            {!isSearchCriteriaFilled() && (
+            {!isProductSelectionAllowed() && (
               <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
                 <p className="text-sm text-amber-800">
-                  {formData.searchType === 'address' 
-                    ? 'Please enter an address and wait for validation to select a product type.'
-                    : 'Please enter parcel information and search for municipality to select a product type.'
-                  }
+                  {!isSearchCriteriaFilled() ? (
+                    formData.searchType === 'address' 
+                      ? 'Please enter an address and wait for validation to select a product type.'
+                      : 'Please enter parcel information and search for municipality to select a product type.'
+                  ) : (
+                    formData.identifiedMunicipality && !isMunicipalityServiced(formData.identifiedMunicipality)
+                      ? 'Product selection is not available for this municipality.'
+                      : 'Please complete the search criteria above.'
+                  )}
                 </p>
               </div>
             )}
@@ -488,15 +567,15 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               value={formData.productType} 
               onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              disabled={!isSearchCriteriaFilled()}
+              disabled={!isProductSelectionAllowed()}
             >
-              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isSearchCriteriaFilled() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
                 <RadioGroupItem 
                   value="full" 
                   id="full-report" 
-                  disabled={!isSearchCriteriaFilled()}
+                  disabled={!isProductSelectionAllowed()}
                 />
-                <Label htmlFor="full-report" className={`font-medium flex-1 ${isSearchCriteriaFilled() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                <Label htmlFor="full-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                   <div className="flex items-center gap-2">
                     Full Report
                     <TooltipProvider>
@@ -514,13 +593,13 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                 </Label>
               </div>
               
-              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isSearchCriteriaFilled() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+              <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
                 <RadioGroupItem 
                   value="card" 
                   id="card-report" 
-                  disabled={!isSearchCriteriaFilled()}
+                  disabled={!isProductSelectionAllowed()}
                 />
-                <Label htmlFor="card-report" className={`font-medium flex-1 ${isSearchCriteriaFilled() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                <Label htmlFor="card-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                   <div className="flex items-center gap-2">
                     Card Report
                     <TooltipProvider>
@@ -545,6 +624,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
           <Button 
             type="submit" 
             className="w-full md:w-auto"
+            disabled={!isProductSelectionAllowed()}
           >
             Review Order
           </Button>
