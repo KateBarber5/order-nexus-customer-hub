@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,8 +8,10 @@ import AddCountyDialog from '@/components/counties-cities/AddCountyDialog';
 import AddMunicipalityDialog from '@/components/counties-cities/AddMunicipalityDialog';
 import { County, Municipality } from '@/types/counties-cities';
 
-// Mock data - in a real app this would come from your API
-const initialCounties: County[] = [
+const STORAGE_KEY = 'counties-cities-data';
+
+// Initial mock data - only used if no data exists in localStorage
+const getInitialCounties = (): County[] => [
   {
     id: '1',
     name: 'Miami-Dade County',
@@ -50,10 +51,33 @@ const initialCounties: County[] = [
 ];
 
 const CountiesCities = () => {
-  const [counties, setCounties] = useState<County[]>(initialCounties);
+  const [counties, setCounties] = useState<County[]>([]);
   const [showAddCounty, setShowAddCounty] = useState(false);
   const [showAddMunicipality, setShowAddMunicipality] = useState(false);
   const [selectedCountyId, setSelectedCountyId] = useState<string>('');
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setCounties(parsedData);
+      } catch (error) {
+        console.error('Error parsing saved counties data:', error);
+        setCounties(getInitialCounties());
+      }
+    } else {
+      setCounties(getInitialCounties());
+    }
+  }, []);
+
+  // Save data to localStorage whenever counties state changes
+  useEffect(() => {
+    if (counties.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(counties));
+    }
+  }, [counties]);
 
   const handleAddCounty = (name: string) => {
     const newCounty: County = {
