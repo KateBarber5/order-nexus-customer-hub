@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, HelpCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Loader2, AlertTriangle } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -38,6 +38,21 @@ interface OrderFormProps {
   onAddressLookup?: (municipality: string, county: string) => void;
 }
 
+// Mock municipality data with alert messages
+const getMunicipalityAlertMessage = (municipality: string): string => {
+  const alertMessages: { [key: string]: string } = {
+    'Homestead': 'Limited services available due to system maintenance. Please allow additional processing time.',
+    'Hollywood': 'This municipality requires additional verification. Orders may take 2-3 extra business days.',
+    'Fort White': 'Please note: Some records may be incomplete due to recent system updates.',
+    'Century': 'Service temporarily limited. Only basic property records are available.',
+    'Miami Beach': 'High volume area - please allow extra processing time during peak season.',
+    'Port Richey': 'Municipal records are currently being digitized. Some historical data may be unavailable.',
+    'Lake Placid': 'Limited weekend processing. Orders submitted after Friday may be delayed until Monday.'
+  };
+  
+  return alertMessages[municipality] || '';
+};
+
 const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [formData, setFormData] = useState<OrderFormData>({
     address: '',
@@ -53,6 +68,8 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
+  const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [municipalityAlert, setMunicipalityAlert] = useState('');
   const [hasValidatedAddress, setHasValidatedAddress] = useState(false);
 
   // Define all municipalities that we service - this should match the logic in Orders.tsx
@@ -108,6 +125,15 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     return matchingKey ? municipalitiesByCounty[matchingKey] : ['Generic City', 'Sample Municipality', 'Test Town'];
   };
 
+  // Check for alert message and show dialog
+  const checkAndShowMunicipalityAlert = (municipality: string) => {
+    const alertMessage = getMunicipalityAlertMessage(municipality);
+    if (alertMessage) {
+      setMunicipalityAlert(alertMessage);
+      setShowAlertDialog(true);
+    }
+  };
+
   // Mock municipality lookup
   const handleMunicipalityLookup = async () => {
     if (!formData.parcelId || !formData.county) {
@@ -134,6 +160,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       
       if (isMunicipalityServiced(randomMunicipality)) {
         toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
+        checkAndShowMunicipalityAlert(randomMunicipality);
       } else {
         setShowUnsupportedDialog(true);
       }
@@ -163,6 +190,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
             
             if (isMunicipalityServiced(result.municipality)) {
               toast.success(`Address validated: ${result.municipality}, ${result.county}`);
+              checkAndShowMunicipalityAlert(result.municipality);
             } else {
               setShowUnsupportedDialog(true);
             }
@@ -621,6 +649,26 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
           </CardFooter>
         </form>
       </Card>
+
+      {/* Municipality Alert Dialog */}
+      <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Municipality Notice
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {municipalityAlert}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAlertDialog(false)}>
+              I Understand
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showUnsupportedDialog} onOpenChange={setShowUnsupportedDialog}>
         <AlertDialogContent>
