@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { mockOrders } from '@/data/mockData';
+import { fetchOrders, Order } from '@/services/orderService';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -36,16 +36,41 @@ const OrderHistory = () => {
   const queryParams = new URLSearchParams(location.search);
   const statusFromUrl = queryParams.get('status');
   
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState(statusFromUrl || 'all');
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
+  // Fetch orders from API on component mount
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        console.log('OrderHistory: Starting to fetch orders...');
+        const fetchedOrders = await fetchOrders();
+        console.log('OrderHistory: Successfully fetched orders:', fetchedOrders);
+        setOrders(fetchedOrders);
+        setError(null);
+      } catch (err) {
+        console.error('OrderHistory: Error loading orders:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load orders. Please try again later.';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
+
   // Update status filter when URL changes
   useEffect(() => {
     if (statusFromUrl) {
@@ -53,7 +78,7 @@ const OrderHistory = () => {
     }
   }, [statusFromUrl]);
   
-  const filteredOrders = mockOrders.filter(order => {
+  const filteredOrders = orders.filter(order => {
     // Text search filter
     const matchesSearch = 
       order.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,7 +137,24 @@ const OrderHistory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      {/* Error state */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className="text-center py-12 border rounded-lg bg-gray-50">
+          <p className="text-muted-foreground">Loading orders...</p>
+        </div>
+      )}
+
+      {/* Filters and table - only show when not loading */}
+      {!loading && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div className="md:col-span-1">
           <Label htmlFor="search" className="mb-2 block text-sm font-medium">Search</Label>
           <div className="relative">
@@ -138,11 +180,11 @@ const OrderHistory = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="shipped">In Research</SelectItem>
               <SelectItem value="delivered">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="canceled">Canceled</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -341,8 +383,10 @@ const OrderHistory = () => {
         </>
       )}
 
-      {selectedOrder && (
-        <OrderDetails order={selectedOrder} onClose={handleCloseModal} />
+          {selectedOrder && (
+            <OrderDetails order={selectedOrder} onClose={handleCloseModal} />
+          )}
+        </>
       )}
     </div>
   );

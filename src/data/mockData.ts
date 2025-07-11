@@ -4,7 +4,7 @@ export interface Order {
   address: string;
   parcelId: string;
   county: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled';
   createdAt: string;
   updatedAt: string;
 }

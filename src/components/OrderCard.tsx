@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from './StatusBadge';
-import { Order } from '@/data/mockData';
+import { Order } from '@/services/orderService';
 import { FileSearch, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 

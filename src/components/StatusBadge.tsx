@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface StatusBadgeProps {
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed';
   className?: string;
 }
 
@@ -19,7 +19,9 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'delivered':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
+      case 'canceled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'failed':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -36,8 +38,10 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
         return 'In Research';
       case 'delivered':
         return 'Completed';
-      case 'cancelled':
-        return 'Cancelled';
+      case 'canceled':
+        return 'Canceled';
+      case 'failed':
+        return 'Failed';
       default:
         return status;
     }
