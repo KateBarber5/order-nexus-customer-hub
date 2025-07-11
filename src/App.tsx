@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,7 +16,6 @@ import NotFound from "./pages/NotFound";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import FloridaMap from "./pages/FloridaMap";
-import CountiesCities from "./pages/CountiesCities";
 
 const queryClient = new QueryClient();
 
@@ -37,7 +37,6 @@ const App = () => (
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/billing" element={<Billing />} />
           <Route path="/florida-map" element={<FloridaMap />} />
-          <Route path="/counties-cities" element={<CountiesCities />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
