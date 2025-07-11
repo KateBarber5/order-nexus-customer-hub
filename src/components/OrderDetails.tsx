@@ -19,8 +19,8 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
   const [askQuestionOpen, setAskQuestionOpen] = useState(false);
 
   const handleDownload = (docName: string) => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082/GovmetricAILocal/';
-    const downloadUrl = `${apiBaseUrl}aHTTPDownloadFile?iContentType=application%2Fpdf&iFileName=${encodeURIComponent(docName)}&iFilePath=Orders%5C${encodeURIComponent(docName)}`;
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://order.govmetric.ai';
+    const downloadUrl = `${apiBaseUrl}/aHTTPDownloadFile?iContentType=application%2Fpdf&iFileName=${encodeURIComponent(docName)}&iFilePath=Orders%5C${encodeURIComponent(docName)}`;
     
     // Create a temporary anchor element to trigger the download
     const link = document.createElement('a');

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:8082/GovmetricAILocal',
+        target: process.env.VITE_API_BASE_URL || 'https://order.govmetric.ai',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
