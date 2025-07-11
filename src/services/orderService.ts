@@ -63,7 +63,7 @@ const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
 export const fetchOrders = async (): Promise<Order[]> => {
   try {
     console.log('Fetching orders from API...');
-    const response = await fetch('/api/GovmetricAILocal/GovMetricAPI/GetOrders', {
+    const response = await fetch('/api/GovMetricAPI/GetOrders', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
