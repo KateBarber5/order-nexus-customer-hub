@@ -6,8 +6,14 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  const env = loadEnv(mode, process.cwd(), '');
+  // Set the third parameter to 'VITE_' to load only VITE_ prefixed env vars.
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  
+  console.log('Environment variables loaded:', {
+    mode,
+    VITE_API_BASE_URL: env.VITE_API_BASE_URL,
+    cwd: process.cwd()
+  });
   
   return {
     server: {

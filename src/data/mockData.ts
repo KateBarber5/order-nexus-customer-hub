@@ -4,7 +4,7 @@ export interface Order {
   address: string;
   parcelId: string;
   county: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed';
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +56,15 @@ export const mockOrders: Order[] = [
     status: 'pending',
     createdAt: '2023-03-10T15:20:00Z',
     updatedAt: '2023-03-10T15:20:00Z'
+  },
+  {
+    id: '5',
+    address: '654 Maple St, Testville, CA',
+    parcelId: 'P99999',
+    county: 'Ventura',
+    status: 'failed',
+    createdAt: '2023-03-12T10:30:00Z',
+    updatedAt: '2023-03-12T10:30:00Z'
   }
 ];
 

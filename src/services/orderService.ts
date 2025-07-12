@@ -1,3 +1,5 @@
+
+
 // API Response interface matching the provided JSON structure
 export interface GovOrderResponse {
   GovOrderID: string;
@@ -16,6 +18,7 @@ export interface GovOrderResponse {
   GovOrderReportType: string;
   GovOrderReportBlobFile: string;
   GovOrderReportFileName: string;
+  GovOrderReportFilePath: string;
   GovOrderRequestID: string;
   GovOrderCreateDateTime: string;
   GovOrderLogs: string;
@@ -63,6 +66,8 @@ const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
 export const fetchOrders = async (): Promise<Order[]> => {
   try {
     console.log('Fetching orders from API...');
+    console.log('API URL:', '/api/GovMetricAPI/GetOrders');
+    
     const response = await fetch('/api/GovMetricAPI/GetOrders', {
       method: 'GET',
       headers: {
@@ -72,12 +77,29 @@ export const fetchOrders = async (): Promise<Order[]> => {
     });
     
     console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
+    console.log('Response status text:', response.statusText);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Response error text:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
     }
     
     const data: GovOrderResponse[] = await response.json();
