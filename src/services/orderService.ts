@@ -36,6 +36,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   reportFileName?: string;
+  reportFilePath?: string;
 }
 
 // Transform API response to frontend format
@@ -58,7 +59,8 @@ const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
     status: statusMapping[govOrder.GovOrderStatus] || 'pending',
     createdAt: govOrder.GovOrderCreateDateTime,
     updatedAt: govOrder.GovOrderCreateDateTime,
-    reportFileName: govOrder.GovOrderReportFileName
+    reportFileName: govOrder.GovOrderReportFileName,
+    reportFilePath: govOrder.GovOrderReportFilePath
   };
 };
 
