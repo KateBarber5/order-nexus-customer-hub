@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface StatusBadgeProps {
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address';
   className?: string;
 }
 
@@ -22,6 +22,14 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
       case 'canceled':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'failed':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'failed-pa-site-down':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'failed-code-site-down':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'failed-permit-site-down':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'failed-bad-address':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -42,6 +50,14 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
         return 'Canceled';
       case 'failed':
         return 'Failed';
+      case 'failed-pa-site-down':
+        return 'Failed - PA Site Down';
+      case 'failed-code-site-down':
+        return 'Failed - Code Site Down';
+      case 'failed-permit-site-down':
+        return 'Failed - Permit Site Down';
+      case 'failed-bad-address':
+        return 'Failed - Bad Address';
       default:
         return status;
     }

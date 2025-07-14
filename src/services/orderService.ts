@@ -31,7 +31,7 @@ export interface Order {
   address: string;
   parcelId: string;
   county: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address';
   createdAt: string;
   updatedAt: string;
   reportFileName?: string;
@@ -41,13 +41,17 @@ export interface Order {
 // Transform API response to frontend format
 const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
   // Map status from API format to frontend format
-  const statusMapping: Record<string, 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed'> = {
+  const statusMapping: Record<string, 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address'> = {
     'PENDING': 'pending',
     'PROCESSING': 'processing',
     'IN_RESEARCH': 'shipped', // Maps to "In Research" which is "shipped" in the UI
     'COMPLETED': 'delivered',
     'CANCELED': 'canceled',
-    'FAILED': 'failed'
+    'FAILED': 'failed',
+    'FAILED_PA_SITE_DOWN': 'failed-pa-site-down',
+    'FAILED_CODE_SITE_DOWN': 'failed-code-site-down',
+    'FAILED_PERMIT_SITE_DOWN': 'failed-permit-site-down',
+    'FAILED_BAD_ADDRESS': 'failed-bad-address'
   };
 
   return {
@@ -112,6 +116,42 @@ const generateMockOrders = (): Order[] => {
       status: "canceled",
       createdAt: "2024-01-11T13:00:00Z",
       updatedAt: "2024-01-11T14:30:00Z"
+    },
+    {
+      id: "GOV006",
+      address: "987 Pine Ave, St. Petersburg, FL 33701",
+      parcelId: "13-9876-000-0045",
+      county: "Pinellas",
+      status: "failed-pa-site-down",
+      createdAt: "2024-01-10T14:00:00Z",
+      updatedAt: "2024-01-10T14:30:00Z"
+    },
+    {
+      id: "GOV007",
+      address: "555 Oak St, Clearwater, FL 33755",
+      parcelId: "14-5555-000-0067",
+      county: "Pinellas",
+      status: "failed-code-site-down",
+      createdAt: "2024-01-09T12:00:00Z",
+      updatedAt: "2024-01-09T12:45:00Z"
+    },
+    {
+      id: "GOV008",
+      address: "777 Maple Dr, Gainesville, FL 32601",
+      parcelId: "15-7777-000-0123",
+      county: "Alachua",
+      status: "failed-permit-site-down",
+      createdAt: "2024-01-08T10:30:00Z",
+      updatedAt: "2024-01-08T11:00:00Z"
+    },
+    {
+      id: "GOV009",
+      address: "999 Invalid Address, Unknown, FL 99999",
+      parcelId: "99-9999-000-0000",
+      county: "Unknown",
+      status: "failed-bad-address",
+      createdAt: "2024-01-07T15:15:00Z",
+      updatedAt: "2024-01-07T15:45:00Z"
     }
   ];
 };
