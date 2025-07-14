@@ -201,10 +201,7 @@ const ExampleReport = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
-                  <p className="text-green-600 font-semibold">No Active Liens Found</p>
-                </div>
+                <p className="text-green-600 font-semibold">No Active Liens Found</p>
               </CardContent>
             </Card>
 
