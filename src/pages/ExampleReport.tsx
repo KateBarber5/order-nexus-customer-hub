@@ -102,7 +102,7 @@ const ExampleReport = () => {
             
             {/* Municipalities Searched Section */}
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   Municipalities Searched
@@ -152,7 +152,7 @@ const ExampleReport = () => {
 
             {/* Taxes Section */}
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
                   Property Taxes
@@ -178,7 +178,7 @@ const ExampleReport = () => {
 
             {/* Code Violations Section */}
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
                   <X className="h-4 w-4 text-red-600" />
                   Code Violations
@@ -212,7 +212,7 @@ const ExampleReport = () => {
 
             {/* Permits Section */}
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
                   Building Permits
@@ -246,7 +246,7 @@ const ExampleReport = () => {
 
             {/* Liens Section */}
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
                   Municipal Liens
