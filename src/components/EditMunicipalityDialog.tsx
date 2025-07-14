@@ -75,25 +75,28 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
   });
 
   useEffect(() => {
-    form.reset({
-      name: municipality.name,
-      countyId: municipality.countyId,
-      status: municipality.status,
-      alertMessage: municipality.alertMessage || '',
-      services: municipality.availableServices,
-      reportTypes: municipality.reportTypes,
-    });
-  }, [municipality, form]);
+    if (open) {
+      form.reset({
+        name: municipality.name,
+        countyId: municipality.countyId,
+        status: municipality.status,
+        alertMessage: municipality.alertMessage || '',
+        services: municipality.availableServices,
+        reportTypes: municipality.reportTypes,
+      });
+    }
+  }, [municipality, form, open]);
 
   const watchedStatus = form.watch('status');
   const watchedReportTypes = form.watch('reportTypes');
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log('Form submitted with values:', values);
+    
     const municipalityData: Omit<Municipality, 'id'> = {
       name: values.name,
       countyId: values.countyId,
       status: values.status,
-      ...(values.status === 'unavailable' && values.alertMessage ? { alertMessage: values.alertMessage } : {}),
       availableServices: {
         code: values.services.code,
         permits: values.services.permits,
@@ -102,7 +105,13 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
       },
       reportTypes: values.reportTypes as ReportType[],
     };
+
+    // Only include alertMessage if status is unavailable and message exists
+    if (values.status === 'unavailable' && values.alertMessage && values.alertMessage.trim()) {
+      municipalityData.alertMessage = values.alertMessage;
+    }
     
+    console.log('Municipality data being sent:', municipalityData);
     onEdit(municipalityData);
     onOpenChange(false);
   };
@@ -147,7 +156,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>County</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a county" />
@@ -172,7 +181,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
