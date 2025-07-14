@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Download, Check } from 'lucide-react';
+import { Download, Check, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -102,7 +101,10 @@ const ExampleReport = () => {
             {/* Taxes Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2]">Property Taxes</CardTitle>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  Property Taxes
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -125,7 +127,10 @@ const ExampleReport = () => {
             {/* Code Violations Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2]">Code Violations</CardTitle>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
+                  <X className="h-5 w-5 text-red-600" />
+                  Code Violations
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -156,7 +161,10 @@ const ExampleReport = () => {
             {/* Permits Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2]">Building Permits</CardTitle>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  Building Permits
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -187,7 +195,10 @@ const ExampleReport = () => {
             {/* Liens Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2]">Municipal Liens</CardTitle>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  Municipal Liens
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
