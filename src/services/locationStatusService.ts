@@ -11,13 +11,15 @@ const mockCountiesData = [
     id: '1',
     name: 'Miami-Dade',
     state: 'FL',
-    status: 'active' as const,
+    status: 'active' as 'active' | 'inactive' | 'unavailable',
+    alertMessage: undefined,
     municipalities: [
       {
         id: '1',
         name: 'Miami',
         countyId: '1',
-        status: 'active' as const,
+        status: 'active' as 'active' | 'inactive' | 'unavailable',
+        alertMessage: undefined,
         availableServices: { code: true, permits: true, liens: true, utilities: true },
         reportTypes: ['full', 'card'] as const
       },
@@ -25,7 +27,7 @@ const mockCountiesData = [
         id: '2',
         name: 'Miami Beach',
         countyId: '1',
-        status: 'unavailable' as const,
+        status: 'unavailable' as 'active' | 'inactive' | 'unavailable',
         alertMessage: 'System maintenance in progress',
         availableServices: { code: false, permits: false, liens: true, utilities: false },
         reportTypes: ['card'] as const
@@ -36,13 +38,15 @@ const mockCountiesData = [
     id: '2',
     name: 'Broward',
     state: 'FL',
-    status: 'active' as const,
+    status: 'active' as 'active' | 'inactive' | 'unavailable',
+    alertMessage: undefined,
     municipalities: [
       {
         id: '3',
         name: 'Fort Lauderdale',
         countyId: '2',
-        status: 'active' as const,
+        status: 'active' as 'active' | 'inactive' | 'unavailable',
+        alertMessage: undefined,
         availableServices: { code: true, permits: true, liens: true, utilities: true },
         reportTypes: ['full', 'card'] as const
       }
