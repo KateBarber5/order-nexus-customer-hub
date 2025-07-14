@@ -104,8 +104,8 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  Municipalities Searched
+                  <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                  <span>Municipalities Searched</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -154,8 +154,8 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Property Taxes
+                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <span>Property Taxes</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -180,8 +180,8 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <X className="h-4 w-4 text-red-600" />
-                  Code Violations
+                  <X className="h-4 w-4 text-red-600 flex-shrink-0" />
+                  <span>Code Violations</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -214,8 +214,8 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Building Permits
+                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <span>Building Permits</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -248,8 +248,8 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Municipal Liens
+                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <span>Municipal Liens</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
