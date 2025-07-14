@@ -17,6 +17,7 @@ import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import FloridaMap from "./pages/FloridaMap";
 import ExampleReport from "./pages/ExampleReport";
+import CountiesCitiesConfig from "./pages/CountiesCitiesConfig";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/counties-cities" element={<CountiesCitiesConfig />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/billing" element={<Billing />} />
           <Route path="/florida-map" element={<FloridaMap />} />
