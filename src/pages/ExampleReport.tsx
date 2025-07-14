@@ -69,6 +69,7 @@ const ExampleReport = () => {
               <div>
                 <h1 className="text-2xl font-bold">GovMetric</h1>
                 <p className="text-blue-100">Municipal Lien Search Report</p>
+                <p className="text-blue-100 text-sm mt-1">Report Date: {new Date().toLocaleDateString()}</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-semibold">Order #: GOV001</p>
@@ -216,11 +217,7 @@ const ExampleReport = () => {
               <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-gray-600">
                 <span>📧 support@govmetric.com</span>
                 <span>🌐 www.govmetric.com</span>
-                <span>📞 (555) 123-4567</span>
               </div>
-              <p className="text-xs text-gray-500 mt-4">
-                Report generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
-              </p>
             </div>
           </div>
 
