@@ -651,15 +651,13 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       <AlertDialog open={showLocationAlert} onOpenChange={setShowLocationAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Location Currently Unavailable</AlertDialogTitle>
+            <AlertDialogTitle>Municipality Site Maintenance</AlertDialogTitle>
             <AlertDialogDescription>
               {locationAlertMessage}
               <br /><br />
               <strong>Location:</strong> {formData.identifiedMunicipality}, {formData.identifiedCounty} County
               <br />
               <strong>Type:</strong> {locationAlertType === 'county' ? 'County' : 'Municipality'} unavailable
-              <br /><br />
-              Orders cannot be placed for this location at this time. Please try a different address or contact us for more information.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
