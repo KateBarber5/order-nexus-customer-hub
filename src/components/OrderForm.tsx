@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { lookupAddress } from '@/services/smartyStreetsService';
+import { checkLocationStatus } from '@/services/locationStatusService';
 import AddressAutocomplete from './AddressAutocomplete';
 
 interface OrderFormData {
@@ -54,8 +55,10 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
   const [hasValidatedAddress, setHasValidatedAddress] = useState(false);
+  const [showLocationAlert, setShowLocationAlert] = useState(false);
+  const [locationAlertMessage, setLocationAlertMessage] = useState('');
+  const [locationAlertType, setLocationAlertType] = useState<'county' | 'municipality'>('municipality');
 
-  // Define all municipalities that we service - this should match the logic in Orders.tsx
   const getServicedMunicipalities = () => {
     return [
       // Full service municipalities (both Full Report and Card Report)
@@ -78,13 +81,11 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     ];
   };
 
-  // Check if municipality is serviced
   const isMunicipalityServiced = (municipality: string) => {
     const servicedMunicipalities = getServicedMunicipalities();
     return servicedMunicipalities.includes(municipality);
   };
 
-  // Mock municipality data by county
   const getMockMunicipalities = (county: string) => {
     const municipalitiesByCounty: { [key: string]: string[] } = {
       'Miami-Dade': ['Miami', 'Miami Beach', 'Coral Gables', 'Homestead', 'Aventura'],
@@ -108,7 +109,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     return matchingKey ? municipalitiesByCounty[matchingKey] : ['Generic City', 'Sample Municipality', 'Test Town'];
   };
 
-  // Mock municipality lookup
   const handleMunicipalityLookup = async () => {
     if (!formData.parcelId || !formData.county) {
       toast.error('Please enter both Parcel ID and County');
@@ -117,7 +117,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
     setIsLookingUpMunicipality(true);
     
-    // 10 second loading simulation
     setTimeout(() => {
       const municipalities = getMockMunicipalities(formData.county);
       const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)];
@@ -132,7 +131,12 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         onAddressLookup(randomMunicipality, formData.county);
       }
       
-      if (isMunicipalityServiced(randomMunicipality)) {
+      const locationStatus = checkLocationStatus(randomMunicipality, formData.county);
+      if (!locationStatus.isAvailable) {
+        setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
+        setLocationAlertType(locationStatus.type);
+        setShowLocationAlert(true);
+      } else if (isMunicipalityServiced(randomMunicipality)) {
         toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
       } else {
         setShowUnsupportedDialog(true);
@@ -141,7 +145,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     }, 10000);
   };
 
-  // Debounced address lookup - only run once
   useEffect(() => {
     if (formData.searchType === 'address' && formData.address.length > 10 && !hasValidatedAddress) {
       const timeoutId = setTimeout(async () => {
@@ -161,7 +164,12 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
               onAddressLookup(result.municipality, result.county);
             }
             
-            if (isMunicipalityServiced(result.municipality)) {
+            const locationStatus = checkLocationStatus(result.municipality, result.county);
+            if (!locationStatus.isAvailable) {
+              setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
+              setLocationAlertType(locationStatus.type);
+              setShowLocationAlert(true);
+            } else if (isMunicipalityServiced(result.municipality)) {
               toast.success(`Address validated: ${result.municipality}, ${result.county}`);
             } else {
               setShowUnsupportedDialog(true);
@@ -198,7 +206,16 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   };
 
   const isProductSelectionAllowed = () => {
-    return isSearchCriteriaFilled() && formData.identifiedMunicipality && isMunicipalityServiced(formData.identifiedMunicipality);
+    if (!isSearchCriteriaFilled() || !formData.identifiedMunicipality) {
+      return false;
+    }
+    
+    const locationStatus = checkLocationStatus(formData.identifiedMunicipality, formData.identifiedCounty || '');
+    if (!locationStatus.isAvailable) {
+      return false;
+    }
+    
+    return isMunicipalityServiced(formData.identifiedMunicipality);
   };
 
   const handleAddressChange = (value: string) => {
@@ -229,7 +246,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     setFormData(prev => ({
       ...prev,
       searchType: value,
-      // Clear search fields when switching types
       address: '',
       parcelId: '',
       county: '',
@@ -237,7 +253,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       identifiedCounty: undefined
     }));
     
-    // Reset address validation flag
     setHasValidatedAddress(false);
     
     if (onAddressLookup) {
@@ -246,7 +261,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   };
 
   const handleProceedToReview = () => {
-    // Validation based on search type
     if (formData.searchType === 'address') {
       if (!formData.address) {
         toast.error('Please enter a property address');
@@ -279,18 +293,14 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     setTimeout(() => {
       console.log('Order submitted:', formData);
       setIsSubmitting(false);
       setIsSuccess(true);
       
-      // Show success message
       toast.success('Municipal lien search order submitted successfully!');
       
-      // Reset after 3 seconds
       setTimeout(() => {
-        // Reset form
         setFormData({
           address: '',
           parcelId: '',
@@ -309,7 +319,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     }, 1500);
   };
 
-  // Display success message screen
   if (isSuccess) {
     return (
       <Card className="text-center py-10">
@@ -633,6 +642,28 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowUnsupportedDialog(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showLocationAlert} onOpenChange={setShowLocationAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Location Currently Unavailable</AlertDialogTitle>
+            <AlertDialogDescription>
+              {locationAlertMessage}
+              <br /><br />
+              <strong>Location:</strong> {formData.identifiedMunicipality}, {formData.identifiedCounty} County
+              <br />
+              <strong>Type:</strong> {locationAlertType === 'county' ? 'County' : 'Municipality'} unavailable
+              <br /><br />
+              Orders cannot be placed for this location at this time. Please try a different address or contact us for more information.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowLocationAlert(false)}>
               OK
             </AlertDialogAction>
           </AlertDialogFooter>
