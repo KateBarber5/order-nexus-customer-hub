@@ -76,6 +76,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
 
   useEffect(() => {
     if (open) {
+      console.log('Dialog opened, resetting form with municipality data:', municipality);
       form.reset({
         name: municipality.name,
         countyId: municipality.countyId,
@@ -106,12 +107,12 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
       reportTypes: values.reportTypes as ReportType[],
     };
 
-    // Only include alertMessage if status is unavailable and message exists
-    if (values.status === 'unavailable' && values.alertMessage && values.alertMessage.trim()) {
+    // Always include alertMessage if it exists, regardless of status
+    if (values.alertMessage !== undefined && values.alertMessage !== null) {
       municipalityData.alertMessage = values.alertMessage;
     }
     
-    console.log('Municipality data being sent:', municipalityData);
+    console.log('Municipality data being sent to parent:', municipalityData);
     onEdit(municipalityData);
     onOpenChange(false);
   };
