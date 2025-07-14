@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, MapPin, Building, Search } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import AddCountyDialog from '@/components/AddCountyDialog';
@@ -79,26 +78,17 @@ const CountiesCitiesConfig = () => {
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('counties');
   const [showAddCountyDialog, setShowAddCountyDialog] = useState(false);
   const [showAddMunicipalityDialog, setShowAddMunicipalityDialog] = useState(false);
+  const [selectedCountyForMunicipality, setSelectedCountyForMunicipality] = useState<string | null>(null);
   const [editingCounty, setEditingCounty] = useState<County | null>(null);
   const [editingMunicipality, setEditingMunicipality] = useState<Municipality | null>(null);
 
-  const allMunicipalities = counties.flatMap(county => 
-    county.municipalities.map(municipality => ({
-      ...municipality,
-      countyName: county.name
-    }))
-  );
-
   const filteredCounties = counties.filter(county =>
-    county.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredMunicipalities = allMunicipalities.filter(municipality =>
-    municipality.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    municipality.countyName.toLowerCase().includes(searchTerm.toLowerCase())
+    county.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    county.municipalities.some(municipality =>
+      municipality.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const handleAddCounty = (countyData: Omit<County, 'id' | 'municipalities'>) => {
@@ -148,6 +138,7 @@ const CountiesCitiesConfig = () => {
         : county
     ));
     toast.success(`Municipality "${municipalityData.name}" added successfully`);
+    setSelectedCountyForMunicipality(null);
   };
 
   const handleEditMunicipality = (municipalityData: Omit<Municipality, 'id'>) => {
@@ -166,7 +157,7 @@ const CountiesCitiesConfig = () => {
   };
 
   const handleDeleteMunicipality = (municipalityId: string) => {
-    const municipality = allMunicipalities.find(m => m.id === municipalityId);
+    const municipality = counties.flatMap(c => c.municipalities).find(m => m.id === municipalityId);
     if (!municipality) return;
     
     setCounties(counties.map(county => ({
@@ -200,6 +191,11 @@ const CountiesCitiesConfig = () => {
     ));
   };
 
+  const openAddMunicipalityDialog = (countyId: string) => {
+    setSelectedCountyForMunicipality(countyId);
+    setShowAddMunicipalityDialog(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -207,13 +203,13 @@ const CountiesCitiesConfig = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Counties & Cities Configuration</h1>
             <p className="text-muted-foreground">
-              Manage counties, municipalities, and their available services
+              Manage counties and their municipalities with available services
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 mb-6">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex items-center justify-between">
+          <div className="relative max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search counties or municipalities..."
@@ -222,143 +218,132 @@ const CountiesCitiesConfig = () => {
               className="pl-8"
             />
           </div>
+          <Button onClick={() => setShowAddCountyDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add County
+          </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="counties" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Counties ({counties.length})
-            </TabsTrigger>
-            <TabsTrigger value="municipalities" className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              Municipalities ({allMunicipalities.length})
-            </TabsTrigger>
-          </TabsList>
+        <div className="grid gap-6">
+          {filteredCounties.map((county) => (
+            <Card key={county.id} className="overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      {county.name} County, {county.state}
+                    </CardTitle>
+                    <CardDescription>
+                      {county.municipalities.length} municipalities
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingCounty(county)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteCounty(county.id)}
+                      disabled={county.municipalities.length > 0}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Municipalities:</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openAddMunicipalityDialog(county.id)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Municipality
+                  </Button>
+                </div>
+                
+                {county.municipalities.length > 0 ? (
+                  <div className="space-y-3">
+                    {county.municipalities.map((municipality) => (
+                      <div
+                        key={municipality.id}
+                        className="border rounded-lg p-4 space-y-3 bg-muted/20"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4" />
+                            <span className="font-medium">{municipality.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingMunicipality(municipality)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteMunicipality(municipality.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Available Services:</Label>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {getServiceBadges(municipality.availableServices)}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Report Types:</Label>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {getReportTypeBadges(municipality.reportTypes)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No municipalities added yet</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => openAddMunicipalityDialog(county.id)}
+                    >
+                      Add the first municipality
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          <TabsContent value="counties" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Counties</h2>
-              <Button onClick={() => setShowAddCountyDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add County
-              </Button>
-            </div>
-
-            <div className="grid gap-4">
-              {filteredCounties.map((county) => (
-                <Card key={county.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <MapPin className="h-5 w-5" />
-                          {county.name} County, {county.state}
-                        </CardTitle>
-                        <CardDescription>
-                          {county.municipalities.length} municipalities
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingCounty(county)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteCounty(county.id)}
-                          disabled={county.municipalities.length > 0}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Municipalities:</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {county.municipalities.length > 0 ? (
-                          county.municipalities.map((municipality) => (
-                            <Badge key={municipality.id} variant="outline">
-                              {municipality.name}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-sm text-muted-foreground">No municipalities added</span>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="municipalities" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Municipalities</h2>
-              <Button onClick={() => setShowAddMunicipalityDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Municipality
-              </Button>
-            </div>
-
-            <div className="grid gap-4">
-              {filteredMunicipalities.map((municipality) => (
-                <Card key={municipality.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Building className="h-5 w-5" />
-                          {municipality.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {municipality.countyName} County
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingMunicipality(municipality)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteMunicipality(municipality.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">Available Services:</Label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {getServiceBadges(municipality.availableServices)}
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Report Types:</Label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {getReportTypeBadges(municipality.reportTypes)}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+        {filteredCounties.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg">No counties found</p>
+            <p className="text-sm">Try adjusting your search or add a new county</p>
+          </div>
+        )}
       </div>
 
       <AddCountyDialog
@@ -369,8 +354,11 @@ const CountiesCitiesConfig = () => {
 
       <AddMunicipalityDialog
         open={showAddMunicipalityDialog}
-        onOpenChange={setShowAddMunicipalityDialog}
-        counties={counties}
+        onOpenChange={(open) => {
+          setShowAddMunicipalityDialog(open);
+          if (!open) setSelectedCountyForMunicipality(null);
+        }}
+        counties={selectedCountyForMunicipality ? counties.filter(c => c.id === selectedCountyForMunicipality) : counties}
         onAdd={handleAddMunicipality}
       />
 
