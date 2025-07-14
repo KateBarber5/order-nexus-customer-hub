@@ -104,7 +104,7 @@ const generateMockOrders = (): Order[] => {
       address: "321 Palm St, Jacksonville, FL 32202",
       parcelId: "16-1234-000-0012",
       county: "Duval",
-      status: "failed",
+      status: "failed-pa-site-down",
       createdAt: "2024-01-12T11:20:00Z",
       updatedAt: "2024-01-12T15:10:00Z"
     },
@@ -113,7 +113,7 @@ const generateMockOrders = (): Order[] => {
       address: "654 Sunset Dr, Fort Lauderdale, FL 33301",
       parcelId: "12-5678-000-0089",
       county: "Broward",
-      status: "canceled",
+      status: "failed-code-site-down",
       createdAt: "2024-01-11T13:00:00Z",
       updatedAt: "2024-01-11T14:30:00Z"
     },
@@ -122,7 +122,7 @@ const generateMockOrders = (): Order[] => {
       address: "987 Pine Ave, St. Petersburg, FL 33701",
       parcelId: "13-9876-000-0045",
       county: "Pinellas",
-      status: "failed-pa-site-down",
+      status: "failed-permit-site-down",
       createdAt: "2024-01-10T14:00:00Z",
       updatedAt: "2024-01-10T14:30:00Z"
     },
@@ -131,7 +131,7 @@ const generateMockOrders = (): Order[] => {
       address: "555 Oak St, Clearwater, FL 33755",
       parcelId: "14-5555-000-0067",
       county: "Pinellas",
-      status: "failed-code-site-down",
+      status: "failed-bad-address",
       createdAt: "2024-01-09T12:00:00Z",
       updatedAt: "2024-01-09T12:45:00Z"
     },
@@ -140,7 +140,7 @@ const generateMockOrders = (): Order[] => {
       address: "777 Maple Dr, Gainesville, FL 32601",
       parcelId: "15-7777-000-0123",
       county: "Alachua",
-      status: "failed-permit-site-down",
+      status: "canceled",
       createdAt: "2024-01-08T10:30:00Z",
       updatedAt: "2024-01-08T11:00:00Z"
     },
@@ -149,7 +149,7 @@ const generateMockOrders = (): Order[] => {
       address: "999 Invalid Address, Unknown, FL 99999",
       parcelId: "99-9999-000-0000",
       county: "Unknown",
-      status: "failed-bad-address",
+      status: "failed",
       createdAt: "2024-01-07T15:15:00Z",
       updatedAt: "2024-01-07T15:45:00Z"
     },
@@ -296,7 +296,48 @@ export const fetchOrders = async (): Promise<Order[]> => {
     const transformedData = data.map(transformGovOrderToOrder);
     console.log('Transformed data:', transformedData);
     
-    return transformedData;
+    // Mix API data with some mock data to show the new statuses
+    const mockOrdersWithNewStatuses = [
+      {
+        id: "MOCK001",
+        address: "1234 Test Street, Tampa, FL 33601",
+        parcelId: "TEST-001-123",
+        county: "Hillsborough",
+        status: "failed-pa-site-down" as const,
+        createdAt: "2025-07-14T10:00:00Z",
+        updatedAt: "2025-07-14T10:30:00Z"
+      },
+      {
+        id: "MOCK002",
+        address: "5678 Demo Avenue, Orlando, FL 32801",
+        parcelId: "TEST-002-456",
+        county: "Orange",
+        status: "failed-code-site-down" as const,
+        createdAt: "2025-07-14T11:00:00Z",
+        updatedAt: "2025-07-14T11:30:00Z"
+      },
+      {
+        id: "MOCK003",
+        address: "9012 Sample Road, Miami, FL 33101",
+        parcelId: "TEST-003-789",
+        county: "Miami-Dade",
+        status: "failed-permit-site-down" as const,
+        createdAt: "2025-07-14T12:00:00Z",
+        updatedAt: "2025-07-14T12:30:00Z"
+      },
+      {
+        id: "MOCK004",
+        address: "Invalid Address Format",
+        parcelId: "TEST-004-000",
+        county: "Unknown",
+        status: "failed-bad-address" as const,
+        createdAt: "2025-07-14T13:00:00Z",
+        updatedAt: "2025-07-14T13:30:00Z"
+      }
+    ];
+    
+    // Combine API data with mock data to demonstrate new statuses
+    return [...transformedData, ...mockOrdersWithNewStatuses];
   } catch (error) {
     console.error('Error fetching orders:', error);
     console.warn('Falling back to mock data due to API error');
