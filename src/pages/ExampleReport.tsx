@@ -51,10 +51,10 @@ const ExampleReport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen bg-gray-100 py-4">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Download Button */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 flex justify-end">
           <Button onClick={downloadPDF} className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             Download PDF
@@ -65,83 +65,83 @@ const ExampleReport = () => {
         <div id="pdf-content" className="bg-white shadow-lg rounded-lg overflow-hidden">
           
           {/* Top Header Section */}
-          <div className="bg-[#1976d2] text-white p-6">
+          <div className="bg-[#1976d2] text-white p-4">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold">GovMetric</h1>
-                <p className="text-blue-100">Municipal Lien Search Report</p>
-                <p className="text-blue-100 text-sm mt-1">Report Date: {new Date().toLocaleDateString()}</p>
+                <h1 className="text-xl font-bold">GovMetric</h1>
+                <p className="text-blue-100 text-sm">Municipal Lien Search Report</p>
+                <p className="text-blue-100 text-xs mt-1">Report Date: {new Date().toLocaleDateString()}</p>
               </div>
               <div className="text-right">
-                <p className="text-lg font-semibold">Order #: GOV001</p>
-                <p className="text-blue-100">Customer: John Smith</p>
+                <p className="text-base font-semibold">Order #: GOV001</p>
+                <p className="text-blue-100 text-sm">Customer: John Smith</p>
               </div>
             </div>
           </div>
 
           {/* Secondary Header Section */}
-          <div className="bg-gray-50 p-6 border-b">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gray-50 p-4 border-b">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <h3 className="font-semibold text-gray-700 mb-1">Property Address</h3>
-                <p className="text-gray-900">123 Main Street<br />Miami, FL 33101</p>
+                <h3 className="font-semibold text-gray-700 mb-1 text-sm">Property Address</h3>
+                <p className="text-gray-900 text-sm">123 Main Street<br />Miami, FL 33101</p>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-700 mb-1">Owner Name</h3>
-                <p className="text-gray-900">Jane Doe</p>
+                <h3 className="font-semibold text-gray-700 mb-1 text-sm">Owner Name</h3>
+                <p className="text-gray-900 text-sm">Jane Doe</p>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-700 mb-1">Parcel ID</h3>
-                <p className="text-gray-900 font-mono">25-3218-000-0010</p>
+                <h3 className="font-semibold text-gray-700 mb-1 text-sm">Parcel ID</h3>
+                <p className="text-gray-900 font-mono text-sm">25-3218-000-0010</p>
               </div>
             </div>
           </div>
 
           {/* Report Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-4">
             
             {/* Municipalities Searched Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-blue-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-blue-600" />
                   Municipalities Searched
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-3 border rounded-lg bg-gray-50">
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="p-2 border rounded bg-gray-50">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900">City of Miami</p>
-                        <p className="text-sm text-gray-600">Miami-Dade County</p>
+                        <p className="font-semibold text-gray-900 text-sm">City of Miami</p>
+                        <p className="text-xs text-gray-600">Miami-Dade County</p>
                       </div>
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
                     </div>
                   </div>
-                  <div className="p-3 border rounded-lg bg-gray-50">
+                  <div className="p-2 border rounded bg-gray-50">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900">Miami-Dade County</p>
-                        <p className="text-sm text-gray-600">County Government</p>
+                        <p className="font-semibold text-gray-900 text-sm">Miami-Dade County</p>
+                        <p className="text-xs text-gray-600">County Government</p>
                       </div>
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
                     </div>
                   </div>
-                  <div className="p-3 border rounded-lg bg-gray-50">
+                  <div className="p-2 border rounded bg-gray-50">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900">Miami Beach</p>
-                        <p className="text-sm text-gray-600">Miami-Dade County</p>
+                        <p className="font-semibold text-gray-900 text-sm">Miami Beach</p>
+                        <p className="text-xs text-gray-600">Miami-Dade County</p>
                       </div>
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
                     </div>
                   </div>
-                  <div className="p-3 border rounded-lg bg-gray-50">
+                  <div className="p-2 border rounded bg-gray-50">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900">Coral Gables</p>
-                        <p className="text-sm text-gray-600">Miami-Dade County</p>
+                        <p className="font-semibold text-gray-900 text-sm">Coral Gables</p>
+                        <p className="text-xs text-gray-600">Miami-Dade County</p>
                       </div>
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
                     </div>
@@ -152,23 +152,23 @@ const ExampleReport = () => {
 
             {/* Taxes Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
                   Property Taxes
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
                     <span>2023 Tax Year</span>
                     <span className="font-semibold text-green-600">PAID</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span>2022 Tax Year</span>
                     <span className="font-semibold text-green-600">PAID</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span>Outstanding Amount</span>
                     <span className="font-semibold">$0.00</span>
                   </div>
@@ -178,30 +178,30 @@ const ExampleReport = () => {
 
             {/* Code Violations Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <X className="h-5 w-5 text-red-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                  <X className="h-4 w-4 text-red-600" />
                   Code Violations
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">Violation #CV-2023-0145</p>
-                        <p className="text-sm text-gray-600">Overgrown vegetation in front yard</p>
-                        <p className="text-sm text-gray-500">Date: March 15, 2023</p>
+                        <p className="font-semibold text-sm">Violation #CV-2023-0145</p>
+                        <p className="text-xs text-gray-600">Overgrown vegetation in front yard</p>
+                        <p className="text-xs text-gray-500">Date: March 15, 2023</p>
                       </div>
                       <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">OPEN</span>
                     </div>
                   </div>
-                  <div className="p-3 bg-green-50 border border-green-200 rounded">
+                  <div className="p-2 bg-green-50 border border-green-200 rounded">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">Violation #CV-2022-0892</p>
-                        <p className="text-sm text-gray-600">Missing house numbers</p>
-                        <p className="text-sm text-gray-500">Date: August 10, 2022</p>
+                        <p className="font-semibold text-sm">Violation #CV-2022-0892</p>
+                        <p className="text-xs text-gray-600">Missing house numbers</p>
+                        <p className="text-xs text-gray-500">Date: August 10, 2022</p>
                       </div>
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">CLOSED</span>
                     </div>
@@ -212,30 +212,30 @@ const ExampleReport = () => {
 
             {/* Permits Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
                   Building Permits
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 border rounded">
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="p-2 border rounded">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">Permit #BP-2023-1247</p>
-                        <p className="text-sm text-gray-600">Roof Repair</p>
-                        <p className="text-sm text-gray-500">Issued: February 20, 2023</p>
+                        <p className="font-semibold text-sm">Permit #BP-2023-1247</p>
+                        <p className="text-xs text-gray-600">Roof Repair</p>
+                        <p className="text-xs text-gray-500">Issued: February 20, 2023</p>
                       </div>
                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">ACTIVE</span>
                     </div>
                   </div>
-                  <div className="p-3 border rounded">
+                  <div className="p-2 border rounded">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">Permit #BP-2021-3456</p>
-                        <p className="text-sm text-gray-600">Kitchen Renovation</p>
-                        <p className="text-sm text-gray-500">Issued: June 5, 2021</p>
+                        <p className="font-semibold text-sm">Permit #BP-2021-3456</p>
+                        <p className="text-xs text-gray-600">Kitchen Renovation</p>
+                        <p className="text-xs text-gray-500">Issued: June 5, 2021</p>
                       </div>
                       <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">COMPLETED</span>
                     </div>
@@ -246,14 +246,14 @@ const ExampleReport = () => {
 
             {/* Liens Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
                   Municipal Liens
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-green-600 font-semibold">No Active Liens Found</p>
+              <CardContent className="pt-0">
+                <p className="text-green-600 font-semibold text-sm">No Active Liens Found</p>
               </CardContent>
             </Card>
 
@@ -262,11 +262,10 @@ const ExampleReport = () => {
           <Separator />
 
           {/* Footer Section */}
-          <div className="bg-gray-50 p-6">
-            <div className="text-center space-y-2">
-              <h3 className="font-semibold text-gray-700">GovMetric Support</h3>
-              <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-gray-600">
-                <span>📧 support@govmetric.com</span>
+          <div className="bg-gray-50 p-3">
+            <div className="text-center space-y-1">
+              <h3 className="font-semibold text-gray-700 text-sm">GovMetric Support</h3>
+              <div className="flex flex-col md:flex-row justify-center items-center gap-2 text-xs text-gray-600">
                 <span>🌐 www.govmetric.com</span>
               </div>
             </div>
