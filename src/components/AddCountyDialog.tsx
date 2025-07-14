@@ -43,7 +43,12 @@ const AddCountyDialog = ({ open, onOpenChange, onAdd }: AddCountyDialogProps) =>
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    onAdd(values);
+    // Since the schema validates that name and state are required strings,
+    // we can safely cast to the expected type
+    onAdd({
+      name: values.name,
+      state: values.state,
+    });
     form.reset();
     onOpenChange(false);
   };

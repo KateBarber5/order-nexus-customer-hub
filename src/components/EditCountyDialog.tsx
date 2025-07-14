@@ -52,7 +52,12 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
   }, [county, form]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    onEdit(values);
+    // Since the schema validates that name and state are required strings,
+    // we can safely cast to the expected type
+    onEdit({
+      name: values.name,
+      state: values.state,
+    });
     onOpenChange(false);
   };
 

@@ -70,7 +70,12 @@ const AddMunicipalityDialog = ({ open, onOpenChange, counties, onAdd }: AddMunic
     const municipalityData: Omit<Municipality, 'id'> = {
       name: values.name,
       countyId: values.countyId,
-      availableServices: values.services,
+      availableServices: {
+        code: values.services.code,
+        permits: values.services.permits,
+        liens: values.services.liens,
+        utilities: values.services.utilities,
+      },
       reportTypes: values.reportTypes as ReportType[],
     };
     
