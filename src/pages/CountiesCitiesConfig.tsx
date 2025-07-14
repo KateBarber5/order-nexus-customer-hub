@@ -13,10 +13,14 @@ import AddMunicipalityDialog from '@/components/AddMunicipalityDialog';
 import EditCountyDialog from '@/components/EditCountyDialog';
 import EditMunicipalityDialog from '@/components/EditMunicipalityDialog';
 
+export type StatusType = 'active' | 'inactive' | 'unavailable';
+
 export interface County {
   id: string;
   name: string;
   state: string;
+  status: StatusType;
+  alertMessage?: string;
   municipalities: Municipality[];
 }
 
@@ -24,6 +28,8 @@ export interface Municipality {
   id: string;
   name: string;
   countyId: string;
+  status: StatusType;
+  alertMessage?: string;
   availableServices: ServiceAvailability;
   reportTypes: ReportType[];
 }
@@ -44,11 +50,13 @@ const CountiesCitiesConfig = () => {
       id: '1',
       name: 'Miami-Dade',
       state: 'FL',
+      status: 'active',
       municipalities: [
         {
           id: '1',
           name: 'Miami',
           countyId: '1',
+          status: 'active',
           availableServices: { code: true, permits: true, liens: true, utilities: true },
           reportTypes: ['full', 'card']
         },
@@ -56,6 +64,8 @@ const CountiesCitiesConfig = () => {
           id: '2',
           name: 'Miami Beach',
           countyId: '1',
+          status: 'unavailable',
+          alertMessage: 'System maintenance in progress',
           availableServices: { code: false, permits: false, liens: true, utilities: false },
           reportTypes: ['card']
         }
@@ -65,11 +75,13 @@ const CountiesCitiesConfig = () => {
       id: '2',
       name: 'Broward',
       state: 'FL',
+      status: 'active',
       municipalities: [
         {
           id: '3',
           name: 'Fort Lauderdale',
           countyId: '2',
+          status: 'active',
           availableServices: { code: true, permits: true, liens: true, utilities: true },
           reportTypes: ['full', 'card']
         }
@@ -191,6 +203,20 @@ const CountiesCitiesConfig = () => {
     ));
   };
 
+  const getStatusBadge = (status: StatusType) => {
+    const variants = {
+      active: 'default',
+      inactive: 'secondary',
+      unavailable: 'destructive'
+    } as const;
+    
+    return (
+      <Badge variant={variants[status]} className="capitalize">
+        {status === 'unavailable' ? 'Currently Unavailable' : status}
+      </Badge>
+    );
+  };
+
   const openAddMunicipalityDialog = (countyId: string) => {
     setSelectedCountyForMunicipality(countyId);
     setShowAddMunicipalityDialog(true);
@@ -234,9 +260,15 @@ const CountiesCitiesConfig = () => {
                       <MapPin className="h-5 w-5" />
                       {county.name} County, {county.state}
                     </CardTitle>
-                    <CardDescription>
-                      {county.municipalities.length} municipalities
+                    <CardDescription className="flex items-center gap-2 mt-2">
+                      <span>{county.municipalities.length} municipalities</span>
+                      {getStatusBadge(county.status)}
                     </CardDescription>
+                    {county.status === 'unavailable' && county.alertMessage && (
+                      <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
+                        <strong>Alert:</strong> {county.alertMessage}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -282,6 +314,7 @@ const CountiesCitiesConfig = () => {
                           <div className="flex items-center gap-2">
                             <Building className="h-4 w-4" />
                             <span className="font-medium">{municipality.name}</span>
+                            {getStatusBadge(municipality.status)}
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
@@ -300,6 +333,12 @@ const CountiesCitiesConfig = () => {
                             </Button>
                           </div>
                         </div>
+
+                        {municipality.status === 'unavailable' && municipality.alertMessage && (
+                          <div className="p-2 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
+                            <strong>Alert:</strong> {municipality.alertMessage}
+                          </div>
+                        )}
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>

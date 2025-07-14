@@ -18,19 +18,38 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import type { StatusType } from '@/pages/CountiesCitiesConfig';
 
 const formSchema = z.object({
   name: z.string().min(1, 'County name is required'),
   state: z.string().min(2, 'State is required').max(2, 'State must be 2 characters'),
+  status: z.enum(['active', 'inactive', 'unavailable'] as const),
+  alertMessage: z.string().optional(),
+}).refine((data) => {
+  if (data.status === 'unavailable' && (!data.alertMessage || data.alertMessage.trim() === '')) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Alert message is required when status is "Currently Unavailable"',
+  path: ['alertMessage'],
 });
 
 interface AddCountyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (county: { name: string; state: string }) => void;
+  onAdd: (county: { name: string; state: string; status: StatusType; alertMessage?: string }) => void;
 }
 
 const AddCountyDialog = ({ open, onOpenChange, onAdd }: AddCountyDialogProps) => {
@@ -39,23 +58,29 @@ const AddCountyDialog = ({ open, onOpenChange, onAdd }: AddCountyDialogProps) =>
     defaultValues: {
       name: '',
       state: 'FL',
+      status: 'active',
+      alertMessage: '',
     },
   });
 
+  const watchedStatus = form.watch('status');
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Since the schema validates that name and state are required strings,
-    // we can safely cast to the expected type
-    onAdd({
+    const countyData = {
       name: values.name,
       state: values.state,
-    });
+      status: values.status,
+      ...(values.status === 'unavailable' && values.alertMessage ? { alertMessage: values.alertMessage } : {}),
+    };
+    
+    onAdd(countyData);
     form.reset();
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New County</DialogTitle>
           <DialogDescription>
@@ -90,6 +115,46 @@ const AddCountyDialog = ({ open, onOpenChange, onAdd }: AddCountyDialogProps) =>
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="unavailable">Currently Unavailable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {watchedStatus === 'unavailable' && (
+              <FormField
+                control={form.control}
+                name="alertMessage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alert Message</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter the message that users will see when this county is unavailable..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

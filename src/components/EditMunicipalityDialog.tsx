@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -29,11 +29,13 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { County, Municipality, ReportType } from '@/pages/CountiesCitiesConfig';
+import type { County, Municipality, ReportType, StatusType } from '@/pages/CountiesCitiesConfig';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Municipality name is required'),
   countyId: z.string().min(1, 'County selection is required'),
+  status: z.enum(['active', 'inactive', 'unavailable'] as const),
+  alertMessage: z.string().optional(),
   services: z.object({
     code: z.boolean(),
     permits: z.boolean(),
@@ -41,6 +43,14 @@ const formSchema = z.object({
     utilities: z.boolean(),
   }),
   reportTypes: z.array(z.enum(['full', 'card'])).min(1, 'At least one report type is required'),
+}).refine((data) => {
+  if (data.status === 'unavailable' && (!data.alertMessage || data.alertMessage.trim() === '')) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Alert message is required when status is "Currently Unavailable"',
+  path: ['alertMessage'],
 });
 
 interface EditMunicipalityDialogProps {
@@ -57,6 +67,8 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
     defaultValues: {
       name: municipality.name,
       countyId: municipality.countyId,
+      status: municipality.status,
+      alertMessage: municipality.alertMessage || '',
       services: municipality.availableServices,
       reportTypes: municipality.reportTypes,
     },
@@ -66,15 +78,22 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
     form.reset({
       name: municipality.name,
       countyId: municipality.countyId,
+      status: municipality.status,
+      alertMessage: municipality.alertMessage || '',
       services: municipality.availableServices,
       reportTypes: municipality.reportTypes,
     });
   }, [municipality, form]);
 
+  const watchedStatus = form.watch('status');
+  const watchedReportTypes = form.watch('reportTypes');
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const municipalityData: Omit<Municipality, 'id'> = {
       name: values.name,
       countyId: values.countyId,
+      status: values.status,
+      ...(values.status === 'unavailable' && values.alertMessage ? { alertMessage: values.alertMessage } : {}),
       availableServices: {
         code: values.services.code,
         permits: values.services.permits,
@@ -88,8 +107,6 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
     onOpenChange(false);
   };
 
-  const watchedReportTypes = form.watch('reportTypes');
-
   const handleReportTypeChange = (reportType: ReportType, checked: boolean) => {
     const currentTypes = watchedReportTypes || [];
     if (checked) {
@@ -101,7 +118,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Municipality</DialogTitle>
           <DialogDescription>
@@ -148,6 +165,48 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="unavailable">Currently Unavailable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {watchedStatus === 'unavailable' && (
+              <FormField
+                control={form.control}
+                name="alertMessage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alert Message</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter the message that users will see when this municipality is unavailable..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="space-y-3">
               <FormLabel>Available Services</FormLabel>

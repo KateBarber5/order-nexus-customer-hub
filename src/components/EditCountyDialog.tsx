@@ -18,21 +18,39 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { County } from '@/pages/CountiesCitiesConfig';
+import type { County, StatusType } from '@/pages/CountiesCitiesConfig';
 
 const formSchema = z.object({
   name: z.string().min(1, 'County name is required'),
   state: z.string().min(2, 'State is required').max(2, 'State must be 2 characters'),
+  status: z.enum(['active', 'inactive', 'unavailable'] as const),
+  alertMessage: z.string().optional(),
+}).refine((data) => {
+  if (data.status === 'unavailable' && (!data.alertMessage || data.alertMessage.trim() === '')) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Alert message is required when status is "Currently Unavailable"',
+  path: ['alertMessage'],
 });
 
 interface EditCountyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   county: County;
-  onEdit: (county: { name: string; state: string }) => void;
+  onEdit: (county: { name: string; state: string; status: StatusType; alertMessage?: string }) => void;
 }
 
 const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDialogProps) => {
@@ -41,6 +59,8 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
     defaultValues: {
       name: county.name,
       state: county.state,
+      status: county.status,
+      alertMessage: county.alertMessage || '',
     },
   });
 
@@ -48,22 +68,28 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
     form.reset({
       name: county.name,
       state: county.state,
+      status: county.status,
+      alertMessage: county.alertMessage || '',
     });
   }, [county, form]);
 
+  const watchedStatus = form.watch('status');
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Since the schema validates that name and state are required strings,
-    // we can safely cast to the expected type
-    onEdit({
+    const countyData = {
       name: values.name,
       state: values.state,
-    });
+      status: values.status,
+      ...(values.status === 'unavailable' && values.alertMessage ? { alertMessage: values.alertMessage } : {}),
+    };
+    
+    onEdit(countyData);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit County</DialogTitle>
           <DialogDescription>
@@ -98,6 +124,46 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="unavailable">Currently Unavailable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {watchedStatus === 'unavailable' && (
+              <FormField
+                control={form.control}
+                name="alertMessage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alert Message</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter the message that users will see when this county is unavailable..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
