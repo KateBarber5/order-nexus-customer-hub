@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Download, Check, X } from 'lucide-react';
+import { Download, Check, X, MapPin } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -99,6 +100,56 @@ const ExampleReport = () => {
           {/* Report Content */}
           <div className="p-6 space-y-6">
             
+            {/* Municipalities Searched Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  Municipalities Searched
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-900">City of Miami</p>
+                        <p className="text-sm text-gray-600">Miami-Dade County</p>
+                      </div>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-900">Miami-Dade County</p>
+                        <p className="text-sm text-gray-600">County Government</p>
+                      </div>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-900">Miami Beach</p>
+                        <p className="text-sm text-gray-600">Miami-Dade County</p>
+                      </div>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-900">Coral Gables</p>
+                        <p className="text-sm text-gray-600">Miami-Dade County</p>
+                      </div>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Taxes Section */}
             <Card>
               <CardHeader>
