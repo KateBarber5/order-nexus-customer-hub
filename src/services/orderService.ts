@@ -152,6 +152,62 @@ const generateMockOrders = (): Order[] => {
       status: "failed-bad-address",
       createdAt: "2024-01-07T15:15:00Z",
       updatedAt: "2024-01-07T15:45:00Z"
+    },
+    {
+      id: "GOV010",
+      address: "111 Harbor Dr, Key West, FL 33040",
+      parcelId: "17-1111-000-0001",
+      county: "Monroe",
+      status: "failed-pa-site-down",
+      createdAt: "2024-01-06T08:00:00Z",
+      updatedAt: "2024-01-06T08:30:00Z"
+    },
+    {
+      id: "GOV011",
+      address: "222 University Blvd, Tallahassee, FL 32301",
+      parcelId: "20-2222-000-0002",
+      county: "Leon",
+      status: "failed-code-site-down",
+      createdAt: "2024-01-05T14:20:00Z",
+      updatedAt: "2024-01-05T14:50:00Z"
+    },
+    {
+      id: "GOV012",
+      address: "333 Colonial Dr, Fort Myers, FL 33901",
+      parcelId: "21-3333-000-0003",
+      county: "Lee",
+      status: "failed-permit-site-down",
+      createdAt: "2024-01-04T11:10:00Z",
+      updatedAt: "2024-01-04T11:40:00Z"
+    },
+    {
+      id: "GOV013",
+      address: "444 Space Coast Pkwy, Cocoa Beach, FL 32931",
+      parcelId: "22-4444-000-0004",
+      county: "Brevard",
+      status: "delivered",
+      createdAt: "2024-01-03T16:30:00Z",
+      updatedAt: "2024-01-04T09:15:00Z",
+      reportFileName: "Municipal_Lien_Search_GOV013.pdf",
+      reportFilePath: "Orders/Municipal_Lien_Search_GOV013.pdf"
+    },
+    {
+      id: "GOV014",
+      address: "555 International Dr, Orlando, FL 32819",
+      parcelId: "18-5555-000-0005",
+      county: "Orange",
+      status: "processing",
+      createdAt: "2024-01-02T13:45:00Z",
+      updatedAt: "2024-01-02T13:45:00Z"
+    },
+    {
+      id: "GOV015",
+      address: "666 Las Olas Blvd, Fort Lauderdale, FL 33301",
+      parcelId: "12-6666-000-0006",
+      county: "Broward",
+      status: "shipped",
+      createdAt: "2024-01-01T10:00:00Z",
+      updatedAt: "2024-01-02T08:20:00Z"
     }
   ];
 };
