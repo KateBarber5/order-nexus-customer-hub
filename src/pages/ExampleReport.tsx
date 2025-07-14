@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Check } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -189,7 +190,10 @@ const ExampleReport = () => {
                 <CardTitle className="text-lg text-[#1976d2]">Municipal Liens</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-green-600 font-semibold">No Active Liens Found</p>
+                <div className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <p className="text-green-600 font-semibold">No Active Liens Found</p>
+                </div>
               </CardContent>
             </Card>
 
