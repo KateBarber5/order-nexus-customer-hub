@@ -18,8 +18,8 @@ const mockCountiesData = [
         id: '1',
         name: 'Miami',
         countyId: '1',
-        status: 'active' as 'active' | 'inactive' | 'unavailable',
-        alertMessage: undefined,
+        status: 'unavailable' as 'active' | 'inactive' | 'unavailable',
+        alertMessage: 'The City of Miami Code Enforcement and Permitting sites are currently down for maintenance. All new orders will resume processing once the site maintenance has concluded.',
         availableServices: { code: true, permits: true, liens: true, utilities: true },
         reportTypes: ['full', 'card'] as const
       },
@@ -31,6 +31,33 @@ const mockCountiesData = [
         alertMessage: 'System maintenance in progress',
         availableServices: { code: false, permits: false, liens: true, utilities: false },
         reportTypes: ['card'] as const
+      },
+      {
+        id: '3',
+        name: 'Coral Gables',
+        countyId: '1',
+        status: 'active' as 'active' | 'inactive' | 'unavailable',
+        alertMessage: undefined,
+        availableServices: { code: true, permits: true, liens: true, utilities: true },
+        reportTypes: ['full', 'card'] as const
+      },
+      {
+        id: '4',
+        name: 'Homestead',
+        countyId: '1',
+        status: 'active' as 'active' | 'inactive' | 'unavailable',
+        alertMessage: undefined,
+        availableServices: { code: true, permits: true, liens: true, utilities: true },
+        reportTypes: ['full', 'card'] as const
+      },
+      {
+        id: '5',
+        name: 'Aventura',
+        countyId: '1',
+        status: 'active' as 'active' | 'inactive' | 'unavailable',
+        alertMessage: undefined,
+        availableServices: { code: true, permits: true, liens: true, utilities: true },
+        reportTypes: ['full', 'card'] as const
       }
     ]
   },
@@ -42,7 +69,7 @@ const mockCountiesData = [
     alertMessage: undefined,
     municipalities: [
       {
-        id: '3',
+        id: '6',
         name: 'Fort Lauderdale',
         countyId: '2',
         status: 'active' as 'active' | 'inactive' | 'unavailable',
