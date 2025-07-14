@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, CheckCircle, MapPin, FileText, CreditCard, Building, Shield, Gavel, FileSpreadsheet, Receipt } from 'lucide-react';
+import { Package, CheckCircle, MapPin, FileText, CreditCard, Building, Shield, Gavel, FileSpreadsheet, Receipt, AlertTriangle } from 'lucide-react';
+import { checkLocationStatus } from '@/services/locationStatusService';
 
 const Orders = () => {
   const [identifiedLocation, setIdentifiedLocation] = useState<{municipality: string, county: string} | null>(null);
@@ -88,6 +89,10 @@ const Orders = () => {
   // Check if we should show the Available Services section
   const shouldShowAvailableServices = displayCounty && displayMunicipality && isMunicipalityServiced(displayMunicipality);
 
+  // Check if there's a location alert to display
+  const locationStatus = displayMunicipality && displayCounty ? checkLocationStatus(displayMunicipality, displayCounty) : null;
+  const shouldShowLocationAlert = shouldShowAvailableServices && locationStatus && !locationStatus.isAvailable;
+
   return (
     <DashboardLayout>
       <div className="flex flex-wrap items-center justify-between mb-4">
@@ -117,6 +122,26 @@ const Orders = () => {
                     Auto-identified
                   </span>
                 </div>
+
+                {/* Location Alert Section */}
+                {shouldShowLocationAlert && (
+                  <Card className="border-amber-200 bg-amber-50 mb-4">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-semibold text-amber-800 text-sm mb-1">Site Maintenance Notice</div>
+                          <div className="text-xs text-amber-700 leading-relaxed">
+                            {locationStatus?.alertMessage}
+                          </div>
+                          <div className="mt-2 text-xs text-amber-600">
+                            <strong>Type:</strong> {locationStatus?.type === 'county' ? 'County' : 'Municipality'} maintenance
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 
                 {/* Report Type Availability Cards */}
                 <div className="grid grid-cols-1 gap-3">

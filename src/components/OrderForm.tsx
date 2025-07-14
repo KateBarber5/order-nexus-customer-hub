@@ -58,6 +58,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [showLocationAlert, setShowLocationAlert] = useState(false);
   const [locationAlertMessage, setLocationAlertMessage] = useState('');
   const [locationAlertType, setLocationAlertType] = useState<'county' | 'municipality'>('municipality');
+  const [hasSeenLocationAlert, setHasSeenLocationAlert] = useState(false);
 
   const getServicedMunicipalities = () => {
     return [
@@ -132,7 +133,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       }
       
       const locationStatus = checkLocationStatus(randomMunicipality, formData.county);
-      if (!locationStatus.isAvailable) {
+      if (!locationStatus.isAvailable && !hasSeenLocationAlert) {
         setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
         setLocationAlertType(locationStatus.type);
         setShowLocationAlert(true);
@@ -165,7 +166,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
             }
             
             const locationStatus = checkLocationStatus(result.municipality, result.county);
-            if (!locationStatus.isAvailable) {
+            if (!locationStatus.isAvailable && !hasSeenLocationAlert) {
               setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
               setLocationAlertType(locationStatus.type);
               setShowLocationAlert(true);
@@ -195,7 +196,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [formData.address, formData.searchType, onAddressLookup, hasValidatedAddress]);
+  }, [formData.address, formData.searchType, onAddressLookup, hasValidatedAddress, hasSeenLocationAlert]);
 
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
@@ -207,11 +208,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
   const isProductSelectionAllowed = () => {
     if (!isSearchCriteriaFilled() || !formData.identifiedMunicipality) {
-      return false;
-    }
-    
-    const locationStatus = checkLocationStatus(formData.identifiedMunicipality, formData.identifiedCounty || '');
-    if (!locationStatus.isAvailable) {
       return false;
     }
     
@@ -254,6 +250,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     }));
     
     setHasValidatedAddress(false);
+    setHasSeenLocationAlert(false);
     
     if (onAddressLookup) {
       onAddressLookup('', '');
@@ -311,12 +308,18 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         setCurrentStep('details');
         setIsSuccess(false);
         setHasValidatedAddress(false);
+        setHasSeenLocationAlert(false);
         
         if (onAddressLookup) {
           onAddressLookup('', '');
         }
       }, 5000);
     }, 1500);
+  };
+
+  const handleLocationAlertClose = () => {
+    setShowLocationAlert(false);
+    setHasSeenLocationAlert(true);
   };
 
   if (isSuccess) {
@@ -648,7 +651,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showLocationAlert} onOpenChange={setShowLocationAlert}>
+      <AlertDialog open={showLocationAlert} onOpenChange={handleLocationAlertClose}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Municipality Site Maintenance</AlertDialogTitle>
@@ -661,7 +664,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowLocationAlert(false)}>
+            <AlertDialogAction onClick={handleLocationAlertClose}>
               OK
             </AlertDialogAction>
           </AlertDialogFooter>
