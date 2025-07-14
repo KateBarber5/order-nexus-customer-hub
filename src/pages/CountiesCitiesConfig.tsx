@@ -56,7 +56,8 @@ const CountiesCitiesConfig = () => {
           id: '1',
           name: 'Miami',
           countyId: '1',
-          status: 'active',
+          status: 'unavailable',
+          alertMessage: 'The City of Miami Code Enforcement and Permitting sites are currently down for maintenance. All new orders will resume processing once the site maintenance has concluded.',
           availableServices: { code: true, permits: true, liens: true, utilities: true },
           reportTypes: ['full', 'card']
         },
