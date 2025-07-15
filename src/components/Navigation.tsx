@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings, CreditCard, Map } from 'lucide-react';
+import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings, CreditCard, Map, MapPin } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +22,11 @@ const Navigation = () => {
     { name: 'Order History', path: '/history', icon: <History className="h-5 w-5" /> },
     { name: 'Florida Map', path: '/florida-map', icon: <Map className="h-5 w-5" /> },
     { name: 'Subscriptions', path: '/subscriptions', icon: <CreditCard className="h-5 w-5" /> },
+  ];
+
+  const adminNavItems = [
     { name: 'Admin', path: '/admin', icon: <Settings className="h-5 w-5" /> },
+    { name: 'Counties & Cities', path: '/admin/counties-cities', icon: <MapPin className="h-5 w-5" /> },
   ];
 
   const handleLogout = () => {
@@ -58,6 +63,29 @@ const Navigation = () => {
                   <span className="ml-1">{item.name}</span>
                 </Link>
               ))}
+              
+              {/* Admin Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className={cn(
+                  "inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium",
+                  (isActive('/admin') || isActive('/admin/counties-cities'))
+                    ? "border-primary text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                )}>
+                  <Settings className="h-5 w-5" />
+                  <span className="ml-1">Admin</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {adminNavItems.map((item) => (
+                    <DropdownMenuItem key={item.path} asChild>
+                      <Link to={item.path} className="flex items-center w-full">
+                        {item.icon}
+                        <span className="ml-2">{item.name}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
@@ -107,6 +135,24 @@ const Navigation = () => {
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
             {mainNavItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center px-3 py-2 text-base font-medium",
+                  isActive(item.path)
+                    ? "bg-primary-50 border-l-4 border-primary text-primary"
+                    : "border-l-4 border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.icon}
+                <span className="ml-2">{item.name}</span>
+              </Link>
+            ))}
+            
+            {/* Admin items in mobile menu */}
+            {adminNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}

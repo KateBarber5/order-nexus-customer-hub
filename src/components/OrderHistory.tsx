@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { fetchOrders, Order } from '@/services/orderService';
 import { Input } from '@/components/ui/input';
@@ -194,6 +193,10 @@ const OrderHistory = () => {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="failed-pa-site-down">Failed - PA Site Down</SelectItem>
+              <SelectItem value="failed-code-site-down">Failed - Code Site Down</SelectItem>
+              <SelectItem value="failed-permit-site-down">Failed - Permit Site Down</SelectItem>
+              <SelectItem value="failed-bad-address">Failed - Bad Address</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="shipped">In Research</SelectItem>
               <SelectItem value="delivered">Completed</SelectItem>
