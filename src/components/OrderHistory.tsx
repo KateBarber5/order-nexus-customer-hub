@@ -48,6 +48,19 @@ const OrderHistory = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const handleDownload = (docName: string, reportFilePath: string) => {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://order.govmetric.ai';
+    const downloadUrl = `${apiBaseUrl}/aHTTPDownloadFile?iContentType=application%2Fpdf&iFileName=${encodeURIComponent(docName)}&iFilePath=${encodeURIComponent(reportFilePath)}`;
+    
+    // Create a temporary anchor element to trigger the download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = docName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   
   // Fetch orders from API on component mount
   useEffect(() => {
@@ -294,8 +307,13 @@ const OrderHistory = () => {
                         >
                           View
                         </Button>
-                        {order.status === 'delivered' && (
-                          <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        {order.status === 'delivered' && order.reportFileName && order.reportFilePath && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex items-center gap-1"
+                            onClick={() => handleDownload(order.reportFileName, order.reportFilePath)}
+                          >
                             <FileText className="h-4 w-4" />
                             Download
                           </Button>

@@ -26,6 +26,32 @@ export interface GovOrderResponse {
   GovOrderTries: number;
 }
 
+// GetPlaces API interfaces
+export interface PlaceService {
+  PlaceService: string;
+  PlaceServiceName: string;
+}
+
+export interface PlaceReport {
+  SubPlaceOrderReportType: string;
+}
+
+export interface SubPlace {
+  SubPlaceName: string;
+  SubPlaceStatus: string;
+  SubPlaceStatusMessage: string;
+  Service: PlaceService[];
+  Report?: PlaceReport[];
+}
+
+export interface Place {
+  PlaceID: number;
+  PlaceName: string;
+  PlaceStatus: string;
+  PlaceStatusMessage: string;
+  SubPlace: SubPlace[];
+}
+
 // Transformed order interface for the frontend
 export interface Order {
   id: string;
@@ -119,6 +145,60 @@ export const fetchOrders = async (): Promise<Order[]> => {
     return transformedData;
   } catch (error) {
     console.error('Error fetching orders:', error);
+    throw error;
+  }
+}; 
+
+// Fetch places from the API
+export const fetchPlaces = async (): Promise<Place[]> => {
+  try {
+    console.log('Fetching places from API...');
+    console.log('API URL:', '/api/GovMetricAPI/GetPlaces');
+    
+    const response = await fetch('/api/GovMetricAPI/GetPlaces', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    const data: Place[] = await response.json();
+    console.log('API response data:', data);
+    
+    // Validate that data is an array
+    if (!Array.isArray(data)) {
+      throw new Error('API response is not an array');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching places:', error);
     throw error;
   }
 }; 

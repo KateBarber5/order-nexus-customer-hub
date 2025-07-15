@@ -21,7 +21,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { lookupAddress } from '@/services/smartyStreetsService';
+import { fetchPlaces, Place } from '@/services/orderService';
 import AddressAutocomplete from './AddressAutocomplete';
 
 interface OrderFormData {
@@ -54,61 +62,89 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
   const [hasValidatedAddress, setHasValidatedAddress] = useState(false);
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
 
-  // Define all municipalities that we service - this should match the logic in Orders.tsx
-  const getServicedMunicipalities = () => {
-    return [
-      // Full service municipalities (both Full Report and Card Report)
-      'Miami', 'Coral Gables', 'Homestead', 'Aventura',
-      'Fort Lauderdale', 'Pembroke Pines', 'Coral Springs', 'Miramar',
-      'West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington',
-      'Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden',
-      'Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz',
-      'St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin',
-      'Jacksonville', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin',
-      'Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel',
-      'Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales',
-      'Melbourne', 'Rockledge',
-      
-      // Card Report only municipalities
-      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
-      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
-      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
-      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
-    ];
-  };
-
-  // Check if municipality is serviced
-  const isMunicipalityServiced = (municipality: string) => {
-    const servicedMunicipalities = getServicedMunicipalities();
-    return servicedMunicipalities.includes(municipality);
-  };
-
-  // Mock municipality data by county
-  const getMockMunicipalities = (county: string) => {
-    const municipalitiesByCounty: { [key: string]: string[] } = {
-      'Miami-Dade': ['Miami', 'Miami Beach', 'Coral Gables', 'Homestead', 'Aventura'],
-      'Broward': ['Fort Lauderdale', 'Hollywood', 'Pembroke Pines', 'Coral Springs', 'Miramar'],
-      'Palm Beach': ['West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington'],
-      'Orange': ['Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden'],
-      'Hillsborough': ['Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz'],
-      'Pinellas': ['St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin'],
-      'Duval': ['Jacksonville', 'Atlantic Beach', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin'],
-      'Lee': ['Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel'],
-      'Polk': ['Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales'],
-      'Brevard': ['Melbourne', 'Palm Bay', 'Titusville', 'Cocoa', 'Rockledge']
+  // Fetch places data on component mount
+  useEffect(() => {
+    const loadPlaces = async () => {
+      try {
+        setIsLoadingPlaces(true);
+        const placesData = await fetchPlaces();
+        setPlaces(placesData);
+      } catch (error) {
+        console.error('Failed to load places:', error);
+        toast.error('Failed to load counties. Please try again.');
+      } finally {
+        setIsLoadingPlaces(false);
+      }
     };
 
-    const normalizedCounty = county.toLowerCase().replace(/\s+/g, '');
-    const matchingKey = Object.keys(municipalitiesByCounty).find(key => 
-      key.toLowerCase().replace(/\s+/g, '').includes(normalizedCounty) ||
-      normalizedCounty.includes(key.toLowerCase().replace(/\s+/g, ''))
-    );
+    loadPlaces();
+  }, []);
 
-    return matchingKey ? municipalitiesByCounty[matchingKey] : ['Generic City', 'Sample Municipality', 'Test Town'];
+  // Check if municipality is serviced using API data
+  const isMunicipalityServiced = (municipality: string) => {
+    // Check if the municipality exists in any of the places' sub-places
+    return places.some(place => 
+      place.SubPlace.some(subPlace => subPlace.SubPlaceName === municipality)
+    );
   };
 
-  // Mock municipality lookup
+  // Get available report types for a municipality
+  const getAvailableReportTypes = (municipality: string) => {
+    for (const place of places) {
+      const subPlace = place.SubPlace.find(sp => sp.SubPlaceName === municipality);
+      if (subPlace && subPlace.Report) {
+        return subPlace.Report.map(report => report.SubPlaceOrderReportType);
+      }
+    }
+    return ['X']; // Default to report type 1 if not specified
+  };
+
+  // Check if full report is available for municipality
+  const isFullReportAvailable = (municipality: string) => {
+    const reportTypes = getAvailableReportTypes(municipality);
+    return reportTypes.includes('1'); // '1' means full report
+  };
+
+  // Check if card report is available for municipality
+  const isCardReportAvailable = (municipality: string) => {
+    const reportTypes = getAvailableReportTypes(municipality);
+    return reportTypes.includes('0'); // '0' means card report
+  };
+
+  // Get available services for a municipality
+  const getAvailableServices = (municipality: string) => {
+    for (const place of places) {
+      const subPlace = place.SubPlace.find(sp => sp.SubPlaceName === municipality);
+      if (subPlace) {
+        return subPlace.Service.map(service => service.PlaceServiceName);
+      }
+    }
+    return [];
+  };
+
+  // Get municipalities from API data by county
+  const getMunicipalitiesFromAPI = (county: string) => {
+    const normalizedCounty = county.toLowerCase().replace(/\s+/g, '');
+    
+    // Find the place that matches the county name
+    const matchingPlace = places.find(place => 
+      place.PlaceName.toLowerCase().replace(/\s+/g, '').includes(normalizedCounty) ||
+      normalizedCounty.includes(place.PlaceName.toLowerCase().replace(/\s+/g, ''))
+    );
+
+    if (matchingPlace) {
+      // Return all sub-place names from the matching place
+      return matchingPlace.SubPlace.map(subPlace => subPlace.SubPlaceName);
+    }
+
+    // Fallback to generic municipalities if no match found
+    return ['Generic City', 'Sample Municipality', 'Test Town'];
+  };
+
+  // Municipality lookup using API data
   const handleMunicipalityLookup = async () => {
     if (!formData.parcelId || !formData.county) {
       toast.error('Please enter both Parcel ID and County');
@@ -119,7 +155,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     
     // 10 second loading simulation
     setTimeout(() => {
-      const municipalities = getMockMunicipalities(formData.county);
+      const municipalities = getMunicipalitiesFromAPI(formData.county);
       const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)];
       
       setFormData(prev => ({
@@ -365,12 +401,20 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                   </div>
                   
                   {formData.identifiedMunicipality && formData.identifiedCounty && (
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm text-muted-foreground">Identified Location</div>
-                      <div className="col-span-2 font-medium text-green-600">
-                        City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                    <>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-1 text-sm text-muted-foreground">Identified Location</div>
+                        <div className="col-span-2 font-medium text-green-600">
+                          City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                        </div>
                       </div>
-                    </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-1 text-sm text-muted-foreground">Available Services</div>
+                        <div className="col-span-2 font-medium text-blue-600">
+                          {getAvailableServices(formData.identifiedMunicipality).join(', ')}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </>
               ) : (
@@ -386,12 +430,20 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                   </div>
                   
                   {formData.identifiedMunicipality && formData.identifiedCounty && (
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm text-muted-foreground">Identified Municipality</div>
-                      <div className="col-span-2 font-medium text-green-600">
-                        City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                    <>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-1 text-sm text-muted-foreground">Identified Municipality</div>
+                        <div className="col-span-2 font-medium text-green-600">
+                          City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
+                        </div>
                       </div>
-                    </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-1 text-sm text-muted-foreground">Available Services</div>
+                        <div className="col-span-2 font-medium text-blue-600">
+                          {getAvailableServices(formData.identifiedMunicipality).join(', ')}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </>
               )}
@@ -477,6 +529,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                     <p className="text-sm text-green-800">
                       <strong>Address Validated:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
                     </p>
+                    <p className="text-sm text-green-800 mt-1">
+                      <strong>Services:</strong> {getAvailableServices(formData.identifiedMunicipality).join(', ')}
+                    </p>
                   </div>
                 )}
               </div>
@@ -497,14 +552,22 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                 
                   <div className="space-y-2">
                     <Label htmlFor="county">County</Label>
-                    <Input
-                      id="county"
-                      name="county"
-                      placeholder="Enter county name"
+                    <Select
                       value={formData.county}
-                      onChange={handleChange}
-                      required
-                    />
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
+                      disabled={isLoadingPlaces}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingPlaces ? "Loading counties..." : "Select a county"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {places.map((place) => (
+                          <SelectItem key={place.PlaceID} value={place.PlaceName}>
+                            {place.PlaceName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               
@@ -531,6 +594,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                     <p className="text-sm text-green-800">
                       <strong>Municipality Identified:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
                     </p>
+                    <p className="text-sm text-green-800 mt-1">
+                      <strong>Services:</strong> {getAvailableServices(formData.identifiedMunicipality).join(', ')}
+                    </p>
                   </div>
                 )}
               </div>
@@ -553,19 +619,42 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                   </p>
                 </div>
               )}
+              
+              {isProductSelectionAllowed() && formData.identifiedMunicipality && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Available Reports for {formData.identifiedMunicipality}:</strong>
+                    {isFullReportAvailable(formData.identifiedMunicipality) && (
+                      <span className="block">• Full Report</span>
+                    )}
+                    {isCardReportAvailable(formData.identifiedMunicipality) && (
+                      <span className="block">• Card Report</span>
+                    )}
+                    {!isFullReportAvailable(formData.identifiedMunicipality) && !isCardReportAvailable(formData.identifiedMunicipality) && (
+                      <span className="block">• No specific report types configured</span>
+                    )}
+                  </p>
+                  <p className="text-sm text-blue-800 mt-2">
+                    <strong>Available Services:</strong>
+                    {getAvailableServices(formData.identifiedMunicipality).map((service, index) => (
+                      <span key={index} className="block">• {service}</span>
+                    ))}
+                  </p>
+                </div>
+              )}
               <RadioGroup 
                 value={formData.productType} 
                 onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 disabled={!isProductSelectionAllowed()}
               >
-                <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+                <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() && isFullReportAvailable(formData.identifiedMunicipality || '') ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
                   <RadioGroupItem 
                     value="full" 
                     id="full-report" 
-                    disabled={!isProductSelectionAllowed()}
+                    disabled={!isProductSelectionAllowed() || !isFullReportAvailable(formData.identifiedMunicipality || '')}
                   />
-                  <Label htmlFor="full-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                  <Label htmlFor="full-report" className={`font-medium flex-1 ${isProductSelectionAllowed() && isFullReportAvailable(formData.identifiedMunicipality || '') ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                     <div className="flex items-center gap-2">
                       Full Report
                       <TooltipProvider>
@@ -583,13 +672,13 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                   </Label>
                 </div>
               
-                <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
+                <div className={`flex items-center space-x-2 border rounded-md p-4 ${isProductSelectionAllowed() && isCardReportAvailable(formData.identifiedMunicipality || '') ? 'hover:border-primary' : 'opacity-50 cursor-not-allowed'}`}>
                   <RadioGroupItem 
                     value="card" 
                     id="card-report" 
-                    disabled={!isProductSelectionAllowed()}
+                    disabled={!isProductSelectionAllowed() || !isCardReportAvailable(formData.identifiedMunicipality || '')}
                   />
-                  <Label htmlFor="card-report" className={`font-medium flex-1 ${isProductSelectionAllowed() ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                  <Label htmlFor="card-report" className={`font-medium flex-1 ${isProductSelectionAllowed() && isCardReportAvailable(formData.identifiedMunicipality || '') ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                     <div className="flex items-center gap-2">
                       Card Report
                       <TooltipProvider>
