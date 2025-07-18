@@ -105,9 +105,12 @@ const ExampleReport = () => {
             {/* Taxes Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  <span>Property Taxes</span>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>Property Taxes</span>
+                  </div>
+                  <Check className="h-5 w-5 text-green-600" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -131,9 +134,12 @@ const ExampleReport = () => {
             {/* Code Violations Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-600 flex-shrink-0" />
-                  <span>Code Violations</span>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                    <span>Code Violations</span>
+                  </div>
+                  <X className="h-5 w-5 text-red-600" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -148,16 +154,6 @@ const ExampleReport = () => {
                       <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">OPEN</span>
                     </div>
                   </div>
-                  <div className="p-2 bg-green-50 border border-green-200 rounded">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-sm">Violation #CV-2022-0892</p>
-                        <p className="text-xs text-gray-600">Missing house numbers</p>
-                        <p className="text-xs text-gray-500">Date: August 10, 2022</p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">CLOSED</span>
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -165,9 +161,12 @@ const ExampleReport = () => {
             {/* Permits Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <Hammer className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                  <span>Building Permits</span>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Hammer className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <span>Building Permits</span>
+                  </div>
+                  <Check className="h-5 w-5 text-green-600" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -182,16 +181,6 @@ const ExampleReport = () => {
                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">ACTIVE</span>
                     </div>
                   </div>
-                  <div className="p-2 border rounded">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-sm">Permit #BP-2021-3456</p>
-                        <p className="text-xs text-gray-600">Kitchen Renovation</p>
-                        <p className="text-xs text-gray-500">Issued: June 5, 2021</p>
-                      </div>
-                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">COMPLETED</span>
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -199,9 +188,12 @@ const ExampleReport = () => {
             {/* Liens Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                  <span>Municipal Liens</span>
+                <CardTitle className="text-lg text-[#1976d2] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                    <span>Municipal Liens</span>
+                  </div>
+                  <Check className="h-5 w-5 text-green-600" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
