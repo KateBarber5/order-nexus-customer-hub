@@ -75,6 +75,7 @@ const ExampleReport = () => {
               <div className="text-right">
                 <p className="text-base font-semibold">Order #: GOV001</p>
                 <p className="text-blue-100 text-sm">Customer: John Smith</p>
+                <p className="text-blue-100 text-xs">Municipalities Searched: City of Miami, Miami-Dade County, Miami Beach, Coral Gables</p>
               </div>
             </div>
           </div>
@@ -100,55 +101,6 @@ const ExampleReport = () => {
           {/* Report Content */}
           <div className="p-4 space-y-4">
             
-            {/* Municipalities Searched Section */}
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                  <span>Municipalities Searched</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div className="p-2 border rounded bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">City of Miami</p>
-                        <p className="text-xs text-gray-600">Miami-Dade County</p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
-                    </div>
-                  </div>
-                  <div className="p-2 border rounded bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">Miami-Dade County</p>
-                        <p className="text-xs text-gray-600">County Government</p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
-                    </div>
-                  </div>
-                  <div className="p-2 border rounded bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">Miami Beach</p>
-                        <p className="text-xs text-gray-600">Miami-Dade County</p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
-                    </div>
-                  </div>
-                  <div className="p-2 border rounded bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">Coral Gables</p>
-                        <p className="text-xs text-gray-600">Miami-Dade County</p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">SEARCHED</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Taxes Section */}
             <Card>
