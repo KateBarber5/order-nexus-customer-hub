@@ -110,11 +110,15 @@ const ExampleReport = () => {
                     <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
                     <span>Property Taxes</span>
                   </div>
-                  <Check className="h-5 w-5 text-green-600" />
+                  <X className="h-5 w-5 text-red-600" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>2024 Tax Year</span>
+                    <span className="font-semibold text-red-600">UNPAID - $2,847.92</span>
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span>2023 Tax Year</span>
                     <span className="font-semibold text-green-600">PAID</span>
@@ -125,7 +129,7 @@ const ExampleReport = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Outstanding Amount</span>
-                    <span className="font-semibold">$0.00</span>
+                    <span className="font-semibold text-red-600">$2,847.92</span>
                   </div>
                 </div>
               </CardContent>
@@ -166,11 +170,21 @@ const ExampleReport = () => {
                     <Hammer className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span>Building Permits</span>
                   </div>
-                  <Check className="h-5 w-5 text-green-600" />
+                  <X className="h-5 w-5 text-red-600" />
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+               <CardContent className="pt-0">
                 <div className="space-y-2">
+                  <div className="p-2 bg-red-50 border border-red-200 rounded">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-sm">Permit #BP-2019-0823</p>
+                        <p className="text-xs text-gray-600">Fence Installation</p>
+                        <p className="text-xs text-gray-500">Issued: September 12, 2019</p>
+                      </div>
+                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">EXPIRED</span>
+                    </div>
+                  </div>
                   <div className="p-2 border rounded">
                     <div className="flex justify-between items-start">
                       <div>
