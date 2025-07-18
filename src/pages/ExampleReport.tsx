@@ -65,7 +65,7 @@ const ExampleReport = () => {
         <div id="pdf-content" className="bg-white shadow-lg rounded-lg overflow-hidden">
           
           {/* Top Header Section */}
-          <div className="bg-[#42a5f5] text-white p-4">
+          <div className="bg-[#5c54f3] text-white p-4">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-xl font-bold">GovMetric</h1>
