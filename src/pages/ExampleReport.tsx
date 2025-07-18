@@ -85,7 +85,7 @@ const ExampleReport = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
               <div>
                 <h3 className="font-semibold text-gray-700 mb-1 text-base">Property Address</h3>
-                <p className="text-gray-900 text-base">123 Main Street<br />Miami, FL 33101</p>
+                <p className="text-gray-900 text-base">123 Main Street, Miami, FL 33101</p>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-700 mb-1 text-base">Owner Name</h3>
