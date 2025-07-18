@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Check, X, MapPin } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import govmetricLogo from '@/assets/govmetric-logo.png';
 
 const ExampleReport = () => {
   const downloadPDF = async () => {
@@ -67,10 +68,13 @@ const ExampleReport = () => {
           {/* Top Header Section */}
           <div className="bg-[#1976d2] text-white p-4">
             <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-xl font-bold">GovMetric</h1>
-                <p className="text-blue-100 text-sm">Municipal Lien Search Report</p>
-                <p className="text-blue-100 text-xs mt-1">Report Date: {new Date().toLocaleDateString()}</p>
+              <div className="flex items-center gap-3">
+                <img src={govmetricLogo} alt="GovMetric Logo" className="h-8 w-auto" />
+                <div>
+                  <h1 className="text-xl font-bold">GovMetric</h1>
+                  <p className="text-blue-100 text-sm">Municipal Lien Search Report</p>
+                  <p className="text-blue-100 text-xs mt-1">Report Date: {new Date().toLocaleDateString()}</p>
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-base font-semibold">Order #: GOV001</p>
