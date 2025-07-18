@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Download, Check, X, MapPin } from 'lucide-react';
+import { Download, Check, X, MapPin, DollarSign, AlertTriangle, Hammer, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -106,7 +106,7 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
                   <span>Property Taxes</span>
                 </CardTitle>
               </CardHeader>
@@ -132,7 +132,7 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <X className="h-4 w-4 text-red-600 flex-shrink-0" />
+                  <AlertTriangle className="h-4 w-4 text-orange-600 flex-shrink-0" />
                   <span>Code Violations</span>
                 </CardTitle>
               </CardHeader>
@@ -166,7 +166,7 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <Hammer className="h-4 w-4 text-blue-600 flex-shrink-0" />
                   <span>Building Permits</span>
                 </CardTitle>
               </CardHeader>
@@ -200,7 +200,7 @@ const ExampleReport = () => {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <FileText className="h-4 w-4 text-purple-600 flex-shrink-0" />
                   <span>Municipal Liens</span>
                 </CardTitle>
               </CardHeader>
