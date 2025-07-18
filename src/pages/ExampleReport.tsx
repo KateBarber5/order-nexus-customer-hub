@@ -65,7 +65,7 @@ const ExampleReport = () => {
         <div id="pdf-content" className="bg-white shadow-lg rounded-lg overflow-hidden">
           
           {/* Top Header Section */}
-          <div className="bg-[#1976d2] text-white p-4">
+          <div className="bg-[#42a5f5] text-white p-4">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-xl font-bold">GovMetric</h1>
@@ -105,7 +105,7 @@ const ExampleReport = () => {
             {/* Taxes Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
                   <span>Property Taxes</span>
                 </CardTitle>
@@ -131,7 +131,7 @@ const ExampleReport = () => {
             {/* Code Violations Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-orange-600 flex-shrink-0" />
                   <span>Code Violations</span>
                 </CardTitle>
@@ -165,7 +165,7 @@ const ExampleReport = () => {
             {/* Permits Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
                   <Hammer className="h-4 w-4 text-blue-600 flex-shrink-0" />
                   <span>Building Permits</span>
                 </CardTitle>
@@ -199,7 +199,7 @@ const ExampleReport = () => {
             {/* Liens Section */}
             <Card>
               <CardHeader className="pb-1">
-                <CardTitle className="text-base text-[#1976d2] flex items-center gap-2">
+                <CardTitle className="text-lg text-[#1976d2] flex items-center gap-2">
                   <FileText className="h-4 w-4 text-purple-600 flex-shrink-0" />
                   <span>Municipal Liens</span>
                 </CardTitle>
