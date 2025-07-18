@@ -82,7 +82,7 @@ const ExampleReport = () => {
 
           {/* Secondary Header Section */}
           <div className="bg-gray-50 p-4 border-b">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
               <div>
                 <h3 className="font-semibold text-gray-700 mb-1 text-sm">Property Address</h3>
                 <p className="text-gray-900 text-sm">123 Main Street<br />Miami, FL 33101</p>
