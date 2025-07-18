@@ -84,16 +84,16 @@ const ExampleReport = () => {
           <div className="bg-gray-50 p-4 border-b">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
               <div>
-                <h3 className="font-semibold text-gray-700 mb-1 text-sm">Property Address</h3>
-                <p className="text-gray-900 text-sm">123 Main Street<br />Miami, FL 33101</p>
+                <h3 className="font-semibold text-gray-700 mb-1 text-base">Property Address</h3>
+                <p className="text-gray-900 text-base">123 Main Street<br />Miami, FL 33101</p>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-700 mb-1 text-sm">Owner Name</h3>
-                <p className="text-gray-900 text-sm">Jane Doe</p>
+                <h3 className="font-semibold text-gray-700 mb-1 text-base">Owner Name</h3>
+                <p className="text-gray-900 text-base">Jane Doe</p>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-700 mb-1 text-sm">Parcel ID</h3>
-                <p className="text-gray-900 font-mono text-sm">25-3218-000-0010</p>
+                <h3 className="font-semibold text-gray-700 mb-1 text-base">Parcel ID</h3>
+                <p className="text-gray-900 font-mono text-base">25-3218-000-0010</p>
               </div>
             </div>
           </div>
