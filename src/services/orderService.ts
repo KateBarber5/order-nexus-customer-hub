@@ -77,7 +77,7 @@ export interface Order {
   address: string;
   parcelId: string;
   county: string;
-  status: 'undefined' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address';
   createdAt: string;
   updatedAt: string;
   reportFileName?: string;
@@ -87,8 +87,8 @@ export interface Order {
 // Transform API response to frontend format
 const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
   // Map status from API format to frontend format
-  const statusMapping: Record<string, 'undefined' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address'> = {
-    'Undefined': 'undefined',
+  const statusMapping: Record<string, 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address'> = {
+    'Undefined': 'pending',
     'Processing': 'processing',
     'InResearch': 'shipped', // Maps to "In Research" which is "shipped" in the UI
     'Completed': 'delivered',
@@ -105,7 +105,7 @@ const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
     address: govOrder.GovOrderAddress,
     parcelId: govOrder.GovOrderParcel,
     county: govOrder.GovOrderCounty,
-    status: statusMapping[govOrder.GovOrderStatus] || 'undefined',
+    status: statusMapping[govOrder.GovOrderStatus] || 'pending',
     createdAt: govOrder.GovOrderCreateDateTime,
     updatedAt: govOrder.GovOrderCreateDateTime,
     reportFileName: govOrder.GovOrderReportFileName,
