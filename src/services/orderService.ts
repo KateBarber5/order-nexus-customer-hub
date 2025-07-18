@@ -25,6 +25,26 @@ export interface GovOrderResponse {
   GovOrderTries: number;
 }
 
+// Municipality availability check API response interface
+export interface MunicipalityAvailabilityResponse {
+  PlaceID: number;
+  PlaceName: string;
+  PlaceStatus: string;
+  PlaceStatusMessage: string;
+  SubPlace: {
+    SubPlaceName: string;
+    SubPlaceStatus: string;
+    SubPlaceStatusMessage: string;
+    Report: {
+      SubPlaceOrderReportType: string;
+    }[];
+    Service: {
+      PlaceService: string;
+      PlaceServiceName: string;
+    }[];
+  }[];
+}
+
 // GetPlaces API interfaces
 export interface PlaceService {
   PlaceService: string;
@@ -57,7 +77,7 @@ export interface Order {
   address: string;
   parcelId: string;
   county: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address';
+  status: 'undefined' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address';
   createdAt: string;
   updatedAt: string;
   reportFileName?: string;
@@ -67,17 +87,17 @@ export interface Order {
 // Transform API response to frontend format
 const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
   // Map status from API format to frontend format
-  const statusMapping: Record<string, 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address'> = {
-    'PENDING': 'pending',
-    'PROCESSING': 'processing',
-    'IN_RESEARCH': 'shipped', // Maps to "In Research" which is "shipped" in the UI
-    'COMPLETED': 'delivered',
-    'CANCELED': 'canceled',
-    'FAILED': 'failed',
-    'FAILED_PA_SITE_DOWN': 'failed-pa-site-down',
-    'FAILED_CODE_SITE_DOWN': 'failed-code-site-down',
-    'FAILED_PERMIT_SITE_DOWN': 'failed-permit-site-down',
-    'FAILED_BAD_ADDRESS': 'failed-bad-address'
+  const statusMapping: Record<string, 'undefined' | 'processing' | 'shipped' | 'delivered' | 'canceled' | 'failed' | 'failed-pa-site-down' | 'failed-code-site-down' | 'failed-permit-site-down' | 'failed-bad-address'> = {
+    'Undefined': 'undefined',
+    'Processing': 'processing',
+    'InResearch': 'shipped', // Maps to "In Research" which is "shipped" in the UI
+    'Completed': 'delivered',
+    'Canceled': 'canceled',
+    'Failed': 'failed',
+    'FailedPASiteDown': 'failed-pa-site-down',
+    'FailedCodeSiteDown': 'failed-code-site-down',
+    'FailedPermitSiteDown': 'failed-permit-site-down',
+    'FailedBadAddress': 'failed-bad-address'
   };
 
   return {
@@ -85,7 +105,7 @@ const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
     address: govOrder.GovOrderAddress,
     parcelId: govOrder.GovOrderParcel,
     county: govOrder.GovOrderCounty,
-    status: statusMapping[govOrder.GovOrderStatus] || 'pending',
+    status: statusMapping[govOrder.GovOrderStatus] || 'undefined',
     createdAt: govOrder.GovOrderCreateDateTime,
     updatedAt: govOrder.GovOrderCreateDateTime,
     reportFileName: govOrder.GovOrderReportFileName,
@@ -94,7 +114,7 @@ const transformGovOrderToOrder = (govOrder: GovOrderResponse): Order => {
 };
 
 // Generate mock data for development/testing
-const generateMockOrders = (): Order[] => {
+export const generateMockOrders = (): Order[] => {
   return [
     {
       id: "GOV001",
@@ -238,8 +258,8 @@ const generateMockOrders = (): Order[] => {
   ];
 };
 
-// Fetch orders from the API
-export const fetchOrders = async (): Promise<Order[]> => {
+// Fetch orders from the API only (no mock data mixing)
+export const fetchOrdersFromAPI = async (): Promise<Order[]> => {
   try {
     console.log('Fetching orders from API...');
     console.log('API URL:', '/api/GovMetricAPI/GetOrders');
@@ -266,12 +286,6 @@ export const fetchOrders = async (): Promise<Order[]> => {
         errorText = 'Unable to read error details';
       }
       
-      // If we get an HTML response, it means the API endpoint is not available
-      if (errorText.includes('<!DOCTYPE') || errorText.includes('<html>')) {
-        console.warn('API endpoint returned HTML instead of JSON, using mock data');
-        return generateMockOrders();
-      }
-      
       // Try to parse as JSON for more detailed error info
       let errorDetails = '';
       try {
@@ -287,8 +301,7 @@ export const fetchOrders = async (): Promise<Order[]> => {
     // Check if the response is HTML instead of JSON
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('text/html')) {
-      console.warn('API endpoint returned HTML instead of JSON, using mock data');
-      return generateMockOrders();
+      throw new Error('API endpoint returned HTML instead of JSON');
     }
     
     const responseText = await response.text();
@@ -296,8 +309,7 @@ export const fetchOrders = async (): Promise<Order[]> => {
     
     // Check if response starts with HTML
     if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
-      console.warn('API endpoint returned HTML instead of JSON, using mock data');
-      return generateMockOrders();
+      throw new Error('API endpoint returned HTML instead of JSON');
     }
     
     let data: GovOrderResponse[];
@@ -306,70 +318,37 @@ export const fetchOrders = async (): Promise<Order[]> => {
     } catch (parseError) {
       console.error('Failed to parse JSON response:', parseError);
       console.error('Response text that failed to parse:', responseText.substring(0, 500));
-      console.warn('Using mock data due to JSON parse error');
-      return generateMockOrders();
+      throw new Error('Failed to parse JSON response from API');
     }
     
     console.log('API response data:', data);
     
     // Validate that data is an array
     if (!Array.isArray(data)) {
-      console.warn('API response is not an array, using mock data');
-      return generateMockOrders();
+      throw new Error('API response is not an array');
     }
     
     // Transform the API response to match the frontend format
     const transformedData = data.map(transformGovOrderToOrder);
     console.log('Transformed data:', transformedData);
     
-    // Mix API data with some mock data to show the new statuses
-    const mockOrdersWithNewStatuses = [
-      {
-        id: "MOCK001",
-        address: "1234 Test Street, Tampa, FL 33601",
-        parcelId: "TEST-001-123",
-        county: "Hillsborough",
-        status: "failed-pa-site-down" as const,
-        createdAt: "2025-07-14T10:00:00Z",
-        updatedAt: "2025-07-14T10:30:00Z"
-      },
-      {
-        id: "MOCK002",
-        address: "5678 Demo Avenue, Orlando, FL 32801",
-        parcelId: "TEST-002-456",
-        county: "Orange",
-        status: "failed-code-site-down" as const,
-        createdAt: "2025-07-14T11:00:00Z",
-        updatedAt: "2025-07-14T11:30:00Z"
-      },
-      {
-        id: "MOCK003",
-        address: "9012 Sample Road, Miami, FL 33101",
-        parcelId: "TEST-003-789",
-        county: "Miami-Dade",
-        status: "failed-permit-site-down" as const,
-        createdAt: "2025-07-14T12:00:00Z",
-        updatedAt: "2025-07-14T12:30:00Z"
-      },
-      {
-        id: "MOCK004",
-        address: "Invalid Address Format",
-        parcelId: "TEST-004-000",
-        county: "Unknown",
-        status: "failed-bad-address" as const,
-        createdAt: "2025-07-14T13:00:00Z",
-        updatedAt: "2025-07-14T13:30:00Z"
-      }
-    ];
-    
-    // Combine API data with mock data to demonstrate new statuses
-    return [...transformedData, ...mockOrdersWithNewStatuses];
+    return transformedData;
+  } catch (error) {
+    console.error('Error fetching orders from API:', error);
+    throw error;
+  }
+};
+
+// Fetch orders from the API with fallback to mock data
+export const fetchOrders = async (): Promise<Order[]> => {
+  try {
+    return await fetchOrdersFromAPI();
   } catch (error) {
     console.error('Error fetching orders:', error);
     console.warn('Falling back to mock data due to API error');
     return generateMockOrders();
   }
-}; 
+};
 
 // Fetch places from the API
 export const fetchPlaces = async (): Promise<Place[]> => {
@@ -421,6 +400,291 @@ export const fetchPlaces = async (): Promise<Place[]> => {
     return data;
   } catch (error) {
     console.error('Error fetching places:', error);
+    throw error;
+  }
+};
+
+// Check municipality availability by parcel ID and county
+export const checkMunicipalityAvailability = async (parcelId: string, countyName: string): Promise<MunicipalityAvailabilityResponse> => {
+  try {
+    console.log('Checking municipality availability...');
+    console.log('Parcel ID:', parcelId);
+    console.log('County Name:', countyName);
+    
+    const url = `/api/GovMetricAPI/CheckMunicipalityAvailabilityByParcel?iParcelID=${encodeURIComponent(parcelId)}&iCountyName=${encodeURIComponent(countyName)}`;
+    console.log('API URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    const data: MunicipalityAvailabilityResponse = await response.json();
+    console.log('Municipality availability response:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('Error checking municipality availability:', error);
+    throw error;
+  }
+};
+
+// Check municipality availability by address
+export const checkMunicipalityAvailabilityByAddress = async (address: string): Promise<MunicipalityAvailabilityResponse> => {
+  try {
+    console.log('Checking municipality availability by address...');
+    console.log('Address:', address);
+    
+    const url = `/api/GovMetricAPI/CheckMunicipalityAvailabilityByAddress?iAddress=${encodeURIComponent(address)}`;
+    console.log('API URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    const data: MunicipalityAvailabilityResponse = await response.json();
+    console.log('Municipality availability by address response:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('Error checking municipality availability by address:', error);
+    throw error;
+  }
+};
+
+// Global function to get organization and user data for testing
+export const getOrganizationAndUserData = () => {
+  return {
+    iOrganizationID: 1,
+    iUserGuid: "45a82190-4011-4fe9-aa5f-d2f2530eb34b"
+  };
+};
+
+// Submit report request by parcel
+export const submitReportRequestByParcel = async (
+  countyName: string, 
+  parcelId: string, 
+  reportType: 'full' | 'card'
+): Promise<any> => {
+  try {
+    console.log('Submitting report request by parcel...');
+    console.log('County Name:', countyName);
+    console.log('Parcel ID:', parcelId);
+    console.log('Report Type:', reportType);
+    
+    const { iOrganizationID, iUserGuid } = getOrganizationAndUserData();
+    const iGovOrderReportType = reportType === 'full' ? "1" : "0";
+    
+    const requestBody = {
+      iOrganizationID,
+      iUserGuid,
+      iCountyName: countyName,
+      iGovOrderParcel: parcelId,
+      iGovOrderReportType
+    };
+    
+    console.log('Request body:', requestBody);
+    
+    const response = await fetch('/api/GovMetricAPI/PostReportRequestByParcel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Submit report request response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return the text
+        return { success: true, message: responseText };
+      }
+    } else {
+      // Empty response but successful status
+      data = { success: true, message: 'Order submitted successfully' };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error submitting report request:', error);
+    throw error;
+  }
+};
+
+// Submit report request by address
+export const submitReportRequestByAddress = async (
+  address: string,
+  countyName: string, 
+  reportType: 'full' | 'card'
+): Promise<any> => {
+  try {
+    console.log('Submitting report request by address...');
+    console.log('Address:', address);
+    console.log('County Name:', countyName);
+    console.log('Report Type:', reportType);
+    
+    const { iOrganizationID, iUserGuid } = getOrganizationAndUserData();
+    const iGovOrderReportType = reportType === 'full' ? "1" : "0";
+    
+    const requestBody = {
+      iOrganizationID,
+      iUserGuid,
+      iGovOrderAddress: address,
+      iCountyName: countyName,
+      iGovOrderReportType
+    };
+    
+    console.log('Request body:', requestBody);
+    
+    const response = await fetch('/api/GovMetricAPI/PostReportRequestByAddress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Submit report request by address response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return the text
+        return { success: true, message: responseText };
+      }
+    } else {
+      // Empty response but successful status
+      data = { success: true, message: 'Order submitted successfully' };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error submitting report request by address:', error);
     throw error;
   }
 };

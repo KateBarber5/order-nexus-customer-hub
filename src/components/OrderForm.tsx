@@ -28,9 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { lookupAddress } from '@/services/smartyStreetsService';
+
 import { checkLocationStatus } from '@/services/locationStatusService';
-import { fetchPlaces, Place } from '@/services/orderService';
+import { fetchPlaces, Place, checkMunicipalityAvailability, checkMunicipalityAvailabilityByAddress, MunicipalityAvailabilityResponse, submitReportRequestByParcel, submitReportRequestByAddress } from '@/services/orderService';
 import AddressAutocomplete from './AddressAutocomplete';
 
 interface OrderFormData {
@@ -62,13 +62,13 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
   const [isLookingUpAddress, setIsLookingUpAddress] = useState(false);
   const [isLookingUpMunicipality, setIsLookingUpMunicipality] = useState(false);
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
-  const [hasValidatedAddress, setHasValidatedAddress] = useState(false);
   const [hasSeenLocationAlert, setHasSeenLocationAlert] = useState(false);
   const [showLocationAlert, setShowLocationAlert] = useState(false);
   const [locationAlertMessage, setLocationAlertMessage] = useState('');
   const [locationAlertType, setLocationAlertType] = useState<'county' | 'municipality'>('municipality');
   const [places, setPlaces] = useState<Place[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
+  const [municipalityData, setMunicipalityData] = useState<MunicipalityAvailabilityResponse | null>(null);
 
   // Load places data
   useEffect(() => {
@@ -89,112 +89,49 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     loadPlaces();
   }, []);
 
-  // Define all municipalities that we service - this should match the logic in Orders.tsx
-  const getServicedMunicipalities = () => {
-    return [
-      // Full service municipalities (both Full Report and Card Report)
-      'Miami', 'Coral Gables', 'Homestead', 'Aventura',
-      'Fort Lauderdale', 'Pembroke Pines', 'Coral Springs', 'Miramar',
-      'West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington',
-      'Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden',
-      'Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz',
-      'St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin',
-      'Jacksonville', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin',
-      'Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel',
-      'Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales',
-      'Melbourne', 'Rockledge',
-      
-      // Card Report only municipalities
-      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
-      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
-      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
-      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
-    ];
-  };
 
-  // Check if municipality is serviced
+
+  // Check if municipality is serviced using API data
   const isMunicipalityServiced = (municipality: string) => {
-    // Check if the municipality exists in any of the places' sub-places
-    return places.some(place => 
-      place.SubPlace.some(subPlace => subPlace.SubPlaceName === municipality)
-    );
-  };
-
-  // Mock municipality data by county
-  const getMockMunicipalities = (county: string) => {
-    const municipalitiesByCounty: { [key: string]: string[] } = {
-      'Miami-Dade': ['Miami', 'Miami Beach', 'Coral Gables', 'Homestead', 'Aventura'],
-      'Broward': ['Fort Lauderdale', 'Hollywood', 'Pembroke Pines', 'Coral Springs', 'Miramar'],
-      'Palm Beach': ['West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington'],
-      'Orange': ['Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden'],
-      'Hillsborough': ['Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz'],
-      'Pinellas': ['St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin'],
-      'Duval': ['Jacksonville', 'Atlantic Beach', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin'],
-      'Lee': ['Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel'],
-      'Polk': ['Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales'],
-      'Brevard': ['Melbourne', 'Palm Bay', 'Titusville', 'Cocoa', 'Rockledge']
-    };
-
-    const normalizedCounty = county.toLowerCase().replace(/\s+/g, '');
+    if (!municipality || !municipalityData) return false;
     
-    // Find the place that matches the county name
-    const matchingPlace = places.find(place => 
-      place.PlaceName.toLowerCase().replace(/\s+/g, '').includes(normalizedCounty) ||
-      normalizedCounty.includes(place.PlaceName.toLowerCase().replace(/\s+/g, ''))
-    );
-
-    if (matchingPlace) {
-      // Return all sub-place names from the matching place
-      return matchingPlace.SubPlace.map(subPlace => subPlace.SubPlaceName);
-    }
-
-    // Fallback to generic municipalities if no match found
-    return ['Generic City', 'Sample Municipality', 'Test Town'];
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    return municipalityInfo && municipalityInfo.SubPlaceStatus === "ACTIVE";
   };
 
-  // Mock function to get municipalities from API
-  const getMunicipalitiesFromAPI = (county: string) => {
-    return getMockMunicipalities(county);
-  };
 
-  // Get available services for a municipality
+
+  // Get available services for a municipality from API data
   const getAvailableServices = (municipality: string) => {
-    if (!municipality) return [];
+    if (!municipality || !municipalityData) return [];
     
-    // Municipalities that only offer Card Report (no Full Report)
-    const cardReportOnlyMunicipalities = [
-      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
-      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
-      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
-      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
-    ];
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo) return [];
     
-    const isCardReportOnly = cardReportOnlyMunicipalities.includes(municipality);
-    
-    if (isCardReportOnly) {
-      return ['Liens'];
-    } else {
-      return ['Code', 'Permits', 'Liens', 'Utilities'];
-    }
+    return municipalityInfo.Service.map(service => service.PlaceServiceName);
   };
 
-  // Check if Full Report is available for a municipality
+  // Check if Full Report is available for a municipality from API data
   const isFullReportAvailable = (municipality: string) => {
-    const cardReportOnlyMunicipalities = [
-      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
-      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
-      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
-      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
-    ];
-    return !cardReportOnlyMunicipalities.includes(municipality);
+    if (!municipality || !municipalityData) return false;
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Report) return false;
+    
+    return municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "1");
   };
 
-  // Check if Card Report is available for a municipality
+  // Check if Card Report is available for a municipality from API data
   const isCardReportAvailable = (municipality: string) => {
-    return true; // All municipalities support Card Report
+    if (!municipality || !municipalityData) return false;
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Report) return false;
+    
+    return municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "0");
   };
 
-  // Mock municipality lookup
+  // Real municipality lookup using API
   const handleMunicipalityLookup = async () => {
     if (!formData.parcelId || !formData.county) {
       toast.error('Please enter both Parcel ID and County');
@@ -203,85 +140,44 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
 
     setIsLookingUpMunicipality(true);
     
-    setTimeout(() => {
-      const municipalities = getMunicipalitiesFromAPI(formData.county);
-      const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)];
+    try {
+      const response = await checkMunicipalityAvailability(formData.parcelId, formData.county);
+      setMunicipalityData(response);
       
-      setFormData(prev => ({
-        ...prev,
-        identifiedMunicipality: randomMunicipality,
-        identifiedCounty: formData.county
-      }));
-      
-      if (onAddressLookup) {
-        onAddressLookup(randomMunicipality, formData.county);
-      }
-      
-      const locationStatus = checkLocationStatus(randomMunicipality, formData.county);
-      if (!locationStatus.isAvailable && !hasSeenLocationAlert) {
-        setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
-        setLocationAlertType(locationStatus.type);
-        setShowLocationAlert(true);
-      } else if (isMunicipalityServiced(randomMunicipality)) {
-        toast.success(`Municipality identified: ${randomMunicipality}, ${formData.county} County`);
+      // Check if the response has valid data
+      if (response.SubPlace && response.SubPlace.length > 0) {
+        const municipality = response.SubPlace[0];
+        
+        setFormData(prev => ({
+          ...prev,
+          identifiedMunicipality: municipality.SubPlaceName,
+          identifiedCounty: response.PlaceName
+        }));
+        
+        if (onAddressLookup) {
+          onAddressLookup(municipality.SubPlaceName, response.PlaceName);
+        }
+        
+        const locationStatus = checkLocationStatus(municipality.SubPlaceName, response.PlaceName);
+        if (!locationStatus.isAvailable && !hasSeenLocationAlert) {
+          setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
+          setLocationAlertType(locationStatus.type);
+          setShowLocationAlert(true);
+        } else {
+          toast.success(`Municipality identified: ${municipality.SubPlaceName}, ${response.PlaceName} County`);
+        }
       } else {
-        setShowUnsupportedDialog(true);
+        toast.error('No municipality found for the provided parcel ID and county');
       }
+    } catch (error) {
+      console.error('Error looking up municipality:', error);
+      toast.error('Failed to lookup municipality. Please try again.');
+    } finally {
       setIsLookingUpMunicipality(false);
-    }, 10000);
+    }
   };
 
-  useEffect(() => {
-    if (formData.searchType === 'address' && formData.address.length > 10 && !hasValidatedAddress) {
-      const timeoutId = setTimeout(async () => {
-        setIsLookingUpAddress(true);
-        try {
-          const result = await lookupAddress(formData.address);
-          if (result && result.isValid) {
-            setFormData(prev => ({
-              ...prev,
-              identifiedMunicipality: result.municipality,
-              identifiedCounty: result.county
-            }));
-            
-            setHasValidatedAddress(true);
-            
-            if (onAddressLookup) {
-              onAddressLookup(result.municipality, result.county);
-            }
-            
-            const locationStatus = checkLocationStatus(result.municipality, result.county);
-            if (!locationStatus.isAvailable && !hasSeenLocationAlert) {
-              setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
-              setLocationAlertType(locationStatus.type);
-              setShowLocationAlert(true);
-            } else if (isMunicipalityServiced(result.municipality)) {
-              toast.success(`Address validated: ${result.municipality}, ${result.county}`);
-            } else {
-              setShowUnsupportedDialog(true);
-            }
-          } else {
-            setFormData(prev => ({
-              ...prev,
-              identifiedMunicipality: undefined,
-              identifiedCounty: undefined
-            }));
-            
-            if (onAddressLookup) {
-              onAddressLookup('', '');
-            }
-          }
-        } catch (error) {
-          console.error('Address lookup failed:', error);
-          toast.error('Failed to validate address');
-        } finally {
-          setIsLookingUpAddress(false);
-        }
-      }, 1500);
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [formData.address, formData.searchType, onAddressLookup, hasValidatedAddress, hasSeenLocationAlert]);
 
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
@@ -299,11 +195,96 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     return isMunicipalityServiced(formData.identifiedMunicipality);
   };
 
+  // Handle municipality availability check by address
+  const handleMunicipalityAvailabilityByAddress = async (address: string) => {
+    console.log('handleMunicipalityAvailabilityByAddress called with address:', address);
+    
+    if (!address || address.length < 10) {
+      console.log('Address validation failed: address too short or empty');
+      return;
+    }
+    
+    console.log('Starting municipality lookup for address:', address);
+    setIsLookingUpAddress(true);
+    
+    try {
+      console.log('Calling checkMunicipalityAvailabilityByAddress API...');
+      const response = await checkMunicipalityAvailabilityByAddress(address);
+      console.log('API response received:', response);
+      setMunicipalityData(response);
+      
+      // Check if the response has valid data
+      if (response.SubPlace && response.SubPlace.length > 0) {
+        const municipality = response.SubPlace[0];
+        console.log('Municipality found:', municipality.SubPlaceName, 'County:', response.PlaceName);
+        
+        setFormData(prev => ({
+          ...prev,
+          identifiedMunicipality: municipality.SubPlaceName,
+          identifiedCounty: response.PlaceName
+        }));
+        
+        if (onAddressLookup) {
+          onAddressLookup(municipality.SubPlaceName, response.PlaceName);
+        }
+        
+        const locationStatus = checkLocationStatus(municipality.SubPlaceName, response.PlaceName);
+        if (!locationStatus.isAvailable && !hasSeenLocationAlert) {
+          setLocationAlertMessage(locationStatus.alertMessage || 'This location is currently unavailable for orders.');
+          setLocationAlertType(locationStatus.type);
+          setShowLocationAlert(true);
+        } else {
+          toast.success(`Municipality identified: ${municipality.SubPlaceName}, ${response.PlaceName} County`);
+        }
+      } else {
+        toast.error('No municipality found for the provided address');
+        setFormData(prev => ({
+          ...prev,
+          identifiedMunicipality: undefined,
+          identifiedCounty: undefined
+        }));
+        
+        if (onAddressLookup) {
+          onAddressLookup('', '');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking municipality availability by address:', error);
+      toast.error('Failed to check municipality availability. Please try again.');
+      
+      setFormData(prev => ({
+        ...prev,
+        identifiedMunicipality: undefined,
+        identifiedCounty: undefined
+      }));
+      
+      if (onAddressLookup) {
+        onAddressLookup('', '');
+      }
+    } finally {
+      setIsLookingUpAddress(false);
+    }
+  };
+
   const handleAddressChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
       address: value
     }));
+    
+    // Reset validation state when address changes
+    if (value !== formData.address) {
+      setMunicipalityData(null);
+      setFormData(prev => ({
+        ...prev,
+        identifiedMunicipality: undefined,
+        identifiedCounty: undefined
+      }));
+      
+      if (onAddressLookup) {
+        onAddressLookup('', '');
+      }
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -334,8 +315,8 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       identifiedCounty: undefined
     }));
     
-    setHasValidatedAddress(false);
     setHasSeenLocationAlert(false);
+    setMunicipalityData(null);
     
     if (onAddressLookup) {
       onAddressLookup('', '');
@@ -371,17 +352,64 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     setCurrentStep('details');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      console.log('Order submitted:', formData);
+    try {
+      let response: any;
+      
+      if (formData.searchType === 'address') {
+        // For address search, use the address-based API endpoint
+        const countyName = formData.identifiedCounty || '';
+        
+        if (!countyName) {
+          toast.error('County information is required. Please ensure address validation is complete.');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        console.log('Submitting address-based order:', {
+          address: formData.address,
+          countyName,
+          reportType: formData.productType
+        });
+        
+        // Submit the report request using address endpoint
+        response = await submitReportRequestByAddress(
+          formData.address,
+          countyName,
+          formData.productType
+        );
+      } else {
+        // For parcel search, use the parcel-based API endpoint
+        const parcelId = formData.parcelId;
+        const countyName = formData.identifiedCounty || formData.county;
+        
+        console.log('Submitting parcel-based order:', {
+          parcelId,
+          countyName,
+          reportType: formData.productType
+        });
+        
+        // Submit the report request using parcel endpoint
+        response = await submitReportRequestByParcel(
+          countyName,
+          parcelId,
+          formData.productType
+        );
+      }
+      
+      console.log('Order submitted successfully:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', response ? Object.keys(response) : 'null/undefined');
+      
       setIsSubmitting(false);
       setIsSuccess(true);
       
       toast.success('Municipal lien search order submitted successfully!');
       
+      // Reset form after 5 seconds
       setTimeout(() => {
         setFormData({
           address: '',
@@ -392,14 +420,19 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         });
         setCurrentStep('details');
         setIsSuccess(false);
-        setHasValidatedAddress(false);
         setHasSeenLocationAlert(false);
+        setMunicipalityData(null);
         
         if (onAddressLookup) {
           onAddressLookup('', '');
         }
       }, 5000);
-    }, 1500);
+      
+    } catch (error) {
+      console.error('Error submitting order:', error);
+      setIsSubmitting(false);
+      toast.error('Failed to submit order. Please try again.');
+    }
   };
 
   const handleLocationAlertClose = () => {
@@ -580,6 +613,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                 <AddressAutocomplete
                   value={formData.address}
                   onChange={handleAddressChange}
+                  onAddressSelected={handleMunicipalityAvailabilityByAddress}
                   placeholder="Enter complete property address"
                   className="min-h-[100px]"
                   isLoading={isLookingUpAddress}
