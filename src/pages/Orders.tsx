@@ -5,56 +5,50 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, CheckCircle, MapPin, FileText, CreditCard, Building, Shield, Gavel, FileSpreadsheet, Receipt, AlertTriangle } from 'lucide-react';
+import { Package, CheckCircle, MapPin, FileText, CreditCard, AlertTriangle } from 'lucide-react';
 import { checkLocationStatus } from '@/services/locationStatusService';
+import { MunicipalityAvailabilityResponse } from '@/services/orderService';
 
 const Orders = () => {
   const [identifiedLocation, setIdentifiedLocation] = useState<{municipality: string, county: string} | null>(null);
+  const [municipalityData, setMunicipalityData] = useState<MunicipalityAvailabilityResponse | null>(null);
   
-  // Get services based on selected municipality - some municipalities don't offer Full Report
+  // Get services based on selected municipality using API data
   const getAvailableServices = (municipality: string | null) => {
-    if (!municipality) return [];
+    if (!municipality || !municipalityData) return [];
     
-    // Municipalities that only offer Card Report (no Full Report)
-    const cardReportOnlyMunicipalities = [
-      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
-      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
-      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
-      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
-    ];
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo) return [];
     
-    const isCardReportOnly = cardReportOnlyMunicipalities.includes(municipality);
-    
-    return [
-      { name: 'Code', fullReport: !isCardReportOnly, cardReport: false },
-      { name: 'Permits', fullReport: !isCardReportOnly, cardReport: false },
-      { name: 'Liens', fullReport: !isCardReportOnly, cardReport: true },
-      { name: 'Utilities', fullReport: !isCardReportOnly, cardReport: false }
-    ];
+    return municipalityInfo.Service.map(service => service.PlaceServiceName);
   };
 
-  // Check if municipality is serviced - this should match the logic in OrderForm.tsx
+  // Check if municipality is serviced using API data
   const isMunicipalityServiced = (municipality: string) => {
-    const servicedMunicipalities = [
-      // Full service municipalities (both Full Report and Card Report)
-      'Miami', 'Coral Gables', 'Homestead', 'Aventura',
-      'Fort Lauderdale', 'Pembroke Pines', 'Coral Springs', 'Miramar',
-      'West Palm Beach', 'Boca Raton', 'Delray Beach', 'Boynton Beach', 'Wellington',
-      'Orlando', 'Winter Park', 'Apopka', 'Ocoee', 'Winter Garden',
-      'Tampa', 'Temple Terrace', 'Plant City', 'Oldsmar', 'Lutz',
-      'St. Petersburg', 'Clearwater', 'Largo', 'Pinellas Park', 'Dunedin',
-      'Jacksonville', 'Neptune Beach', 'Jacksonville Beach', 'Baldwin',
-      'Fort Myers', 'Cape Coral', 'Bonita Springs', 'Estero', 'Sanibel',
-      'Lakeland', 'Winter Haven', 'Bartow', 'Auburndale', 'Lake Wales',
-      'Melbourne', 'Rockledge',
-      
-      // Card Report only municipalities
-      'Titusville', 'Palm Bay', 'Cocoa', 'Hollywood', 'Fort White', 
-      'Atlantic Beach', 'Century', 'Weeki Wachee', 'Lake Placid',
-      'Miami Beach', 'Port Richey', 'Gulf Breeze', 'Longboat Key',
-      'Casselberry', 'Deltona', 'New Smyrna Beach', 'St. Marks'
-    ];
-    return servicedMunicipalities.includes(municipality);
+    if (!municipality || !municipalityData) return false;
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    return municipalityInfo && municipalityInfo.SubPlaceStatus === "ACTIVE";
+  };
+
+  // Check if Full Report is available for a municipality from API data
+  const isFullReportAvailable = (municipality: string) => {
+    if (!municipality || !municipalityData) return false;
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Report) return false;
+    
+    return municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "1");
+  };
+
+  // Check if Card Report is available for a municipality from API data
+  const isCardReportAvailable = (municipality: string) => {
+    if (!municipality || !municipalityData) return false;
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Report) return false;
+    
+    return municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "0");
   };
 
   const handleAddressLookup = (municipality: string, county: string) => {
@@ -62,7 +56,12 @@ const Orders = () => {
       setIdentifiedLocation({ municipality, county });
     } else {
       setIdentifiedLocation(null);
+      setMunicipalityData(null);
     }
+  };
+
+  const handleMunicipalityDataChange = (data: MunicipalityAvailabilityResponse | null) => {
+    setMunicipalityData(data);
   };
 
   // Use identified location
@@ -71,20 +70,30 @@ const Orders = () => {
   const availableServices = getAvailableServices(displayMunicipality);
 
   // Check if any service supports Full Report or Card Report
-  const hasFullReport = availableServices.some(service => service.fullReport);
-  const hasCardReport = availableServices.some(service => service.cardReport);
+  const hasFullReport = displayMunicipality ? isFullReportAvailable(displayMunicipality) : false;
+  const hasCardReport = displayMunicipality ? isCardReportAvailable(displayMunicipality) : false;
 
-  // Define data services for each product type
-  const fullReportServices = [
-    { name: 'Code', icon: Building },
-    { name: 'Permits', icon: Shield },
-    { name: 'Liens', icon: Gavel }
-  ];
+  // Get services for each report type from API data
+  const getFullReportServices = (municipality: string) => {
+    if (!municipality || !municipalityData) return [];
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Service) return [];
+    
+    // For Full Report, return all available services
+    return municipalityInfo.Service.map(service => service.PlaceServiceName);
+  };
 
-  const cardReportServices = [
-    { name: 'Property Appraiser Sheet', icon: FileSpreadsheet },
-    { name: 'Tax Records', icon: Receipt }
-  ];
+  const getCardReportServices = (municipality: string) => {
+    if (!municipality || !municipalityData) return [];
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Service) return [];
+    
+    // For Card Report, return all available services (same as Full Report for now)
+    // In the future, this could be filtered based on specific Card Report services
+    return municipalityInfo.Service.map(service => service.PlaceServiceName);
+  };
 
   // Check if we should show the Available Services section
   const shouldShowAvailableServices = displayCounty && displayMunicipality && isMunicipalityServiced(displayMunicipality);
@@ -105,7 +114,7 @@ const Orders = () => {
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
         {/* Order Form */}
         <div className={`w-full ${shouldShowAvailableServices ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-300`}>
-          <OrderForm onAddressLookup={handleAddressLookup} />
+          <OrderForm onAddressLookup={handleAddressLookup} onMunicipalityDataChange={handleMunicipalityDataChange} />
         </div>
         
         {/* Available Services Section - Only show when municipality is identified AND serviced */}
@@ -162,12 +171,11 @@ const Orders = () => {
                         {/* Full Report Data Services */}
                         <div className="space-y-2">
                           <div className="text-xs font-medium text-green-700 mb-2">Included Data Services:</div>
-                          {fullReportServices.map((service, index) => {
-                            const IconComponent = service.icon;
+                          {getFullReportServices(displayMunicipality).map((service, index) => {
                             return (
                               <div key={index} className="flex items-center gap-2 text-xs text-green-700">
-                                <IconComponent size={12} />
-                                <span>{service.name}</span>
+                                <FileText size={12} />
+                                <span>{service}</span>
                               </div>
                             );
                           })}
@@ -193,12 +201,11 @@ const Orders = () => {
                         {/* Card Report Data Services */}
                         <div className="space-y-2">
                           <div className="text-xs font-medium text-blue-700 mb-2">Included Data Services:</div>
-                          {cardReportServices.map((service, index) => {
-                            const IconComponent = service.icon;
+                          {getCardReportServices(displayMunicipality).map((service, index) => {
                             return (
                               <div key={index} className="flex items-center gap-2 text-xs text-blue-700">
-                                <IconComponent size={12} />
-                                <span>{service.name}</span>
+                                <CreditCard size={12} />
+                                <span>{service}</span>
                               </div>
                             );
                           })}

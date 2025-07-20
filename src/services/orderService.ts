@@ -1,4 +1,12 @@
 
+// Report request response interface
+export interface ReportRequestResponse {
+  success?: boolean;
+  message?: string;
+  GovOrderID?: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 // API Response interface matching the provided JSON structure
 export interface GovOrderResponse {
   GovOrderID: string;
@@ -522,7 +530,7 @@ export const submitReportRequestByParcel = async (
   countyName: string, 
   parcelId: string, 
   reportType: 'full' | 'card'
-): Promise<any> => {
+): Promise<ReportRequestResponse> => {
   try {
     console.log('Submitting report request by parcel...');
     console.log('County Name:', countyName);
@@ -580,7 +588,7 @@ export const submitReportRequestByParcel = async (
     const responseText = await response.text();
     console.log('Raw response text:', responseText);
     
-    let data;
+    let data: ReportRequestResponse;
     if (responseText.trim()) {
       try {
         data = JSON.parse(responseText);
@@ -608,7 +616,7 @@ export const submitReportRequestByAddress = async (
   address: string,
   countyName: string, 
   reportType: 'full' | 'card'
-): Promise<any> => {
+): Promise<ReportRequestResponse> => {
   try {
     console.log('Submitting report request by address...');
     console.log('Address:', address);
@@ -666,7 +674,7 @@ export const submitReportRequestByAddress = async (
     const responseText = await response.text();
     console.log('Raw response text:', responseText);
     
-    let data;
+    let data: ReportRequestResponse;
     if (responseText.trim()) {
       try {
         data = JSON.parse(responseText);

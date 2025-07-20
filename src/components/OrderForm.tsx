@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 
 import { checkLocationStatus } from '@/services/locationStatusService';
-import { fetchPlaces, Place, checkMunicipalityAvailability, checkMunicipalityAvailabilityByAddress, MunicipalityAvailabilityResponse, submitReportRequestByParcel, submitReportRequestByAddress } from '@/services/orderService';
+import { fetchPlaces, Place, checkMunicipalityAvailability, checkMunicipalityAvailabilityByAddress, MunicipalityAvailabilityResponse, ReportRequestResponse, submitReportRequestByParcel, submitReportRequestByAddress } from '@/services/orderService';
 import AddressAutocomplete from './AddressAutocomplete';
 
 interface OrderFormData {
@@ -45,9 +45,10 @@ interface OrderFormData {
 
 interface OrderFormProps {
   onAddressLookup?: (municipality: string, county: string) => void;
+  onMunicipalityDataChange?: (data: MunicipalityAvailabilityResponse | null) => void;
 }
 
-const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
+const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps) => {
   const [formData, setFormData] = useState<OrderFormData>({
     address: '',
     parcelId: '',
@@ -143,6 +144,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     try {
       const response = await checkMunicipalityAvailability(formData.parcelId, formData.county);
       setMunicipalityData(response);
+      if (onMunicipalityDataChange) {
+        onMunicipalityDataChange(response);
+      }
       
       // Check if the response has valid data
       if (response.SubPlace && response.SubPlace.length > 0) {
@@ -212,6 +216,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
       const response = await checkMunicipalityAvailabilityByAddress(address);
       console.log('API response received:', response);
       setMunicipalityData(response);
+      if (onMunicipalityDataChange) {
+        onMunicipalityDataChange(response);
+      }
       
       // Check if the response has valid data
       if (response.SubPlace && response.SubPlace.length > 0) {
@@ -275,6 +282,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     // Reset validation state when address changes
     if (value !== formData.address) {
       setMunicipalityData(null);
+      if (onMunicipalityDataChange) {
+        onMunicipalityDataChange(null);
+      }
       setFormData(prev => ({
         ...prev,
         identifiedMunicipality: undefined,
@@ -317,6 +327,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     
     setHasSeenLocationAlert(false);
     setMunicipalityData(null);
+    if (onMunicipalityDataChange) {
+      onMunicipalityDataChange(null);
+    }
     
     if (onAddressLookup) {
       onAddressLookup('', '');
@@ -357,7 +370,7 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
     setIsSubmitting(true);
     
     try {
-      let response: any;
+      let response: ReportRequestResponse;
       
       if (formData.searchType === 'address') {
         // For address search, use the address-based API endpoint
@@ -422,6 +435,9 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
         setIsSuccess(false);
         setHasSeenLocationAlert(false);
         setMunicipalityData(null);
+        if (onMunicipalityDataChange) {
+          onMunicipalityDataChange(null);
+        }
         
         if (onAddressLookup) {
           onAddressLookup('', '');
@@ -618,17 +634,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                   className="min-h-[100px]"
                   isLoading={isLookingUpAddress}
                 />
-                
-                {formData.identifiedMunicipality && formData.identifiedCounty && isMunicipalityServiced(formData.identifiedMunicipality) && (
-                  <div className="border rounded-md p-3 bg-green-50 border-green-200">
-                    <p className="text-sm text-green-800">
-                      <strong>Address Validated:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
-                    </p>
-                    <p className="text-sm text-green-800 mt-1">
-                      <strong>Services:</strong> {getAvailableServices(formData.identifiedMunicipality).join(', ')}
-                    </p>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -683,17 +688,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                     )}
                   </Button>
                 </div>
-                
-                {formData.identifiedMunicipality && formData.identifiedCounty && isMunicipalityServiced(formData.identifiedMunicipality) && (
-                  <div className="border rounded-md p-3 bg-green-50 border-green-200">
-                    <p className="text-sm text-green-800">
-                      <strong>Municipality Identified:</strong> City: {formData.identifiedMunicipality}, County: {formData.identifiedCounty}
-                    </p>
-                    <p className="text-sm text-green-800 mt-1">
-                      <strong>Services:</strong> {getAvailableServices(formData.identifiedMunicipality).join(', ')}
-                    </p>
-                  </div>
-                )}
               </div>
             )}
 
@@ -715,28 +709,6 @@ const OrderForm = ({ onAddressLookup }: OrderFormProps) => {
                 </div>
               )}
               
-              {isProductSelectionAllowed() && formData.identifiedMunicipality && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                  <p className="text-sm text-blue-800">
-                    <strong>Available Reports for {formData.identifiedMunicipality}:</strong>
-                    {isFullReportAvailable(formData.identifiedMunicipality) && (
-                      <span className="block">• Full Report</span>
-                    )}
-                    {isCardReportAvailable(formData.identifiedMunicipality) && (
-                      <span className="block">• Card Report</span>
-                    )}
-                    {!isFullReportAvailable(formData.identifiedMunicipality) && !isCardReportAvailable(formData.identifiedMunicipality) && (
-                      <span className="block">• No specific report types configured</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-blue-800 mt-2">
-                    <strong>Available Services:</strong>
-                    {getAvailableServices(formData.identifiedMunicipality).map((service, index) => (
-                      <span key={index} className="block">• {service}</span>
-                    ))}
-                  </p>
-                </div>
-              )}
               <RadioGroup 
                 value={formData.productType} 
                 onValueChange={(value) => handleProductTypeChange(value as 'full' | 'card')}
