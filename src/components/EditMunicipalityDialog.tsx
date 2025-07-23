@@ -29,7 +29,9 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { County, Municipality, ReportType, StatusType } from '@/pages/CountiesCitiesConfig';
+import { toast } from '@/components/ui/sonner';
+import type { County, Municipality, ReportType, StatusType, CrudMunicipalityRequest } from '@/services/orderService';
+import { crudMunicipality } from '@/services/orderService';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Municipality name is required'),
@@ -49,7 +51,7 @@ const formSchema = z.object({
   }
   return true;
 }, {
-  message: 'Alert message is required when status is "Currently Unavailable"',
+  message: 'Alert message is required when status is "Unavailable"',
   path: ['alertMessage'],
 });
 
@@ -91,30 +93,99 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
   const watchedStatus = form.watch('status');
   const watchedReportTypes = form.watch('reportTypes');
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log('Form submitted with values:', values);
     
-    const municipalityData: Omit<Municipality, 'id'> = {
-      name: values.name,
-      countyId: values.countyId,
-      status: values.status,
-      availableServices: {
-        code: values.services.code,
-        permits: values.services.permits,
-        liens: values.services.liens,
-        utilities: values.services.utilities,
-      },
-      reportTypes: values.reportTypes as ReportType[],
-    };
+    try {
+      // Find the selected county to get its name
+      const selectedCounty = counties.find(county => county.id === values.countyId);
+      if (!selectedCounty) {
+        toast.error('Selected county not found');
+        return;
+      }
 
-    // Always include alertMessage if it exists, regardless of status
-    if (values.alertMessage !== undefined && values.alertMessage !== null) {
-      municipalityData.alertMessage = values.alertMessage;
+      // Map status to API format
+      const mapStatusToAPI = (status: string): string => {
+        switch (status) {
+          case 'active': return 'Active';
+          case 'inactive': return 'Inactive';
+          case 'unavailable': return 'Unavailable';
+          default: return 'Active';
+        }
+      };
+
+      // Build report types array
+      const reports = values.reportTypes.map(reportType => ({
+        SubPlaceOrderReportType: reportType === 'full' ? '1' : '0'
+      }));
+
+      // Build services array from checked services
+      const services = Object.entries(values.services)
+        .filter(([_, isChecked]) => isChecked)
+        .map(([serviceKey, _]) => ({
+          PlaceService: serviceKey.charAt(0).toUpperCase() + serviceKey.slice(1) // Capitalize first letter
+        }));
+
+      // Prepare the API request payload
+      const requestData: CrudMunicipalityRequest = {
+        iTrnMode: 'UPD',
+        iCountyName: selectedCounty.name,
+        iSubPlace: {
+          SubPlaceName: values.name,
+          SubPlaceStatus: mapStatusToAPI(values.status),
+          ...(values.status === 'unavailable' && values.alertMessage && {
+            SubPlaceStatusMessage: values.alertMessage
+          }),
+          Report: reports,
+          Service: services
+        }
+      };
+
+      console.log('API request payload:', requestData);
+
+      // Make the API call
+      const response = await crudMunicipality(requestData);
+      console.log('API response:', response);
+
+      // Check for success
+      const successMessage = response.oMessages?.find(msg => msg.Id === 'Success');
+      if (successMessage) {
+        toast.success('Municipality updated successfully');
+        
+        const municipalityData: Omit<Municipality, 'id'> = {
+          name: values.name,
+          countyId: values.countyId,
+          status: values.status,
+          availableServices: {
+            code: values.services.code,
+            permits: values.services.permits,
+            liens: values.services.liens,
+            utilities: values.services.utilities,
+          },
+          reportTypes: values.reportTypes as ReportType[],
+        };
+
+        // Always include alertMessage if it exists, regardless of status
+        if (values.alertMessage !== undefined && values.alertMessage !== null) {
+          municipalityData.alertMessage = values.alertMessage;
+        }
+        
+        console.log('Municipality data being sent to parent:', municipalityData);
+        onEdit(municipalityData);
+        onOpenChange(false);
+      } else {
+        // Check for error messages
+        const errorMessage = response.oMessages?.find(msg => msg.Id !== 'Success');
+        if (errorMessage) {
+          toast.error(`Failed to update municipality: ${errorMessage.Description}`);
+        } else {
+          toast.error('Failed to update municipality: Unknown error');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating municipality:', error);
+      toast.error('Failed to update municipality. Please try again.');
     }
-    
-    console.log('Municipality data being sent to parent:', municipalityData);
-    onEdit(municipalityData);
-    onOpenChange(false);
   };
 
   const handleReportTypeChange = (reportType: ReportType, checked: boolean) => {
@@ -191,7 +262,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="unavailable">Currently Unavailable</SelectItem>
+                      <SelectItem value="unavailable">Unavailable</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -234,7 +305,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="text-sm font-normal">
-                          Code Enforcement
+                          Code
                         </FormLabel>
                       </div>
                     </FormItem>
@@ -253,7 +324,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="text-sm font-normal">
-                          Building Permits
+                          Permits
                         </FormLabel>
                       </div>
                     </FormItem>
@@ -272,7 +343,7 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="text-sm font-normal">
-                          Municipal Liens
+                          Liens
                         </FormLabel>
                       </div>
                     </FormItem>

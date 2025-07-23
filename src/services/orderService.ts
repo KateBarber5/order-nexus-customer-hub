@@ -1,4 +1,35 @@
 
+// Types for CountiesCitiesConfig component
+export type StatusType = 'active' | 'inactive' | 'unavailable';
+
+export interface ServiceAvailability {
+  code: boolean;
+  permits: boolean;
+  liens: boolean;
+  utilities: boolean;
+}
+
+export type ReportType = 'full' | 'card';
+
+export interface Municipality {
+  id: string;
+  name: string;
+  countyId: string;
+  status: StatusType;
+  alertMessage?: string;
+  availableServices: ServiceAvailability;
+  reportTypes: ReportType[];
+}
+
+export interface County {
+  id: string;
+  name: string;
+  state: string;
+  status: StatusType;
+  alertMessage?: string;
+  municipalities: Municipality[];
+}
+
 // Report request response interface
 export interface ReportRequestResponse {
   success?: boolean;
@@ -402,10 +433,26 @@ export const fetchPlaces = async (): Promise<Place[]> => {
     
     // Validate that data is an array
     if (!Array.isArray(data)) {
+      console.error('API response is not an array:', data);
       throw new Error('API response is not an array');
     }
     
-    return data;
+    // Validate each place has required properties
+    const validPlaces = data.filter(place => {
+      if (!place || typeof place !== 'object') {
+        console.warn('Invalid place object:', place);
+        return false;
+      }
+      if (!place.PlaceID || !place.PlaceName) {
+        console.warn('Place missing required properties:', place);
+        return false;
+      }
+      // SubPlace is optional - can be undefined, null, or empty array
+      return true;
+    });
+    
+    console.log('Valid places after filtering:', validPlaces);
+    return validPlaces;
   } catch (error) {
     console.error('Error fetching places:', error);
     throw error;
@@ -525,6 +572,354 @@ export const getOrganizationAndUserData = () => {
   };
 };
 
+// CRUD County API interfaces
+export interface CrudCountyRequest {
+  iTrnMode: 'INS' | 'UPD' | 'DLT';
+  iCountyName: string;
+  iState: string;
+  iCountyStatus: string;
+  iAlertMessage?: string;
+}
+
+export interface CrudCountyMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface CrudCountyResponse {
+  oMessages: CrudCountyMessage[];
+  [key: string]: any;
+}
+
+export interface AvailableService {
+  Name: string;
+}
+
+// CRUD Municipality interfaces
+export interface CrudMunicipalityRequest {
+  iTrnMode: 'INS' | 'UPD' | 'DLT';
+  iCountyName: string;
+  iSubPlace: {
+    SubPlaceName: string;
+    SubPlaceStatus: string;
+    SubPlaceStatusMessage?: string;
+    Report: {
+      SubPlaceOrderReportType: string;
+    }[];
+    Service: {
+      PlaceService: string;
+    }[];
+  };
+}
+
+export interface CrudMunicipalityMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface CrudMunicipalityResponse {
+  oMessages: CrudMunicipalityMessage[];
+  [key: string]: any;
+}
+
+// CRUD County API function
+export const crudCounty = async (requestData: CrudCountyRequest): Promise<CrudCountyResponse> => {
+  try {
+    console.log('Submitting county CRUD request...');
+    console.log('Request data:', requestData);
+    
+    const response = await fetch('/api/GovMetricAPI/CrudCounty', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: CrudCountyResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('CRUD County response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'County operation completed successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in CRUD County operation:', error);
+    throw error;
+  }
+};
+
+// CRUD Municipality API function
+export const crudMunicipality = async (requestData: CrudMunicipalityRequest): Promise<CrudMunicipalityResponse> => {
+  try {
+    console.log('Submitting municipality CRUD request...');
+    console.log('Request data:', requestData);
+    
+    const response = await fetch('/api/GovMetricAPI/CrudMunicipality', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: CrudMunicipalityResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('CRUD Municipality response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'Municipality operation completed successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in CRUD Municipality operation:', error);
+    throw error;
+  }
+};
+
+// Transform API Place data to County/Municipality format for CountiesCitiesConfig
+export const transformPlacesToCounties = (places: Place[]): County[] => {
+  // Handle null/undefined input
+  if (!places || !Array.isArray(places)) {
+    console.warn('transformPlacesToCounties: Invalid input - places is not an array:', places);
+    return [];
+  }
+
+  console.log(`Processing ${places.length} places from API`);
+  
+  return places.map(place => {
+    console.log(`Processing place: ${place.PlaceName} (ID: ${place.PlaceID})`);
+    console.log(`SubPlace: ${place.SubPlace ? `Array with ${place.SubPlace.length} items` : 'undefined/null'}`);
+    // Map API status to component status
+    const mapStatus = (apiStatus: string): StatusType => {
+      switch (apiStatus.toLowerCase()) {
+        case 'active':
+        case 'available':
+          return 'active';
+        case 'inactive':
+          return 'inactive';
+        case 'unavailable':
+          return 'unavailable';
+        case 'down':
+        case 'maintenance':
+        case 'error':
+          return 'unavailable';
+        default:
+          return 'inactive';
+      }
+    };
+
+    // Transform services from API format to component format
+    const transformServices = (services: PlaceService[]): ServiceAvailability => {
+      const serviceMap: ServiceAvailability = {
+        code: false,
+        permits: false,
+        liens: false,
+        utilities: false
+      };
+
+      if (!services || !Array.isArray(services)) {
+        console.warn('Invalid services array:', services);
+        return serviceMap;
+      }
+
+      services.forEach(service => {
+        if (!service || !service.PlaceServiceName) {
+          console.warn('Invalid service object:', service);
+          return;
+        }
+        
+        const serviceName = service.PlaceServiceName.toLowerCase();
+        if (serviceName.includes('code') || serviceName.includes('enforcement')) {
+          serviceMap.code = true;
+        }
+        if (serviceName.includes('permit')) {
+          serviceMap.permits = true;
+        }
+        if (serviceName.includes('lien') || serviceName.includes('municipal')) {
+          serviceMap.liens = true;
+        }
+        if (serviceName.includes('utility') || serviceName.includes('utilities')) {
+          serviceMap.utilities = true;
+        }
+      });
+
+      return serviceMap;
+    };
+
+    // Transform report types from API format to component format
+    const transformReportTypes = (reports: PlaceReport[]): ReportType[] => {
+      const reportTypes: ReportType[] = [];
+      
+      if (!reports || !Array.isArray(reports)) {
+        console.warn('Invalid reports array:', reports);
+        return reportTypes;
+      }
+      
+      reports.forEach(report => {
+        if (!report || !report.SubPlaceOrderReportType) {
+          console.warn('Invalid report object:', report);
+          return;
+        }
+        
+        if (report.SubPlaceOrderReportType === '1') {
+          reportTypes.push('full');
+        } else if (report.SubPlaceOrderReportType === '0') {
+          reportTypes.push('card');
+        }
+      });
+
+      return reportTypes;
+    };
+
+    // Handle counties with no municipalities (SubPlace can be undefined, null, or empty array)
+    const municipalities: Municipality[] = [];
+    
+    if (place.SubPlace && Array.isArray(place.SubPlace) && place.SubPlace.length > 0) {
+      console.log(`Processing ${place.SubPlace.length} municipalities for county "${place.PlaceName}"`);
+      
+      const mappedMunicipalities = place.SubPlace.map(subPlace => {
+        // Validate subPlace has required properties
+        if (!subPlace || !subPlace.SubPlaceName || !Array.isArray(subPlace.Service)) {
+          console.warn('Invalid subPlace object:', subPlace);
+          return null;
+        }
+        
+        return {
+          id: `${place.PlaceID}-${subPlace.SubPlaceName}`,
+          name: subPlace.SubPlaceName,
+          countyId: place.PlaceID.toString(),
+          status: mapStatus(subPlace.SubPlaceStatus),
+          alertMessage: subPlace.SubPlaceStatusMessage || undefined,
+          availableServices: transformServices(subPlace.Service),
+          reportTypes: transformReportTypes(subPlace.Report || [])
+        };
+      }).filter(Boolean) as Municipality[];
+      
+      municipalities.push(...mappedMunicipalities);
+    } else {
+      console.log(`County "${place.PlaceName}" has no municipalities (SubPlace is ${place.SubPlace ? 'empty array' : 'undefined/null'})`);
+    }
+
+    const county = {
+      id: place.PlaceID.toString(),
+      name: place.PlaceName,
+      state: 'FL', // Assuming all places are in Florida
+      status: mapStatus(place.PlaceStatus),
+      alertMessage: place.PlaceStatusMessage || undefined,
+      municipalities
+    };
+    
+    console.log(`Created county: ${county.name} with ${county.municipalities.length} municipalities`);
+    return county;
+  });
+};
+
 // Submit report request by parcel
 export const submitReportRequestByParcel = async (
   countyName: string, 
@@ -607,6 +1002,61 @@ export const submitReportRequestByParcel = async (
     return data;
   } catch (error) {
     console.error('Error submitting report request:', error);
+    throw error;
+  }
+};
+
+// Fetch all available services from API
+export const getAllAvailableServices = async (): Promise<AvailableService[]> => {
+  try {
+    console.log('Fetching all available services from API...');
+    console.log('API URL:', '/api/GovMetricAPI/GetAllAvailableServices');
+    
+    const response = await fetch('/api/GovMetricAPI/GetAllAvailableServices', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    const data: AvailableService[] = await response.json();
+    console.log('API response data:', data);
+    
+    // Validate that data is an array
+    if (!Array.isArray(data)) {
+      console.error('API response is not an array:', data);
+      throw new Error('API response is not an array');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching available services:', error);
     throw error;
   }
 };

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,7 +29,9 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { County, StatusType } from '@/pages/CountiesCitiesConfig';
+import { toast } from '@/components/ui/sonner';
+import type { County, StatusType } from '@/services/orderService';
+import { crudCounty } from '@/services/orderService';
 
 const formSchema = z.object({
   name: z.string().min(1, 'County name is required'),
@@ -42,7 +44,7 @@ const formSchema = z.object({
   }
   return true;
 }, {
-  message: 'Alert message is required when status is "Currently Unavailable"',
+  message: 'Alert message is required when status is "Unavailable"',
   path: ['alertMessage'],
 });
 
@@ -54,6 +56,8 @@ interface EditCountyDialogProps {
 }
 
 const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDialogProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,16 +79,64 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
 
   const watchedStatus = form.watch('status');
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const countyData = {
-      name: values.name,
-      state: values.state,
-      status: values.status,
-      ...(values.status === 'unavailable' && values.alertMessage ? { alertMessage: values.alertMessage } : {}),
-    };
-    
-    onEdit(countyData);
-    onOpenChange(false);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Map status to API format
+      const mapStatusToAPI = (status: StatusType): string => {
+        switch (status) {
+          case 'active':
+            return 'Active';
+          case 'inactive':
+            return 'Inactive';
+          case 'unavailable':
+            return 'Unavailable';
+          default:
+            return 'Active';
+        }
+      };
+
+      const requestData = {
+        iTrnMode: 'UPD' as const,
+        iCountyName: values.name,
+        iState: values.state,
+        iCountyStatus: mapStatusToAPI(values.status),
+        iAlertMessage: values.status === 'unavailable' && values.alertMessage ? values.alertMessage : undefined,
+      };
+
+      console.log('Submitting county update request:', requestData);
+      
+      const response = await crudCounty(requestData);
+      
+      // Check if the operation was successful by looking for "Success" in oMessages
+      const successMessage = response.oMessages?.find(msg => msg.Id === 'Success');
+      
+      if (successMessage) {
+        toast.success(successMessage.Description || `County "${values.name}" updated successfully`);
+        
+        // Call the onEdit callback with the form data for local state update
+        const countyData = {
+          name: values.name,
+          state: values.state,
+          status: values.status,
+          ...(values.status === 'unavailable' && values.alertMessage ? { alertMessage: values.alertMessage } : {}),
+        };
+        
+        onEdit(countyData);
+        onOpenChange(false);
+      } else {
+        // Find error message if any
+        const errorMessage = response.oMessages?.find(msg => msg.Id !== 'Success');
+        const errorText = errorMessage?.Description || 'Failed to update county';
+        toast.error(errorText);
+      }
+    } catch (error) {
+      console.error('Error updating county:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update county');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -105,7 +157,7 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
                 <FormItem>
                   <FormLabel>County Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Miami-Dade" {...field} />
+                    <Input placeholder="e.g., Miami-Dade" {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,7 +191,7 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="unavailable">Currently Unavailable</SelectItem>
+                      <SelectItem value="unavailable">Unavailable</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -165,10 +217,12 @@ const EditCountyDialog = ({ open, onOpenChange, county, onEdit }: EditCountyDial
               />
             )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit">Update County</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Updating County...' : 'Update County'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
