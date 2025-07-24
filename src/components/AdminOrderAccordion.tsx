@@ -9,7 +9,7 @@ interface OrderData {
   address: string;
   county: string;
   status: string;
-  amount: number;
+  amount: string;
   orderDate: string;
   paidStatus: string;
 }

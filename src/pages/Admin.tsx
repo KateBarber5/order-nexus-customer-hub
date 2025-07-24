@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import AdminReportFilters from '@/components/AdminReportFilters';
 import AdminOrderTable from '@/components/AdminOrderTable';
 import AdminOrderAccordion from '@/components/AdminOrderAccordion';
 import AdminSubscriptionsGrid from '@/components/AdminSubscriptionsGrid';
+import { getAdminOrderReporting, AdminOrderReportingResponse, AdminOrder, AdminOrderReportingFilter } from '@/services/orderService';
 
 interface OrderData {
   id: string;
@@ -14,7 +16,7 @@ interface OrderData {
   address: string;
   county: string;
   status: string;
-  amount: number;
+  amount: string;
   orderDate: string;
   paidStatus: string;
 }
@@ -27,58 +29,106 @@ const Admin = () => {
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [selectedPaidStatus, setSelectedPaidStatus] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [adminOrderData, setAdminOrderData] = useState<AdminOrderReportingResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Mock data with dates for demonstration
-  const mockOrderData = [
-    { customer: 'John Doe', email: 'john@example.com', orderCount: 15, totalAmount: 2500, lastOrderDate: '2024-01-15' },
-    { customer: 'Jane Smith', email: 'jane@example.com', orderCount: 8, totalAmount: 1200, lastOrderDate: '2024-02-20' },
-    { customer: 'Bob Johnson', email: 'bob@example.com', orderCount: 12, totalAmount: 1800, lastOrderDate: '2024-03-10' },
-    { customer: 'Alice Williams', email: 'alice@example.com', orderCount: 6, totalAmount: 900, lastOrderDate: '2024-03-25' },
-    { customer: 'Mike Davis', email: 'mike@example.com', orderCount: 20, totalAmount: 3200, lastOrderDate: '2024-04-05' },
-    { customer: 'Sarah Wilson', email: 'sarah@example.com', orderCount: 9, totalAmount: 1400, lastOrderDate: '2024-04-15' },
-  ];
+  // Fetch admin order reporting data
+  const fetchAdminOrderData = async (filters: AdminOrderReportingFilter[] = []) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAdminOrderReporting(filters);
+      setAdminOrderData(data);
+    } catch (err) {
+      console.error('Error fetching admin order data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch order data');
+      toast({
+        title: "Error",
+        description: "Failed to fetch order data from API",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Mock customer order data for specific customer reports - using state to allow updates
-  const [mockCustomerOrderData, setMockCustomerOrderData] = useState<OrderData[]>([
-    { id: 'ORD-001', customer: 'John Doe', address: '123 Main St, Anytown, CA', county: 'Los Angeles', status: 'delivered', amount: 150, orderDate: '2024-01-15', paidStatus: 'Paid' },
-    { id: 'ORD-002', customer: 'John Doe', address: '456 Oak Ave, Anytown, CA', county: 'Los Angeles', status: 'completed', amount: 200, orderDate: '2024-02-10', paidStatus: 'Paid' },
-    { id: 'ORD-003', customer: 'Jane Smith', address: '789 Pine St, Somewhere, CA', county: 'San Diego', status: 'shipped', amount: 175, orderDate: '2024-02-20', paidStatus: 'Unpaid' },
-    { id: 'ORD-004', customer: 'Bob Johnson', address: '321 Elm Dr, Nowhere, CA', county: 'Orange', status: 'processing', amount: 125, orderDate: '2024-03-10', paidStatus: 'Unpaid' },
-    { id: 'ORD-005', customer: 'John Doe', address: '654 Maple Ln, Anytown, CA', county: 'Los Angeles', status: 'delivered', amount: 300, orderDate: '2024-03-15', paidStatus: 'Paid' },
-    { id: 'ORD-006', customer: 'Alice Williams', address: '987 Cedar St, Elsewhere, CA', county: 'Riverside', status: 'pending', amount: 225, orderDate: '2024-03-25', paidStatus: 'Unpaid' },
-  ]);
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchAdminOrderData();
+  }, []);
+
+  // Transform API data to match the expected format
+  const transformApiDataToOrderData = (apiData: AdminOrderReportingResponse[]): OrderData[] => {
+    const orderData: OrderData[] = [];
+    
+    apiData.forEach(org => {
+      // Check if Orders array exists and is not empty
+      if (org.Orders && Array.isArray(org.Orders)) {
+        org.Orders.forEach(order => {
+          orderData.push({
+            id: order.GovOrderID,
+            customer: org.OrganizationName,
+            address: order.GovOrderAddress,
+            county: order.GovOrderCounty,
+            status: order.GovOrderStatus,
+            amount: order.GovOrderAmount,
+            orderDate: order.GovOrderCreateDate,
+            paidStatus: order.GovOrderPaidStatus
+          });
+        });
+      }
+    });
+    
+    return orderData;
+  };
+
+  // Transform API data to summary format for accordion view
+  const transformApiDataToSummaryData = (apiData: AdminOrderReportingResponse[]) => {
+    return apiData.map(org => {
+      // Check if Orders array exists and is not empty
+      const orders = org.Orders && Array.isArray(org.Orders) ? org.Orders : [];
+      const lastOrderDate = orders.length > 0 ? orders[0].GovOrderCreateDate : 'N/A';
+      
+      return {
+        customer: org.OrganizationName,
+        email: '', // API doesn't provide email
+        orderCount: org.OrdersNumber,
+        totalAmount: parseFloat(org.OrdersAmount) || 0,
+        lastOrderDate: lastOrderDate,
+        orders: orders.map(order => ({
+          id: order.GovOrderID,
+          customer: org.OrganizationName,
+          address: order.GovOrderAddress,
+          county: order.GovOrderCounty,
+          status: order.GovOrderStatus,
+          amount: order.GovOrderAmount,
+          orderDate: order.GovOrderCreateDate,
+          paidStatus: order.GovOrderPaidStatus
+        }))
+      };
+    });
+  };
 
   // Get unique customers for dropdown
-  const uniqueCustomers = [...new Set(mockCustomerOrderData.map(order => order.customer))];
+  const uniqueCustomers = useMemo(() => {
+    if (!Array.isArray(adminOrderData)) return [];
+    return [...new Set(adminOrderData.map(org => org.OrganizationName))];
+  }, [adminOrderData]);
 
   // Get customer orders grouped by customer
   const customerOrdersGrouped = useMemo(() => {
-    const grouped = mockCustomerOrderData.reduce((acc, order) => {
-      if (!acc[order.customer]) {
-        acc[order.customer] = [];
-      }
-      acc[order.customer].push(order);
-      return acc;
-    }, {} as Record<string, typeof mockCustomerOrderData>);
-
-    // Calculate summary data for each customer
-    return Object.entries(grouped).map(([customerName, orders]) => {
-      const customerInfo = mockOrderData.find(data => data.customer === customerName);
-      return {
-        customer: customerName,
-        email: customerInfo?.email || 'N/A',
-        orderCount: orders.length,
-        totalAmount: orders.reduce((sum, order) => sum + order.amount, 0),
-        orders: orders
-      };
-    });
-  }, [mockCustomerOrderData]);
+    if (!Array.isArray(adminOrderData)) return [];
+    return transformApiDataToSummaryData(adminOrderData);
+  }, [adminOrderData]);
 
   // Filter data based on report type, date range, customer(s), and paid status
   const filteredData = useMemo(() => {
+    if (!Array.isArray(adminOrderData)) return [];
+    
     if (reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf') {
-      let customerOrders = mockCustomerOrderData;
+      let customerOrders = transformApiDataToOrderData(adminOrderData);
       
       // Filter by customer if selected
       if (selectedCustomer) {
@@ -115,7 +165,7 @@ const Admin = () => {
       
       return customerOrders;
     } else {
-      let filteredOrderData = mockOrderData;
+      let filteredOrderData = transformApiDataToSummaryData(adminOrderData);
       
       // Filter by multiple customers if selected
       if (selectedCustomers.length > 0) {
@@ -142,7 +192,7 @@ const Admin = () => {
       
       return filteredOrderData;
     }
-  }, [startDate, endDate, selectedCustomer, selectedCustomers, selectedPaidStatus, reportType, mockCustomerOrderData]);
+  }, [startDate, endDate, selectedCustomer, selectedCustomers, selectedPaidStatus, reportType, adminOrderData]);
 
   // Filter customerOrdersGrouped based on selected customers and paid status
   const filteredCustomerOrdersGrouped = useMemo(() => {
@@ -161,7 +211,7 @@ const Admin = () => {
         orderCount: customerData.orders.filter(order => order.paidStatus === selectedPaidStatus).length,
         totalAmount: customerData.orders
           .filter(order => order.paidStatus === selectedPaidStatus)
-          .reduce((sum, order) => sum + order.amount, 0)
+          .reduce((sum, order) => sum + parseFloat(order.amount) || 0, 0)
       })).filter(customerData => customerData.orders.length > 0);
     }
 
@@ -169,33 +219,20 @@ const Admin = () => {
   }, [customerOrdersGrouped, selectedCustomers, selectedPaidStatus]);
 
   const handleMarkOrdersAsPaid = (customerName: string) => {
-    setMockCustomerOrderData(prevData => 
-      prevData.map(order => 
-        order.customer === customerName && order.paidStatus === 'Unpaid'
-          ? { ...order, paidStatus: 'Paid' }
-          : order
-      )
-    );
-    
+    // Note: This would typically call an API to update the paid status
+    // For now, we'll just show a toast message
     toast({
       title: "Orders Marked as Paid",
-      description: `All unpaid orders for ${customerName} have been marked as paid.`,
+      description: `All unpaid orders for ${customerName} have been marked as paid. This would typically update the database via API.`,
     });
   };
 
   const handleMarkOrderAsPaid = (orderId: string) => {
-    setMockCustomerOrderData(prevData => 
-      prevData.map(order => 
-        order.id === orderId
-          ? { ...order, paidStatus: 'Paid' }
-          : order
-      )
-    );
-    
-    const order = mockCustomerOrderData.find(o => o.id === orderId);
+    // Note: This would typically call an API to update the paid status
+    // For now, we'll just show a toast message
     toast({
       title: "Order Marked as Paid",
-      description: `Order ${orderId} has been marked as paid.`,
+      description: `Order ${orderId} has been marked as paid. This would typically update the database via API.`,
     });
   };
 
@@ -207,7 +244,7 @@ const Admin = () => {
       csvContent = [
         headers.join(','),
         ...filteredData.map(row => 
-          `"${row.id}","${row.customer}","${row.address}","${row.county}","${row.status}",${row.amount},"${row.orderDate}","${row.paidStatus}"`
+          `"${row.id}","${row.customer}","${row.address}","${row.county}","${row.status}","${row.amount}","${row.orderDate}","${row.paidStatus}"`
         )
       ].join('\n');
     } else {
@@ -340,8 +377,51 @@ const Admin = () => {
 
     setIsGenerating(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      // Build filters for the API call
+      const filters: AdminOrderReportingFilter[] = [];
+      
+      if (selectedCustomer) {
+        filters.push({
+          FilterID: "OrganizationName",
+          FilterValue: selectedCustomer
+        });
+      }
+      
+      if (selectedCustomers.length > 0) {
+        selectedCustomers.forEach(customer => {
+          filters.push({
+            FilterID: "OrganizationName",
+            FilterValue: customer
+          });
+        });
+      }
+      
+      if (selectedPaidStatus && selectedPaidStatus !== 'all') {
+        filters.push({
+          FilterID: "PaidStatus",
+          FilterValue: selectedPaidStatus
+        });
+      }
+      
+      if (startDate) {
+        filters.push({
+          FilterID: "StartDate",
+          FilterValue: startDate
+        });
+      }
+      
+      if (endDate) {
+        filters.push({
+          FilterID: "EndDate",
+          FilterValue: endDate
+        });
+      }
+      
+      // Fetch fresh data with filters
+      await fetchAdminOrderData(filters);
+      
+      // Generate report
       if (reportType === 'csv' || reportType === 'pdf' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf') {
         const isCSV = reportType.includes('csv');
         if (isCSV) {
@@ -358,8 +438,16 @@ const Admin = () => {
           });
         }
       }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
@@ -384,7 +472,6 @@ const Admin = () => {
               selectedCustomers={selectedCustomers}
               selectedPaidStatus={selectedPaidStatus}
               isGenerating={isGenerating}
-              uniqueCustomers={uniqueCustomers}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
               onReportTypeChange={setReportType}
@@ -405,22 +492,42 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isCustomerOrderReport ? (
-                  <AdminOrderTable 
-                    data={filteredData as OrderData[]} 
-                    onMarkOrderAsPaid={handleMarkOrderAsPaid}
-                  />
-                ) : (
-                  <AdminOrderAccordion 
-                    customerOrdersGrouped={filteredCustomerOrdersGrouped}
-                    onMarkOrdersAsPaid={handleMarkOrdersAsPaid}
-                    onMarkOrderAsPaid={handleMarkOrderAsPaid}
-                  />
-                )}
-                {filteredData.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    No records found for the selected criteria.
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-muted-foreground">Loading order data...</span>
                   </div>
+                ) : error ? (
+                  <div className="text-center py-8 text-destructive">
+                    <p className="text-sm">{error}</p>
+                    <Button 
+                      onClick={() => fetchAdminOrderData()} 
+                      className="mt-2"
+                      variant="outline"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {isCustomerOrderReport ? (
+                      <AdminOrderTable 
+                        data={filteredData as OrderData[]} 
+                        onMarkOrderAsPaid={handleMarkOrderAsPaid}
+                      />
+                    ) : (
+                      <AdminOrderAccordion 
+                        customerOrdersGrouped={filteredCustomerOrdersGrouped}
+                        onMarkOrdersAsPaid={handleMarkOrdersAsPaid}
+                        onMarkOrderAsPaid={handleMarkOrderAsPaid}
+                      />
+                    )}
+                    {filteredData.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        No records found for the selected criteria.
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

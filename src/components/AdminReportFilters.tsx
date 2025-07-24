@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { FileText, Download } from 'lucide-react';
+import { getOrganizations, Organization } from '@/services/orderService';
 
 interface AdminReportFiltersProps {
   startDate: string;
@@ -15,7 +16,6 @@ interface AdminReportFiltersProps {
   selectedCustomers: string[];
   selectedPaidStatus: string;
   isGenerating: boolean;
-  uniqueCustomers: string[];
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
   onReportTypeChange: (type: string) => void;
@@ -33,7 +33,6 @@ const AdminReportFilters = ({
   selectedCustomers,
   selectedPaidStatus,
   isGenerating,
-  uniqueCustomers,
   onStartDateChange,
   onEndDateChange,
   onReportTypeChange,
@@ -42,12 +41,41 @@ const AdminReportFilters = ({
   onPaidStatusChange,
   onGenerateReport,
 }: AdminReportFiltersProps) => {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loadingOrganizations, setLoadingOrganizations] = useState(true);
+  const [organizationsError, setOrganizationsError] = useState<string | null>(null);
+
+  // Fetch organizations on component mount
+  useEffect(() => {
+    const loadOrganizations = async () => {
+      try {
+        setLoadingOrganizations(true);
+        setOrganizationsError(null);
+        const orgs = await getOrganizations();
+        setOrganizations(orgs);
+      } catch (error) {
+        console.error('Error loading organizations:', error);
+        setOrganizationsError('Failed to load organizations');
+        // Set empty array to prevent further errors
+        setOrganizations([]);
+      } finally {
+        setLoadingOrganizations(false);
+      }
+    };
+
+    loadOrganizations();
+  }, []);
+
   const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
 
-  const customerOptions: Option[] = uniqueCustomers.map(customer => ({
-    label: customer,
-    value: customer
+  // Create customer options from organizations
+  const customerOptions: Option[] = organizations.map(org => ({
+    label: org.OrganizationName,
+    value: org.OrganizationName
   }));
+
+  // Get unique customer names for the single customer select
+  const uniqueCustomers = organizations.map(org => org.OrganizationName);
 
   return (
     <Card className="mb-6">
@@ -83,29 +111,89 @@ const AdminReportFilters = ({
         {isCustomerOrderReport && (
           <div className="space-y-2">
             <Label htmlFor="customer-select">Select Customer</Label>
-            <Select value={selectedCustomer} onValueChange={onCustomerChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {uniqueCustomers.map((customer) => (
-                  <SelectItem key={customer} value={customer}>
-                    {customer}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {loadingOrganizations ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <span className="ml-2 text-sm text-muted-foreground">Loading customers...</span>
+              </div>
+            ) : organizationsError ? (
+              <div className="text-center py-4 text-destructive">
+                <p className="text-sm">{organizationsError}</p>
+                <Button 
+                  onClick={() => {
+                    setLoadingOrganizations(true);
+                    setOrganizationsError(null);
+                    getOrganizations()
+                      .then(orgs => setOrganizations(orgs))
+                      .catch(error => {
+                        console.error('Error loading organizations:', error);
+                        setOrganizationsError('Failed to load organizations');
+                        setOrganizations([]);
+                      })
+                      .finally(() => setLoadingOrganizations(false));
+                  }}
+                  className="mt-2"
+                  variant="outline"
+                  size="sm"
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <Select value={selectedCustomer} onValueChange={onCustomerChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueCustomers.map((customer) => (
+                    <SelectItem key={customer} value={customer}>
+                      {customer}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         )}
 
         <div className="space-y-2">
           <Label htmlFor="customer-filter">Filter by Customers</Label>
-          <MultiSelect
-            options={customerOptions}
-            selected={selectedCustomers}
-            onChange={onMultipleCustomersChange}
-            placeholder="Select customers to filter..."
-          />
+          {loadingOrganizations ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="ml-2 text-sm text-muted-foreground">Loading customers...</span>
+            </div>
+          ) : organizationsError ? (
+            <div className="text-center py-4 text-destructive">
+              <p className="text-sm">{organizationsError}</p>
+              <Button 
+                onClick={() => {
+                  setLoadingOrganizations(true);
+                  setOrganizationsError(null);
+                  getOrganizations()
+                    .then(orgs => setOrganizations(orgs))
+                    .catch(error => {
+                      console.error('Error loading organizations:', error);
+                      setOrganizationsError('Failed to load organizations');
+                      setOrganizations([]);
+                    })
+                    .finally(() => setLoadingOrganizations(false));
+                }}
+                className="mt-2"
+                variant="outline"
+                size="sm"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <MultiSelect
+              options={customerOptions}
+              selected={selectedCustomers}
+              onChange={onMultipleCustomersChange}
+              placeholder="Select customers to filter..."
+            />
+          )}
         </div>
 
         <div className="space-y-2">

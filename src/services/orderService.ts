@@ -624,6 +624,23 @@ export interface CrudMunicipalityResponse {
   [key: string]: any;
 }
 
+// Get Organizations API interfaces
+export interface GetOrganizationsRequest {
+  FilterID: string;
+  FilterValue: string;
+}
+
+export interface OrganizationUser {
+  UserGuid: string;
+  UserName: string;
+}
+
+export interface Organization {
+  OrganizationID: number;
+  OrganizationName: string;
+  User: OrganizationUser[];
+}
+
 // CRUD County API function
 export const crudCounty = async (requestData: CrudCountyRequest): Promise<CrudCountyResponse> => {
   try {
@@ -778,6 +795,108 @@ export const crudMunicipality = async (requestData: CrudMunicipalityRequest): Pr
     return data;
   } catch (error) {
     console.error('Error in CRUD Municipality operation:', error);
+    throw error;
+  }
+};
+
+// Get Organizations API function
+export const getOrganizations = async (): Promise<Organization[]> => {
+  try {
+    console.log('Fetching organizations from API...');
+    console.log('API URL:', '/api/GovMetricAPI/GetOrganizations');
+    
+    // Try with GET request first (simpler approach)
+    let response = await fetch('/api/GovMetricAPI/GetOrganizations', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('GET Response status:', response.status);
+    console.log('GET Response status text:', response.statusText);
+    
+    // If GET fails, try POST with the original request body
+    if (!response.ok) {
+      console.log('GET request failed, trying POST request...');
+      
+      const requestBody: GetOrganizationsRequest[] = [
+        {
+          FilterID: "",
+          FilterValue: ""
+        }
+      ];
+      
+      response = await fetch('/api/GovMetricAPI/GetOrganizations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      console.log('POST Response status:', response.status);
+      console.log('POST Response status text:', response.statusText);
+    }
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText.substring(0, 200) + '...');
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: Organization[];
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText.substring(0, 500));
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    console.log('API response data:', data);
+    
+    // Validate that data is an array
+    if (!Array.isArray(data)) {
+      console.error('API response is not an array:', data);
+      throw new Error('API response is not an array');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching organizations:', error);
     throw error;
   }
 };
@@ -1143,6 +1262,125 @@ export const submitReportRequestByAddress = async (
     return data;
   } catch (error) {
     console.error('Error submitting report request by address:', error);
+    throw error;
+  }
+};
+
+// Admin Order Reporting API interfaces
+export interface AdminOrderReportingFilter {
+  FilterID: string;
+  FilterValue: string;
+}
+
+export interface AdminOrder {
+  GovOrderID: string;
+  GovOrderAddress: string;
+  GovOrderCounty: string;
+  GovOrderStatus: string;
+  GovOrderAmount: string;
+  GovOrderCreateDate: string;
+  GovOrderPaidStatus: string;
+}
+
+export interface AdminOrderReportingResponse {
+  OrganizationName: string;
+  OrdersNumber: number;
+  OrdersAmount: string;
+  Orders: AdminOrder[];
+}
+
+// Get Admin Order Reporting API function
+export const getAdminOrderReporting = async (filters: AdminOrderReportingFilter[]): Promise<AdminOrderReportingResponse[]> => {
+  try {
+    console.log('Fetching admin order reporting from API...');
+    console.log('API URL:', '/api/GovMetricAPI/GetAdminOrderReporting');
+    console.log('Request filters:', filters);
+    
+    // Try with GET request first (simpler approach)
+    let response = await fetch('/api/GovMetricAPI/GetAdminOrderReporting', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('GET Response status:', response.status);
+    console.log('GET Response status text:', response.statusText);
+    
+    // If GET fails, try POST with the filters
+    if (!response.ok) {
+      console.log('GET request failed, trying POST request...');
+      
+      response = await fetch('/api/GovMetricAPI/GetAdminOrderReporting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(filters),
+      });
+      
+      console.log('POST Response status:', response.status);
+      console.log('POST Response status text:', response.statusText);
+    }
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText.substring(0, 200) + '...');
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: AdminOrderReportingResponse[];
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText.substring(0, 500));
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    console.log('API response data:', data);
+    
+    // Validate that data is an array
+    if (!Array.isArray(data)) {
+      console.error('API response is not an array:', data);
+      throw new Error('API response is not an array');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching admin order reporting:', error);
     throw error;
   }
 };
