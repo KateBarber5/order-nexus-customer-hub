@@ -30,6 +30,17 @@ export interface County {
   municipalities: Municipality[];
 }
 
+// GovMetric Login API interfaces
+export interface LoginError {
+  Code: string;
+  Message: string;
+}
+
+export interface LoginResponse {
+  LoginIsValid: boolean;
+  Error?: LoginError[];
+}
+
 // Report request response interface
 export interface ReportRequestResponse {
   success?: boolean;
@@ -1381,6 +1392,87 @@ export const getAdminOrderReporting = async (filters: AdminOrderReportingFilter[
     return data;
   } catch (error) {
     console.error('Error fetching admin order reporting:', error);
+    throw error;
+  }
+};
+
+// GovMetric Login API function
+export const govMetricLogin = async (email: string, password: string): Promise<LoginResponse> => {
+  try {
+    console.log('Authenticating with GovMetric API...');
+    console.log('Email:', email);
+    
+    // Construct the API URL with query parameters
+    const apiUrl = `/api/GovMetricAPI/GovmetricLogin?iUserName=${encodeURIComponent(email)}&iUserPassword=${encodeURIComponent(password)}`;
+    console.log('API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    console.log('Response text length:', responseText.length);
+    console.log('Response text trimmed:', responseText.trim());
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: LoginResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log('Parsed JSON data:', data);
+      console.log('Data type:', typeof data);
+      console.log('LoginIsValid value:', data.LoginIsValid);
+      console.log('LoginIsValid type:', typeof data.LoginIsValid);
+      console.log('Is LoginIsValid === true?', data.LoginIsValid === true);
+      console.log('Is LoginIsValid truthy?', !!data.LoginIsValid);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText.substring(0, 500));
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error authenticating with GovMetric:', error);
     throw error;
   }
 };

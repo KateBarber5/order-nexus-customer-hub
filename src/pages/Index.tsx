@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileSearch, Lock, Mail } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { govMetricLogin } from '@/services/orderService';
 
 const Index = () => {
   const [email, setEmail] = useState('');
@@ -28,35 +29,84 @@ const Index = () => {
     
     setIsLoading(true);
     
-    // Simulate authentication (in a real app, this would call an API)
-    setTimeout(() => {
-      // This is just for demonstration
-      // In a real app, you would verify credentials against a backend
-      if (email === 'demo@example.com' && password === 'password') {
+    try {
+      console.log('Attempting login with email:', email);
+      const data = await govMetricLogin(email, password);
+      console.log('Login API response:', data);
+      console.log('LoginIsValid:', data.LoginIsValid);
+      console.log('Type of LoginIsValid:', typeof data.LoginIsValid);
+      console.log('Raw LoginIsValid value:', JSON.stringify(data.LoginIsValid));
+      console.log('Full response structure:', JSON.stringify(data, null, 2));
+      
+      // More explicit validation logic
+      let isLoginValid = false;
+      
+      if (typeof data.LoginIsValid === 'boolean') {
+        isLoginValid = data.LoginIsValid === true;
+        console.log('LoginIsValid is boolean, value:', isLoginValid);
+      } else if (typeof data.LoginIsValid === 'string') {
+        isLoginValid = (data.LoginIsValid as string).toLowerCase() === 'true';
+        console.log('LoginIsValid is string, value:', isLoginValid);
+      } else if (typeof data.LoginIsValid === 'number') {
+        isLoginValid = data.LoginIsValid === 1;
+        console.log('LoginIsValid is number, value:', isLoginValid);
+      } else {
+        // Fallback: try to convert to string and check
+        const stringValue = String(data.LoginIsValid).toLowerCase();
+        isLoginValid = stringValue === 'true' || stringValue === '1';
+        console.log('LoginIsValid is unknown type, converted to string:', stringValue, 'result:', isLoginValid);
+      }
+      
+      console.log('Final isLoginValid result:', isLoginValid);
+      
+      if (isLoginValid) {
+        console.log('Login is valid, storing session data...');
         // Store login state
         if (rememberMe) {
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('userEmail', email);
+          console.log('Stored in localStorage');
         } else {
           sessionStorage.setItem('isLoggedIn', 'true');
           sessionStorage.setItem('userEmail', email);
+          console.log('Stored in sessionStorage');
         }
         
+        console.log('Showing success toast...');
         toast({
           title: "Success",
           description: "Login successful! Redirecting to dashboard...",
         });
         
-        navigate('/dashboard');
+        console.log('Waiting 1 second before navigation...');
+        // Add a small delay to ensure toast is shown
+        setTimeout(() => {
+          console.log('Navigating to dashboard...');
+          navigate('/dashboard');
+        }, 1000);
       } else {
+        console.log('Login is not valid, showing error...');
+        // Show error message from API response
+        const errorMessage = data.Error && data.Error.length > 0 
+          ? data.Error[0].Message 
+          : "Login failed. Please check your credentials.";
+        
         toast({
           title: "Authentication failed",
-          description: "Invalid email or password. Try demo@example.com / password",
+          description: errorMessage,
           variant: "destructive",
         });
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred during login. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

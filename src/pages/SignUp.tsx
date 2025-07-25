@@ -95,13 +95,13 @@ const SignUp = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name (Optional)</Label>
+                <Label htmlFor="companyName">Organization Name</Label>
                 <div className="relative">
                   <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="companyName" 
                     type="text" 
-                    placeholder="Your company name" 
+                    placeholder="Your organization name" 
                     className="pl-10"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
