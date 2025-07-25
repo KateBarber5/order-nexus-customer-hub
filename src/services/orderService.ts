@@ -579,7 +579,8 @@ export const checkMunicipalityAvailabilityByAddress = async (address: string): P
 export const getOrganizationAndUserData = () => {
   return {
     iOrganizationID: 1,
-    iUserGuid: "45a82190-4011-4fe9-aa5f-d2f2530eb34b"
+    //iUserGuid: "45a82190-4011-4fe9-aa5f-d2f2530eb34b"
+    iUserGuid: "076854c4-42e6-4089-aa67-25f9516f246f"
   };
 };
 

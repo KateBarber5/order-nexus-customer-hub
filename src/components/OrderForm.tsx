@@ -97,9 +97,22 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     if (!municipality || !municipalityData) return false;
     
     const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
-    return municipalityInfo && municipalityInfo.SubPlaceStatus === "ACTIVE";
+    const isServiced = municipalityInfo && municipalityInfo.SubPlaceStatus === "Active";
+    console.log(`isMunicipalityServiced for ${municipality}:`, isServiced, municipalityInfo);
+    return isServiced;
   };
 
+  // Check if any reports are available for a municipality
+  const isAnyReportAvailable = (municipality: string) => {
+    if (!municipality || !municipalityData) return false;
+    
+    const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
+    if (!municipalityInfo || !municipalityInfo.Report) return false;
+    
+    const hasReports = municipalityInfo.Report.length > 0;
+    console.log(`isAnyReportAvailable for ${municipality}:`, hasReports, municipalityInfo.Report);
+    return hasReports;
+  };
 
 
   // Get available services for a municipality from API data
@@ -119,7 +132,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
     if (!municipalityInfo || !municipalityInfo.Report) return false;
     
-    return municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "1");
+    const hasFullReport = municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "1");
+    console.log(`isFullReportAvailable for ${municipality}:`, hasFullReport, municipalityInfo.Report);
+    return hasFullReport;
   };
 
   // Check if Card Report is available for a municipality from API data
@@ -129,7 +144,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
     if (!municipalityInfo || !municipalityInfo.Report) return false;
     
-    return municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "0");
+    const hasCardReport = municipalityInfo.Report.some(report => report.SubPlaceOrderReportType === "0");
+    console.log(`isCardReportAvailable for ${municipality}:`, hasCardReport, municipalityInfo.Report);
+    return hasCardReport;
   };
 
   // Real municipality lookup using API
@@ -144,6 +161,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     try {
       const response = await checkMunicipalityAvailability(formData.parcelId, formData.county);
       setMunicipalityData(response);
+      console.log('Municipality data set:', response);
       if (onMunicipalityDataChange) {
         onMunicipalityDataChange(response);
       }
@@ -168,7 +186,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
           setLocationAlertType(locationStatus.type);
           setShowLocationAlert(true);
         } else {
-          toast.success(`Municipality identified: ${municipality.SubPlaceName}, ${response.PlaceName} County`);
+          toast.success(`Municipality identified: ${formatMunicipalityDisplayName(municipality.SubPlaceName, response.PlaceName)}`);
         }
       } else {
         toast.error('No municipality found for the provided parcel ID and county');
@@ -181,7 +199,12 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     }
   };
 
-
+  // Helper function to format municipality display name
+  const formatMunicipalityDisplayName = (municipalityName: string, countyName: string) => {
+    return municipalityName === countyName 
+      ? `${municipalityName} County`
+      : `${municipalityName}, ${countyName} County`;
+  };
 
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
@@ -193,10 +216,16 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
 
   const isProductSelectionAllowed = () => {
     if (!isSearchCriteriaFilled() || !formData.identifiedMunicipality) {
+      console.log('isProductSelectionAllowed: Search criteria not filled or no municipality identified');
       return false;
     }
     
-    return isMunicipalityServiced(formData.identifiedMunicipality);
+    // Check if municipality is serviced AND has at least one report available
+    const isServiced = isMunicipalityServiced(formData.identifiedMunicipality);
+    const hasReports = isAnyReportAvailable(formData.identifiedMunicipality);
+    const allowed = isServiced && hasReports;
+    console.log(`isProductSelectionAllowed for ${formData.identifiedMunicipality}:`, allowed, { isServiced, hasReports });
+    return allowed;
   };
 
   // Handle municipality availability check by address
@@ -216,6 +245,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       const response = await checkMunicipalityAvailabilityByAddress(address);
       console.log('API response received:', response);
       setMunicipalityData(response);
+      console.log('Municipality data set (address):', response);
       if (onMunicipalityDataChange) {
         onMunicipalityDataChange(response);
       }
@@ -241,7 +271,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
           setLocationAlertType(locationStatus.type);
           setShowLocationAlert(true);
         } else {
-          toast.success(`Municipality identified: ${municipality.SubPlaceName}, ${response.PlaceName} County`);
+          toast.success(`Municipality identified: ${formatMunicipalityDisplayName(municipality.SubPlaceName, response.PlaceName)}`);
         }
       } else {
         toast.error('No municipality found for the provided address');
@@ -703,6 +733,8 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
                     ) : (
                       formData.identifiedMunicipality && !isMunicipalityServiced(formData.identifiedMunicipality)
                         ? 'Product selection is not available for this municipality.'
+                        : formData.identifiedMunicipality && !isAnyReportAvailable(formData.identifiedMunicipality)
+                        ? 'No reports are available for this municipality at this time.'
                         : 'Please complete the search criteria above.'
                     )}
                   </p>
