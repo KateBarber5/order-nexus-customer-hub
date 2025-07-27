@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { fetchOrders, fetchOrdersFromAPI, generateMockOrders, Order } from '@/services/orderService';
+import { fetchOrdersFromAPI, Order } from '@/services/orderService';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Search, Calendar as CalendarIcon, Database, TestTube } from 'lucide-react';
+import { Search, Calendar as CalendarIcon } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
@@ -29,7 +29,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Switch } from '@/components/ui/switch';
 
 const OrderHistory = () => {
   const location = useLocation();
@@ -37,8 +36,6 @@ const OrderHistory = () => {
   const statusFromUrl = queryParams.get('status');
   
   const [orders, setOrders] = useState<Order[]>([]);
-  const [apiOrders, setApiOrders] = useState<Order[]>([]);
-  const [mockOrders, setMockOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,8 +43,6 @@ const OrderHistory = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [useMockData, setUseMockData] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,51 +61,21 @@ const OrderHistory = () => {
     document.body.removeChild(link);
   };
   
-  // Load both API and mock data on component mount
+  // Load API data on component mount
   useEffect(() => {
-    const loadAllData = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
-        setApiError(null);
         
-        console.log('OrderHistory: Starting to load data...');
+        console.log('OrderHistory: Starting to load API data...');
         
-        // Load mock data immediately
-        const mockData = generateMockOrders();
-        setMockOrders(mockData);
-        console.log('OrderHistory: Loaded mock data:', mockData.length, 'orders');
-        
-        // Try to load API data
-        try {
-          console.log('OrderHistory: Attempting to fetch API data...');
-          const apiData = await fetchOrdersFromAPI();
-          setApiOrders(apiData);
-          console.log('OrderHistory: Successfully loaded API data:', apiData.length, 'orders');
-          
-          // Set initial data to API data if available
-          if (!useMockData) {
-            setOrders(apiData);
-          }
-        } catch (apiErr) {
-          console.error('OrderHistory: API data fetch failed:', apiErr);
-          const apiErrorMessage = apiErr instanceof Error ? apiErr.message : 'Failed to load API data';
-          setApiError(apiErrorMessage);
-          
-          // If API fails and we're not using mock data, fall back to mock data
-          if (!useMockData) {
-            setOrders(mockData);
-            setError('API data unavailable. Showing mock data instead.');
-          }
-        }
-        
-        // If using mock data initially, set it
-        if (useMockData) {
-          setOrders(mockData);
-        }
+        const apiData = await fetchOrdersFromAPI();
+        setOrders(apiData);
+        console.log('OrderHistory: Successfully loaded API data:', apiData.length, 'orders');
         
       } catch (err) {
-        console.error('OrderHistory: Error loading data:', err);
+        console.error('OrderHistory: Error loading API data:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load orders. Please try again later.';
         setError(errorMessage);
       } finally {
@@ -118,24 +83,8 @@ const OrderHistory = () => {
       }
     };
 
-    loadAllData();
+    loadData();
   }, []);
-
-  // Update orders when data source changes
-  useEffect(() => {
-    if (useMockData) {
-      setOrders(mockOrders);
-      setError(null);
-    } else {
-      if (apiOrders.length > 0) {
-        setOrders(apiOrders);
-        setError(null);
-      } else if (apiError) {
-        setOrders(mockOrders);
-        setError('API data unavailable. Showing mock data instead.');
-      }
-    }
-  }, [useMockData, mockOrders, apiOrders, apiError]);
 
   // Update status filter when URL changes
   useEffect(() => {
@@ -201,54 +150,12 @@ const OrderHistory = () => {
     setEndDate(null);
   };
 
-  const handleDataSourceToggle = () => {
-    setUseMockData(!useMockData);
-    setCurrentPage(1); // Reset to first page when switching data sources
-  };
-
   return (
     <div className="space-y-6">
-      {/* Data source toggle */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Database className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium">API Data</span>
-            <Switch
-              checked={useMockData}
-              onCheckedChange={handleDataSourceToggle}
-            />
-            <TestTube className="h-4 w-4 text-orange-600" />
-            <span className="text-sm font-medium">Mock Data</span>
-          </div>
-          <span className="text-xs text-gray-500">
-            {useMockData ? 'Using test data' : 'Using live API data'}
-          </span>
-        </div>
-        
-        {/* Data source info */}
-        <div className="text-xs text-gray-500">
-          {useMockData ? (
-            <span>Mock: {mockOrders.length} orders</span>
-          ) : (
-            <span>API: {apiOrders.length} orders {apiError && '(with errors)'}</span>
-          )}
-        </div>
-      </div>
-
       {/* Error state */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <p className="text-red-800">{error}</p>
-        </div>
-      )}
-
-      {/* API Error state */}
-      {apiError && !useMockData && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <p className="text-yellow-800">
-            <strong>API Error:</strong> {apiError}. Showing mock data instead.
-          </p>
         </div>
       )}
 

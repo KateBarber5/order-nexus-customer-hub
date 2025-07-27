@@ -38,8 +38,137 @@ export interface LoginError {
 
 export interface LoginResponse {
   LoginIsValid: boolean;
+  UserID?: string;
+  OrganizationID?: number;
   Error?: LoginError[];
 }
+
+// User session interface
+export interface UserSession {
+  isAuthenticated: boolean;
+  userID: string;
+  organizationID: number;
+  email?: string;
+  loginTime: number;
+  expiresAt: number;
+}
+
+// Session storage keys
+const SESSION_KEYS = {
+  USER_SESSION: 'govMetric_userSession',
+  REMEMBER_ME: 'govMetric_rememberMe',
+  USER_EMAIL: 'govMetric_userEmail'
+} as const;
+
+// Session management functions
+export const sessionManager = {
+  // Store user session data
+  storeSession: (session: UserSession, rememberMe: boolean = false): void => {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    
+    // Store session data
+    storage.setItem(SESSION_KEYS.USER_SESSION, JSON.stringify(session));
+    
+    // Store remember me preference
+    if (rememberMe) {
+      localStorage.setItem(SESSION_KEYS.REMEMBER_ME, 'true');
+    } else {
+      localStorage.removeItem(SESSION_KEYS.REMEMBER_ME);
+    }
+    
+    console.log('Session stored:', { session, rememberMe, storage: rememberMe ? 'localStorage' : 'sessionStorage' });
+  },
+
+  // Retrieve user session data
+  getSession: (): UserSession | null => {
+    try {
+      // Check localStorage first (for remember me)
+      const localSession = localStorage.getItem(SESSION_KEYS.USER_SESSION);
+      if (localSession) {
+        const session: UserSession = JSON.parse(localSession);
+        
+        // Check if session is still valid
+        if (session.expiresAt > Date.now()) {
+          console.log('Retrieved session from localStorage:', session);
+          return session;
+        } else {
+          console.log('Session expired, clearing localStorage');
+          sessionManager.clearSession();
+          return null;
+        }
+      }
+      
+      // Check sessionStorage
+      const sessionData = sessionStorage.getItem(SESSION_KEYS.USER_SESSION);
+      if (sessionData) {
+        const session: UserSession = JSON.parse(sessionData);
+        
+        // Check if session is still valid
+        if (session.expiresAt > Date.now()) {
+          console.log('Retrieved session from sessionStorage:', session);
+          return session;
+        } else {
+          console.log('Session expired, clearing sessionStorage');
+          sessionManager.clearSession();
+          return null;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error retrieving session:', error);
+      sessionManager.clearSession();
+      return null;
+    }
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: (): boolean => {
+    const session = sessionManager.getSession();
+    return session?.isAuthenticated === true && session.expiresAt > Date.now();
+  },
+
+  // Get current user ID
+  getCurrentUserID: (): string | null => {
+    const session = sessionManager.getSession();
+    return session?.userID || null;
+  },
+
+  // Get current organization ID
+  getCurrentOrganizationID: (): number | null => {
+    const session = sessionManager.getSession();
+    return session?.organizationID || null;
+  },
+
+  // Clear session data
+  clearSession: (): void => {
+    localStorage.removeItem(SESSION_KEYS.USER_SESSION);
+    localStorage.removeItem(SESSION_KEYS.REMEMBER_ME);
+    localStorage.removeItem(SESSION_KEYS.USER_EMAIL);
+    sessionStorage.removeItem(SESSION_KEYS.USER_SESSION);
+    sessionStorage.removeItem(SESSION_KEYS.USER_EMAIL);
+    console.log('Session cleared from all storage');
+  },
+
+  // Refresh session (extend expiration time)
+  refreshSession: (): boolean => {
+    const session = sessionManager.getSession();
+    if (session) {
+      // Extend session by 24 hours
+      const newExpiresAt = Date.now() + (24 * 60 * 60 * 1000);
+      const updatedSession: UserSession = {
+        ...session,
+        expiresAt: newExpiresAt
+      };
+      
+      const rememberMe = localStorage.getItem(SESSION_KEYS.REMEMBER_ME) === 'true';
+      sessionManager.storeSession(updatedSession, rememberMe);
+      console.log('Session refreshed, new expiration:', new Date(newExpiresAt));
+      return true;
+    }
+    return false;
+  }
+};
 
 // Report request response interface
 export interface ReportRequestResponse {
@@ -575,12 +704,15 @@ export const checkMunicipalityAvailabilityByAddress = async (address: string): P
   }
 };
 
-// Global function to get organization and user data for testing
+// Global function to get organization and user data from session
 export const getOrganizationAndUserData = () => {
+  const userID = sessionManager.getCurrentUserID();
+  const organizationID = sessionManager.getCurrentOrganizationID();
+  
+  // Fallback to default values if session data is not available
   return {
-    iOrganizationID: 1,
-    //iUserGuid: "45a82190-4011-4fe9-aa5f-d2f2530eb34b"
-    iUserGuid: "076854c4-42e6-4089-aa67-25f9516f246f"
+    iOrganizationID: organizationID,
+    iUserGuid: userID
   };
 };
 
@@ -1474,6 +1606,142 @@ export const govMetricLogin = async (email: string, password: string): Promise<L
     return data;
   } catch (error) {
     console.error('Error authenticating with GovMetric:', error);
+    throw error;
+  }
+};
+
+// CRUD Account API interfaces
+export interface AccountSDT {
+  Name: string;
+  EMail: string;
+  FirstName: string;
+  LastName: string;
+  Password: string;
+  OrganizationName: string;
+  UserActivationMethod: string;
+  RoleId: number;
+}
+
+export interface CrudAccountRequest {
+  iTrnMode: 'INS' | 'UPD' | 'DLT';
+  iAccountSDT: AccountSDT;
+}
+
+export interface CrudAccountMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface CrudAccountResponse {
+  oMessages: CrudAccountMessage[];
+  [key: string]: any;
+}
+
+// CRUD Account API function
+export const crudAccount = async (requestData: CrudAccountRequest): Promise<CrudAccountResponse> => {
+  try {
+    console.log('Submitting account CRUD request...');
+    console.log('Request data:', requestData);
+    
+    const response = await fetch('/api/GovMetricAPI/CrudAccount', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: CrudAccountResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('CRUD Account response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'Account operation completed successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in CRUD Account operation:', error);
+    throw error;
+  }
+};
+
+// Get current services for a specific municipality
+export const getMunicipalityCurrentServices = async (municipalityName: string): Promise<string[]> => {
+  try {
+    console.log('Fetching current services for municipality:', municipalityName);
+    
+    // Fetch all places from the API
+    const places = await fetchPlaces();
+    
+    // Find the municipality in the places data
+    for (const place of places) {
+      const municipality = place.SubPlace?.find(subPlace => 
+        subPlace.SubPlaceName.toLowerCase() === municipalityName.toLowerCase()
+      );
+      
+      if (municipality) {
+        console.log('Found municipality:', municipality);
+        // Return the service names
+        return municipality.Service?.map(service => service.PlaceServiceName) || [];
+      }
+    }
+    
+    console.log('Municipality not found in places data');
+    return [];
+  } catch (error) {
+    console.error('Error fetching municipality current services:', error);
     throw error;
   }
 };

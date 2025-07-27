@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { FileSearch, Lock, Mail, UserPlus, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { crudAccount } from '@/services/orderService';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
@@ -40,14 +41,65 @@ const SignUp = () => {
     
     setIsLoading(true);
     
-    // Simulate account creation
-    setTimeout(() => {
+    try {
+      const requestData = {
+        iTrnMode: 'INS' as const,
+        iAccountSDT: {
+          Name: email,
+          EMail: email,
+          FirstName: firstName,
+          LastName: lastName,
+          Password: password,
+          OrganizationName: companyName || 'Default Organization',
+          UserActivationMethod: 'U',
+          RoleId: 3
+        }
+      };
+      
+      const response = await crudAccount(requestData);
+      
+      // Check if the response contains any error messages
+      const errorMessage = response.oMessages?.find(msg => msg.Type === 1);
+      if (errorMessage) {
+        toast({
+          title: "Account Creation Failed",
+          description: errorMessage.Description,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check for success message
+      const successMessage = response.oMessages?.find(msg => msg.Type === 2);
+      if (successMessage) {
+        toast({
+          title: "Account Request Submitted",
+          description: successMessage.Description,
+        });
+        
+        // Clear form on success
+        setFirstName('');
+        setLastName('');
+        setCompanyName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+      } else {
+        toast({
+          title: "Account Request Submitted",
+          description: "Your account request has been submitted for review. You will be notified when your account is approved.",
+        });
+      }
+    } catch (error) {
+      console.error('Error creating account:', error);
       toast({
-        title: "Account Request Submitted",
-        description: "Your account request has been submitted for review. You will be notified when your account is approved.",
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred while creating your account. Please try again.",
+        variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -30,30 +30,35 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from '@/components/ui/sonner';
-import type { County, Municipality, ReportType, StatusType, CrudMunicipalityRequest } from '@/services/orderService';
-import { crudMunicipality } from '@/services/orderService';
+import type { County, Municipality, ReportType, StatusType, CrudMunicipalityRequest, AvailableService, ServiceAvailability } from '@/services/orderService';
+import { crudMunicipality, getAllAvailableServices, getMunicipalityCurrentServices } from '@/services/orderService';
 
-const formSchema = z.object({
-  name: z.string().min(1, 'Municipality name is required'),
-  countyId: z.string().min(1, 'County selection is required'),
-  status: z.enum(['active', 'inactive', 'unavailable'] as const),
-  alertMessage: z.string().optional(),
-  services: z.object({
-    code: z.boolean(),
-    permits: z.boolean(),
-    liens: z.boolean(),
-    utilities: z.boolean(),
-  }),
-  reportTypes: z.array(z.enum(['full', 'card'])).min(1, 'At least one report type is required'),
-}).refine((data) => {
-  if (data.status === 'unavailable' && (!data.alertMessage || data.alertMessage.trim() === '')) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Alert message is required when status is "Unavailable"',
-  path: ['alertMessage'],
-});
+// Dynamic form schema based on available services
+const createFormSchema = (availableServices: AvailableService[]) => {
+  const servicesSchema: Record<string, z.ZodBoolean> = {};
+  
+  availableServices.forEach(service => {
+    const serviceKey = service.Name.toLowerCase().replace(/\s+/g, '');
+    servicesSchema[serviceKey] = z.boolean();
+  });
+
+  return z.object({
+    name: z.string().min(1, 'Municipality name is required'),
+    countyId: z.string().min(1, 'County selection is required'),
+    status: z.enum(['active', 'inactive', 'unavailable'] as const),
+    alertMessage: z.string().optional(),
+    services: z.object(servicesSchema),
+    reportTypes: z.array(z.enum(['full', 'card'])).min(1, 'At least one report type is required'),
+  }).refine((data) => {
+    if (data.status === 'unavailable' && (!data.alertMessage || data.alertMessage.trim() === '')) {
+      return false;
+    }
+    return true;
+  }, {
+    message: 'Alert message is required when status is "Unavailable"',
+    path: ['alertMessage'],
+  });
+};
 
 interface EditMunicipalityDialogProps {
   open: boolean;
@@ -64,6 +69,59 @@ interface EditMunicipalityDialogProps {
 }
 
 const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, onEdit }: EditMunicipalityDialogProps) => {
+  const [availableServices, setAvailableServices] = useState<AvailableService[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+  const [currentMunicipalityServices, setCurrentMunicipalityServices] = useState<string[]>([]);
+
+  // Fetch available services and current municipality services on component mount
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        setLoadingServices(true);
+        setServicesError(null);
+        
+        // Fetch all available services
+        const services = await getAllAvailableServices();
+        console.log('Loaded available services:', services);
+        setAvailableServices(services);
+        
+        // Fetch current municipality services
+        const currentServices = await getMunicipalityCurrentServices(municipality.name);
+        console.log('Loaded current municipality services:', currentServices);
+        setCurrentMunicipalityServices(currentServices);
+        
+      } catch (error) {
+        console.error('Error loading services:', error);
+        setServicesError('Failed to load available services');
+        toast.error('Failed to load available services');
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+
+    if (open) {
+      loadServices();
+    }
+  }, [open, municipality.name]);
+
+  // Create default values for services based on current municipality services
+  const createDefaultServices = () => {
+    const defaultServices: Record<string, boolean> = {};
+    availableServices.forEach(service => {
+      const serviceKey = service.Name.toLowerCase().replace(/\s+/g, '');
+      // Check if this service is currently enabled for the municipality
+      const isCurrentlyEnabled = currentMunicipalityServices.some(currentService => 
+        currentService.toLowerCase() === service.Name.toLowerCase()
+      );
+      defaultServices[serviceKey] = isCurrentlyEnabled;
+    });
+    return defaultServices;
+  };
+
+  // Create dynamic form schema based on available services
+  const formSchema = createFormSchema(availableServices);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,24 +129,51 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
       countyId: municipality.countyId,
       status: municipality.status,
       alertMessage: municipality.alertMessage || '',
-      services: municipality.availableServices,
+      services: createDefaultServices(),
       reportTypes: municipality.reportTypes,
     },
   });
 
+  // Reset form when services change to ensure proper field registration
   useEffect(() => {
-    if (open) {
-      console.log('Dialog opened, resetting form with municipality data:', municipality);
+    if (availableServices.length > 0 && currentMunicipalityServices.length >= 0) {
+      const defaultServices = createDefaultServices();
       form.reset({
         name: municipality.name,
         countyId: municipality.countyId,
         status: municipality.status,
         alertMessage: municipality.alertMessage || '',
-        services: municipality.availableServices,
+        services: defaultServices,
         reportTypes: municipality.reportTypes,
       });
     }
-  }, [municipality, form, open]);
+  }, [availableServices, currentMunicipalityServices, municipality, form]);
+
+  // Don't render the form if services are still loading or if there's an error
+  if (loadingServices || servicesError) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Municipality</DialogTitle>
+            <DialogDescription>
+              {loadingServices ? 'Loading available services...' : 'Error loading services'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-8">
+            {loadingServices ? (
+              <>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="ml-2 text-sm text-muted-foreground">Loading services...</span>
+              </>
+            ) : (
+              <p className="text-sm text-destructive">{servicesError}</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const watchedStatus = form.watch('status');
   const watchedReportTypes = form.watch('reportTypes');
@@ -122,9 +207,15 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
       // Build services array from checked services
       const services = Object.entries(values.services)
         .filter(([_, isChecked]) => isChecked)
-        .map(([serviceKey, _]) => ({
-          PlaceService: serviceKey.charAt(0).toUpperCase() + serviceKey.slice(1) // Capitalize first letter
-        }));
+        .map(([serviceKey, _]) => {
+          // Map the service key back to the original service name
+          const service = availableServices.find(s => 
+            s.Name.toLowerCase().replace(/\s+/g, '') === serviceKey
+          );
+          return {
+            PlaceService: service ? service.Name : serviceKey
+          };
+        });
 
       // Prepare the API request payload
       const requestData: CrudMunicipalityRequest = {
@@ -152,16 +243,19 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
       if (successMessage) {
         toast.success('Municipality updated successfully');
         
+        // Transform dynamic services to ServiceAvailability format for local state
+        const availableServices: ServiceAvailability = {
+          code: values.services.code || false,
+          permits: values.services.permits || false,
+          liens: values.services.liens || false,
+          utilities: values.services.utilities || false,
+        };
+
         const municipalityData: Omit<Municipality, 'id'> = {
           name: values.name,
           countyId: values.countyId,
           status: values.status,
-          availableServices: {
-            code: values.services.code,
-            permits: values.services.permits,
-            liens: values.services.liens,
-            utilities: values.services.utilities,
-          },
+          availableServices,
           reportTypes: values.reportTypes as ReportType[],
         };
 
@@ -292,82 +386,31 @@ const EditMunicipalityDialog = ({ open, onOpenChange, municipality, counties, on
             <div className="space-y-3">
               <FormLabel>Available Services</FormLabel>
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="services.code"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          Code
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="services.permits"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          Permits
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="services.liens"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          Liens
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="services.utilities"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          Utilities
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                {availableServices.map((service) => {
+                  const serviceKey = service.Name.toLowerCase().replace(/\s+/g, '');
+                  return (
+                    <FormField
+                      key={service.Name}
+                      control={form.control}
+                      name={`services.${serviceKey}` as any}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value || false}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-sm font-normal">
+                              {service.Name}
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  );
+                })}
               </div>
             </div>
 

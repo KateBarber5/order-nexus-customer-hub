@@ -6,14 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileSearch, Lock, Mail } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { govMetricLogin } from '@/services/orderService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,73 +27,27 @@ const Index = () => {
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      console.log('Attempting login with email:', email);
-      const data = await govMetricLogin(email, password);
-      console.log('Login API response:', data);
-      console.log('LoginIsValid:', data.LoginIsValid);
-      console.log('Type of LoginIsValid:', typeof data.LoginIsValid);
-      console.log('Raw LoginIsValid value:', JSON.stringify(data.LoginIsValid));
-      console.log('Full response structure:', JSON.stringify(data, null, 2));
+      const result = await login(email, password, rememberMe);
       
-      // More explicit validation logic
-      let isLoginValid = false;
-      
-      if (typeof data.LoginIsValid === 'boolean') {
-        isLoginValid = data.LoginIsValid === true;
-        console.log('LoginIsValid is boolean, value:', isLoginValid);
-      } else if (typeof data.LoginIsValid === 'string') {
-        isLoginValid = (data.LoginIsValid as string).toLowerCase() === 'true';
-        console.log('LoginIsValid is string, value:', isLoginValid);
-      } else if (typeof data.LoginIsValid === 'number') {
-        isLoginValid = data.LoginIsValid === 1;
-        console.log('LoginIsValid is number, value:', isLoginValid);
-      } else {
-        // Fallback: try to convert to string and check
-        const stringValue = String(data.LoginIsValid).toLowerCase();
-        isLoginValid = stringValue === 'true' || stringValue === '1';
-        console.log('LoginIsValid is unknown type, converted to string:', stringValue, 'result:', isLoginValid);
-      }
-      
-      console.log('Final isLoginValid result:', isLoginValid);
-      
-      if (isLoginValid) {
-        console.log('Login is valid, storing session data...');
-        // Store login state
-        if (rememberMe) {
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('userEmail', email);
-          console.log('Stored in localStorage');
-        } else {
-          sessionStorage.setItem('isLoggedIn', 'true');
-          sessionStorage.setItem('userEmail', email);
-          console.log('Stored in sessionStorage');
-        }
-        
-        console.log('Showing success toast...');
+      if (result.success) {
         toast({
           title: "Success",
-          description: "Login successful! Redirecting to dashboard...",
+          description: result.message,
         });
         
-        console.log('Waiting 1 second before navigation...');
+        // Get the redirect URL from session storage (if any)
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+        sessionStorage.removeItem('redirectAfterLogin');
+        
         // Add a small delay to ensure toast is shown
         setTimeout(() => {
-          console.log('Navigating to dashboard...');
-          navigate('/dashboard');
+          navigate(redirectUrl || '/dashboard');
         }, 1000);
       } else {
-        console.log('Login is not valid, showing error...');
-        // Show error message from API response
-        const errorMessage = data.Error && data.Error.length > 0 
-          ? data.Error[0].Message 
-          : "Login failed. Please check your credentials.";
-        
         toast({
           title: "Authentication failed",
-          description: errorMessage,
+          description: result.message,
           variant: "destructive",
         });
       }
@@ -104,8 +58,6 @@ const Index = () => {
         description: "An error occurred during login. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -122,7 +74,8 @@ const Index = () => {
             <img src="/lovable-uploads/fd821935-e446-4482-8a82-2cdfc6b0305e.png" alt="GovMetric Logo" className="h-20" />
           </div>
         </div>
-        
+
+        {/* Login card */}
         <Card className="w-full backdrop-blur-sm bg-white/90 border border-white/20 shadow-xl">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
@@ -148,6 +101,7 @@ const Index = () => {
                   />
                 </div>
               </div>
+              
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
