@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { mockCustomer } from '@/data/mockData';
+import React, { useState, useEffect } from 'react';
+import { mockCustomer, Customer } from '@/data/mockData';
+import { getUserProfile, updateUserProfile, changeUserPassword, UserProfileResponse } from '@/services/orderService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,13 +17,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Lock, CreditCard, Calendar, User } from 'lucide-react';
+import { Lock, CreditCard, Calendar, User, Loader2 } from 'lucide-react';
 
 const CustomerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [customer, setCustomer] = useState(mockCustomer);
-  const [formData, setFormData] = useState(mockCustomer);
+  const [customer, setCustomer] = useState<Customer>(mockCustomer);
+  const [formData, setFormData] = useState<Customer>(mockCustomer);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [passwords, setPasswords] = useState({
     newPassword: '',
     confirmPassword: '',
@@ -54,6 +57,43 @@ const CustomerProfile = () => {
     cardholderName: ''
   });
 
+  // Load user profile data from API
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const userProfile = await getUserProfile();
+        
+        // Transform API response to match the component's expected format
+        const transformedCustomer = {
+          id: userProfile.UserId, // Use UserId from API response
+          name: userProfile.FullName || '',
+          email: userProfile.Email || '',
+          phone: userProfile.Phone || '',
+          address: userProfile.Address || '',
+          city: userProfile.City || '',
+          state: userProfile.State || '',
+          zipCode: userProfile.PostCode || ''
+        };
+        
+        setCustomer(transformedCustomer);
+        setFormData(transformedCustomer);
+        
+        console.log('User profile loaded successfully:', transformedCustomer);
+      } catch (err) {
+        console.error('Error loading user profile:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load user profile');
+        toast.error('Failed to load user profile. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -62,11 +102,43 @@ const CustomerProfile = () => {
     }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCustomer(formData);
-    setIsEditing(false);
-    toast.success('Profile updated successfully!');
+    
+    try {
+      // Call the API to update the user profile
+      const response = await updateUserProfile({
+        id: formData.id,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        phone: formData.phone,
+        state: formData.state,
+        zipCode: formData.zipCode
+      });
+      
+      // Check for success messages in the response
+      if (response.oMessages && Array.isArray(response.oMessages)) {
+        const successMessages = response.oMessages.filter(msg => msg.Type === 2);
+        if (successMessages.length > 0) {
+          // Update local state
+          setCustomer(formData);
+          setIsEditing(false);
+          toast.success(successMessages[0].Description || 'Profile updated successfully!');
+        } else {
+          // No success messages found
+          toast.error('Failed to update profile. Please try again.');
+        }
+      } else {
+        // Update local state
+        setCustomer(formData);
+        setIsEditing(false);
+        toast.success('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile. Please try again.');
+    }
   };
   
   const handleCancel = () => {
@@ -83,7 +155,7 @@ const CustomerProfile = () => {
     setPasswordError('');
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (passwords.newPassword.length < 8) {
@@ -96,10 +168,32 @@ const CustomerProfile = () => {
       return;
     }
     
-    toast.success('Password changed successfully!');
-    setIsDialogOpen(false);
-    setPasswords({ newPassword: '', confirmPassword: '' });
-    setPasswordError('');
+    try {
+      // Call the API to change the password
+      const response = await changeUserPassword(formData.id, passwords.newPassword);
+      
+      // Check for success messages in the response
+      if (response.oMessages && Array.isArray(response.oMessages)) {
+        const successMessages = response.oMessages.filter(msg => msg.Type === 2);
+        if (successMessages.length > 0) {
+          toast.success(successMessages[0].Description || 'Password changed successfully!');
+          setIsDialogOpen(false);
+          setPasswords({ newPassword: '', confirmPassword: '' });
+          setPasswordError('');
+        } else {
+          // No success messages found
+          toast.error('Failed to change password. Please try again.');
+        }
+      } else {
+        toast.success('Password changed successfully!');
+        setIsDialogOpen(false);
+        setPasswords({ newPassword: '', confirmPassword: '' });
+        setPasswordError('');
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to change password. Please try again.');
+    }
   };
 
   const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,12 +215,57 @@ const CustomerProfile = () => {
     });
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Profile</CardTitle>
+          <CardDescription>
+            Loading your profile information...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading profile...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Profile</CardTitle>
+          <CardDescription>
+            Error loading profile
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="py-8">
+          <div className="text-center space-y-4">
+            <p className="text-destructive">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Customer Profile</CardTitle>
+        <CardTitle>User Profile</CardTitle>
         <CardDescription>
-          Manage your personal information and subscription
+          Manage your personal information
         </CardDescription>
       </CardHeader>
       
@@ -181,8 +320,6 @@ const CustomerProfile = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      readOnly={!isEditing}
-                      className={!isEditing ? "bg-gray-50" : ""}
                       required
                     />
                   </div>
@@ -194,8 +331,6 @@ const CustomerProfile = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleChange}
-                      readOnly={!isEditing}
-                      className={!isEditing ? "bg-gray-50" : ""}
                       required
                     />
                   </div>
@@ -207,8 +342,6 @@ const CustomerProfile = () => {
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
-                      readOnly={!isEditing}
-                      className={!isEditing ? "bg-gray-50" : ""}
                       required
                     />
                   </div>
@@ -220,8 +353,6 @@ const CustomerProfile = () => {
                       name="state"
                       value={formData.state}
                       onChange={handleChange}
-                      readOnly={!isEditing}
-                      className={!isEditing ? "bg-gray-50" : ""}
                       required
                     />
                   </div>
@@ -233,8 +364,6 @@ const CustomerProfile = () => {
                       name="zipCode"
                       value={formData.zipCode}
                       onChange={handleChange}
-                      readOnly={!isEditing}
-                      className={!isEditing ? "bg-gray-50" : ""}
                       required
                     />
                   </div>

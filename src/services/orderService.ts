@@ -1717,6 +1717,317 @@ export const crudAccount = async (requestData: CrudAccountRequest): Promise<Crud
   }
 };
 
+// Get System Parameter API interfaces
+export interface GetSystemParameterResponse {
+  WWPParameterValue: string;
+}
+
+// Get System Parameter API function
+export const getSystemParameter = async (parameterKey: string): Promise<GetSystemParameterResponse> => {
+  try {
+    console.log('Fetching system parameter from API...');
+    console.log('Parameter Key:', parameterKey);
+    
+    const url = `/api/GovMetricAPI/GetSystemParameter?WWPParameterKey=${encodeURIComponent(parameterKey)}`;
+    console.log('API URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: GetSystemParameterResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log('System parameter response:', data);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText);
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching system parameter:', error);
+    throw error;
+  }
+};
+
+// Get User Profile API interfaces
+export interface UserProfileResponse {
+  UserId: string;
+  FullName: string;
+  Email: string;
+  Phone: string;
+  Address: string;
+  City: string;
+  State: string;
+  PostCode: string;
+}
+
+// Get User Profile API function
+export const getUserProfile = async (): Promise<UserProfileResponse> => {
+  try {
+    console.log('Fetching user profile from API...');
+    
+    // Get the current user ID from session
+    const userID = sessionManager.getCurrentUserID();
+    
+    if (!userID) {
+      throw new Error('No user ID found in session. Please log in again.');
+    }
+    
+    console.log('User ID:', userID);
+    
+    const url = `/api/GovMetricAPI/GetUserProfile?iUserGUID=${encodeURIComponent(userID)}`;
+    console.log('API URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: UserProfileResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log('User profile response:', data);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText);
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+};
+
+// Update User Profile API interfaces
+export interface UpdateUserProfileRequest {
+  iTrnMode: 'UPD';
+  iAccountSDT: {
+    UserId: string;
+    EMail: string;
+    FirstName: string;
+    LastName: string;
+    Address: string;
+    City: string;
+    Phone: string;
+    State: string;
+    PostCode: string;
+  };
+}
+
+// Update User Profile API function
+export const updateUserProfile = async (userData: {
+  id: string;
+  email: string;
+  address: string;
+  city: string;
+  phone: string;
+  state: string;
+  zipCode: string;
+}): Promise<CrudAccountResponse> => {
+  try {
+    console.log('Updating user profile...');
+    console.log('User data:', userData);
+    
+    // Split the name into first and last name
+    const nameParts = userData.email.split('@')[0].split('.');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join('.') || '';
+    
+    const requestData: UpdateUserProfileRequest = {
+      iTrnMode: 'UPD',
+      iAccountSDT: {
+        UserId: userData.id,
+        EMail: userData.email,
+        FirstName: firstName,
+        LastName: lastName,
+        Address: userData.address,
+        City: userData.city,
+        Phone: userData.phone,
+        State: userData.state,
+        PostCode: userData.zipCode
+      }
+    };
+    
+    console.log('Request data:', requestData);
+    
+    const response = await fetch('/api/GovMetricAPI/CrudAccount', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: CrudAccountResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Update user profile response:', data);
+        
+        // Check if the response contains success messages
+        if (data.oMessages && Array.isArray(data.oMessages)) {
+          const successMessages = data.oMessages.filter(msg => msg.Type === 2);
+          const errorMessages = data.oMessages.filter(msg => msg.Type !== 2);
+          
+          if (successMessages.length > 0) {
+            console.log('Success messages:', successMessages);
+          }
+          
+          if (errorMessages.length > 0) {
+            console.log('Error messages:', errorMessages);
+            throw new Error(errorMessages.map(msg => msg.Description).join(', '));
+          }
+        }
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'User profile updated successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
 // Get current services for a specific municipality
 export const getMunicipalityCurrentServices = async (municipalityName: string): Promise<string[]> => {
   try {
@@ -1742,6 +2053,100 @@ export const getMunicipalityCurrentServices = async (municipalityName: string): 
     return [];
   } catch (error) {
     console.error('Error fetching municipality current services:', error);
+    throw error;
+  }
+};
+
+// Change Password API interfaces
+export interface ChangePasswordRequest {
+  iUserGUID: string;
+  iUserPassword: string;
+  iUserNewPassword: string;
+}
+
+export interface ChangePasswordMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface ChangePasswordResponse {
+  oMessages: ChangePasswordMessage[];
+  [key: string]: any;
+}
+
+// Change Password API function
+export const changeUserPassword = async (userID: string, newPassword: string): Promise<ChangePasswordResponse> => {
+  try {
+    console.log('Changing user password...');
+    console.log('User ID:', userID);
+    
+    const requestData: ChangePasswordRequest = {
+      iUserGUID: userID,
+      iUserPassword: '', // Empty as per requirements
+      iUserNewPassword: newPassword
+    };
+    
+    console.log('Request data:', requestData);
+    
+    const response = await fetch('/api/GovMetricAPI/PostChangePassword', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const responseText = await response.text();
+    console.log('Response text:', responseText);
+    
+    let data: ChangePasswordResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Change password response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        throw new Error('Failed to parse JSON response from API');
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'Password changed successfully' 
+        }] 
+      };
+    }
+    
+    // Check for error messages in the response
+    if (data.oMessages && Array.isArray(data.oMessages)) {
+      const errorMessages = data.oMessages.filter(msg => msg.Type !== 2);
+      if (errorMessages.length > 0) {
+        const errorDescriptions = errorMessages.map(msg => msg.Description).join(', ');
+        console.error('API returned error messages:', errorDescriptions);
+        throw new Error(errorDescriptions);
+      }
+      
+      const successMessages = data.oMessages.filter(msg => msg.Type === 2);
+      if (successMessages.length > 0) {
+        console.log('Password change successful:', successMessages[0].Description);
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error changing password:', error);
     throw error;
   }
 };

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { FileSearch, Lock, Mail, UserPlus, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { crudAccount } from '@/services/orderService';
+import { crudAccount, getSystemParameter } from '@/services/orderService';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
@@ -42,6 +42,14 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
+      // Fetch the OrganizationAdminRoleId from the API
+      const systemParamResponse = await getSystemParameter('OrganizationAdminRoleId');
+      const roleId = parseInt(systemParamResponse.WWPParameterValue, 10);
+      
+      if (isNaN(roleId)) {
+        throw new Error('Invalid role ID received from server');
+      }
+      
       const requestData = {
         iTrnMode: 'INS' as const,
         iAccountSDT: {
@@ -52,7 +60,7 @@ const SignUp = () => {
           Password: password,
           OrganizationName: companyName || 'Default Organization',
           UserActivationMethod: 'U',
-          RoleId: 3
+          RoleId: roleId
         }
       };
       
