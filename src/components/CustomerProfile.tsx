@@ -23,6 +23,7 @@ const CustomerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [customer, setCustomer] = useState<Customer>(mockCustomer);
   const [formData, setFormData] = useState<Customer>(mockCustomer);
+  const [organizationName, setOrganizationName] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +81,7 @@ const CustomerProfile = () => {
         
         setCustomer(transformedCustomer);
         setFormData(transformedCustomer);
+        setOrganizationName(userProfile.OrganizationName || '');
         
         console.log('User profile loaded successfully:', transformedCustomer);
       } catch (err) {
@@ -286,6 +288,17 @@ const CustomerProfile = () => {
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="organizationName">Organization Name</Label>
+                    <Input
+                      id="organizationName"
+                      name="organizationName"
+                      value={organizationName}
+                      readOnly={true}
+                      className="bg-gray-50"
+                    />
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
                     <Input

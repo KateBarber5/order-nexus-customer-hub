@@ -111,7 +111,7 @@ const AdminSubscriptionsGrid = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Client Subscriptions</CardTitle>
+        <CardTitle>Account Subscriptions</CardTitle>
         <CardDescription>
           Manage client subscription details and pricing
         </CardDescription>
@@ -120,7 +120,7 @@ const AdminSubscriptionsGrid = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Client Name</TableHead>
+              <TableHead>Account Name</TableHead>
               <TableHead>Subscription Option</TableHead>
               <TableHead>Monthly Price</TableHead>
               <TableHead>Monthly Orders</TableHead>

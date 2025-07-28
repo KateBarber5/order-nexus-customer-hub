@@ -460,7 +460,7 @@ const Admin = () => {
         <Tabs defaultValue="order-reporting" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="order-reporting">Order Reporting</TabsTrigger>
-            <TabsTrigger value="client-subscriptions">Client Subscriptions</TabsTrigger>
+            <TabsTrigger value="client-subscriptions">Account Subscriptions</TabsTrigger>
           </TabsList>
           
           <TabsContent value="order-reporting" className="space-y-6">

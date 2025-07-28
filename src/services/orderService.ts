@@ -1798,6 +1798,7 @@ export const getSystemParameter = async (parameterKey: string): Promise<GetSyste
 // Get User Profile API interfaces
 export interface UserProfileResponse {
   UserId: string;
+  OrganizationName: string;
   FullName: string;
   Email: string;
   Phone: string;

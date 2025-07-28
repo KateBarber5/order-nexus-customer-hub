@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Users, CheckCircle, Clock, X, Plus, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { fetchOrders, Order } from '@/services/orderService';
+import { fetchOrdersFromAPI, Order } from '@/services/orderService';
 import StatusBadge from '@/components/StatusBadge';
 import OrderDetails from '@/components/OrderDetails';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,7 +21,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
         console.log('Dashboard: Starting to fetch orders...');
-        const fetchedOrders = await fetchOrders();
+        const fetchedOrders = await fetchOrdersFromAPI();
         console.log('Dashboard: Successfully fetched orders:', fetchedOrders);
         setOrders(fetchedOrders);
         setError(null);
