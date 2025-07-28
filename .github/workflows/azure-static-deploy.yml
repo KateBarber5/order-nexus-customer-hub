@@ -39,7 +39,8 @@ jobs:
         # Create a deployment package for Azure Web App
         mkdir -p deploy
         cp -r dist/* deploy/
-        cp web.config deploy/ 2>/dev/null || echo "web.config not found, will be created"
+        ls -la deploy/
+        echo "Deployment package created successfully"
         
     - name: Create web.config for Azure
       run: |
