@@ -1,3 +1,4 @@
+import { API_CONFIG, apiRequest } from '@/config/api';
 
 // Types for CountiesCitiesConfig component
 export type StatusType = 'active' | 'inactive' | 'unavailable';
@@ -441,15 +442,9 @@ export const generateMockOrders = (): Order[] => {
 export const fetchOrdersFromAPI = async (): Promise<Order[]> => {
   try {
     console.log('Fetching orders from API...');
-    console.log('API URL:', '/api/GovMetricAPI/GetOrders');
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await fetch('/api/GovMetricAPI/GetOrders', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_ORDERS);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -533,15 +528,9 @@ export const fetchOrders = async (): Promise<Order[]> => {
 export const fetchPlaces = async (): Promise<Place[]> => {
   try {
     console.log('Fetching places from API...');
-    console.log('API URL:', '/api/GovMetricAPI/GetPlaces');
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await fetch('/api/GovMetricAPI/GetPlaces', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_PLACES);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -605,16 +594,11 @@ export const checkMunicipalityAvailability = async (parcelId: string, countyName
     console.log('Checking municipality availability...');
     console.log('Parcel ID:', parcelId);
     console.log('County Name:', countyName);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const url = `/api/GovMetricAPI/CheckMunicipalityAvailabilityByParcel?iParcelID=${encodeURIComponent(parcelId)}&iCountyName=${encodeURIComponent(countyName)}`;
-    console.log('API URL:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_PARCEL, {
+      iParcelID: parcelId,
+      iCountyName: countyName
     });
     
     console.log('Response status:', response.status);
@@ -657,16 +641,10 @@ export const checkMunicipalityAvailabilityByAddress = async (address: string): P
   try {
     console.log('Checking municipality availability by address...');
     console.log('Address:', address);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const url = `/api/GovMetricAPI/CheckMunicipalityAvailabilityByAddress?iAddress=${encodeURIComponent(address)}`;
-    console.log('API URL:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_ADDRESS, {
+      iAddress: address
     });
     
     console.log('Response status:', response.status);
@@ -790,15 +768,9 @@ export const crudCounty = async (requestData: CrudCountyRequest): Promise<CrudCo
   try {
     console.log('Submitting county CRUD request...');
     console.log('Request data:', requestData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await fetch('/api/GovMetricAPI/CrudCounty', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.CRUD_COUNTY, requestData);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -1194,6 +1166,7 @@ export const submitReportRequestByParcel = async (
     console.log('County Name:', countyName);
     console.log('Parcel ID:', parcelId);
     console.log('Report Type:', reportType);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
     const { iOrganizationID, iUserGuid } = getOrganizationAndUserData();
     const iGovOrderReportType = reportType === 'full' ? "1" : "0";
@@ -1208,14 +1181,7 @@ export const submitReportRequestByParcel = async (
     
     console.log('Request body:', requestBody);
     
-    const response = await fetch('/api/GovMetricAPI/PostReportRequestByParcel', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.POST_REPORT_REQUEST_BY_PARCEL, requestBody);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -1534,17 +1500,11 @@ export const govMetricLogin = async (email: string, password: string): Promise<L
   try {
     console.log('Authenticating with GovMetric API...');
     console.log('Email:', email);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    // Construct the API URL with query parameters
-    const apiUrl = `/api/GovMetricAPI/GovmetricLogin?iUserName=${encodeURIComponent(email)}&iUserPassword=${encodeURIComponent(password)}`;
-    console.log('API URL:', apiUrl);
-    
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.LOGIN, {
+      iUserName: email,
+      iUserPassword: password
     });
     
     console.log('Response status:', response.status);
@@ -1574,7 +1534,10 @@ export const govMetricLogin = async (email: string, password: string): Promise<L
     
     // Check if the response is HTML instead of JSON
     const contentType = response.headers.get('content-type');
+    console.log('Response content-type:', contentType);
     if (contentType && contentType.includes('text/html')) {
+      const responseText = await response.text();
+      console.log('HTML Response received:', responseText.substring(0, 500));
       throw new Error('API endpoint returned HTML instead of JSON');
     }
     
@@ -1582,9 +1545,11 @@ export const govMetricLogin = async (email: string, password: string): Promise<L
     console.log('Raw response text:', responseText);
     console.log('Response text length:', responseText.length);
     console.log('Response text trimmed:', responseText.trim());
+    console.log('Response text starts with:', responseText.substring(0, 50));
     
     // Check if response starts with HTML
     if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      console.log('Response appears to be HTML, throwing error');
       throw new Error('API endpoint returned HTML instead of JSON');
     }
     
