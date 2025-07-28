@@ -1,0 +1,91 @@
+name: Deploy React App to Azure Web App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  AZURE_WEBAPP_NAME: govmetric    # Make sure this matches your actual Azure Web App name
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Build application
+      run: npm run build
+      env:
+        VITE_API_BASE_URL: https://order.govmetric.ai
+        
+    - name: Create deployment package
+      run: |
+        # Create a deployment package for Azure Web App
+        mkdir -p deploy
+        cp -r dist/* deploy/
+        cp web.config deploy/ 2>/dev/null || echo "web.config not found, will be created"
+        
+    - name: Create web.config for Azure
+      run: |
+        cat > deploy/web.config << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <configuration>
+          <system.webServer>
+            <rewrite>
+              <rules>
+                <rule name="React Routes" stopProcessing="true">
+                  <match url=".*" />
+                  <conditions logicalGrouping="MatchAll">
+                    <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                    <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                  </conditions>
+                  <action type="Rewrite" url="/" />
+                </rule>
+              </rules>
+            </rewrite>
+            <staticContent>
+              <mimeMap fileExtension=".json" mimeType="application/json" />
+              <mimeMap fileExtension=".woff" mimeType="application/font-woff" />
+              <mimeMap fileExtension=".woff2" mimeType="application/font-woff2" />
+            </staticContent>
+            <httpProtocol>
+              <customHeaders>
+                <add name="X-Content-Type-Options" value="nosniff" />
+                <add name="X-Frame-Options" value="DENY" />
+                <add name="X-XSS-Protection" value="1; mode=block" />
+                <add name="Referrer-Policy" value="strict-origin-when-cross-origin" />
+              </customHeaders>
+            </httpProtocol>
+          </system.webServer>
+        </configuration>
+        EOF
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: deploy/
+        
+    - name: Deploy to Azure Web App
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: ./deploy
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }} 
