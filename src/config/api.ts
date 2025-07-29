@@ -1,10 +1,10 @@
 // API Configuration
 // Change this value to switch between development and production API endpoints
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://order.govmetric.ai';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net';
 
 // For development, you can use:
 // const API_BASE_URL = 'http://localhost:8080'; // or your local dev server
-// const API_BASE_URL = 'https://order.govmetric.ai'; // for production
+// const API_BASE_URL = 'https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net'; // for production
 
 export const API_CONFIG = {
   BASE_URL: API_BASE_URL,

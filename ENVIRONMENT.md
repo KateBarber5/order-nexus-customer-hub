@@ -8,7 +8,7 @@ The application now uses a configurable API endpoint that can be set for differe
 The API endpoint is configured in `src/config/api.ts`:
 
 ```typescript
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://order.govmetric.ai';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net';
 ```
 
 ### Environment Variables
@@ -22,7 +22,7 @@ VITE_API_BASE_URL=http://localhost:8080
 
 #### For Production (Azure Deployment)
 ```bash
-VITE_API_BASE_URL=https://order.govmetric.ai
+VITE_API_BASE_URL=https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net
 ```
 
 ### CORS Management
@@ -36,7 +36,7 @@ CORS (Cross-Origin Resource Sharing) is now managed directly by the Azure Static
    VITE_API_BASE_URL=http://localhost:8080
    ```
 
-2. **For Production**: The default value `https://order.govmetric.ai` will be used when deployed to Azure.
+2. **For Production**: The default value `https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net` will be used when deployed to Azure.
 
 3. **To change the production endpoint**: Update the default value in `src/config/api.ts`:
    ```typescript

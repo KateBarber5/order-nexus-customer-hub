@@ -190,7 +190,7 @@ const MyComponent = () => {
 
 ### Environment Variables
 ```env
-VITE_API_BASE_URL=https://order.govmetric.ai
+VITE_API_BASE_URL=https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net
 ```
 
 ### Session Configuration

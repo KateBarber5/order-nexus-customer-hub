@@ -49,7 +49,7 @@ const OrderHistory = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const handleDownload = (docName: string, reportFilePath: string) => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://order.govmetric.ai';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net';
     const downloadUrl = `${apiBaseUrl}/aHTTPDownloadFile?iContentType=application%2Fpdf&iFileName=${encodeURIComponent(docName)}&iFilePath=${encodeURIComponent(reportFilePath)}`;
     
     // Create a temporary anchor element to trigger the download

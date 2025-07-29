@@ -60,7 +60,7 @@ az webapp create --resource-group myResourceGroup --plan myAppServicePlan --name
 
 ```
 AZURE_WEBAPP_PUBLISH_PROFILE=<content-of-publish-profile-file>
-VITE_API_BASE_URL=https://order.govmetric.ai
+VITE_API_BASE_URL=https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net
 ```
 
 ### Optional Secrets (for advanced scenarios):

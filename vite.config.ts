@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL || 'https://order.govmetric.ai',
+          target: env.VITE_API_BASE_URL || 'https://govmetricai-h0h4crd6a6gregbm.eastus-01.azurewebsites.net',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },
