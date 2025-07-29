@@ -2,12 +2,22 @@
 // Change this value to switch between development and production API endpoints
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://order.govmetric.ai';
 
+// CORS Proxy Configuration
+// Use a CORS proxy to handle cross-origin requests
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+const USE_CORS_PROXY = import.meta.env.VITE_USE_CORS_PROXY === 'true' || true; // Enable by default
+
+// To disable CORS proxy for testing, set VITE_USE_CORS_PROXY=false in your .env file
+// or change the default value above to false
+
 // For development, you can use:
 // const API_BASE_URL = 'http://localhost:8080'; // or your local dev server
 // const API_BASE_URL = 'https://order.govmetric.ai'; // for production
 
 export const API_CONFIG = {
   BASE_URL: API_BASE_URL,
+  USE_CORS_PROXY,
+  CORS_PROXY,
   ENDPOINTS: {
     LOGIN: '/GovMetricAPI/GovmetricLogin',
     GET_ORDERS: '/GovMetricAPI/GetOrders',
@@ -30,7 +40,14 @@ export const API_CONFIG = {
 
 // Helper function to build full API URLs
 export const buildApiUrl = (endpoint: string, params?: Record<string, string>): string => {
-  const url = new URL(`${API_CONFIG.BASE_URL}${endpoint}`);
+  let baseUrl = API_CONFIG.BASE_URL;
+  
+  // Use CORS proxy if enabled
+  if (API_CONFIG.USE_CORS_PROXY) {
+    baseUrl = `${API_CONFIG.CORS_PROXY}${encodeURIComponent(baseUrl)}`;
+  }
+  
+  const url = new URL(`${baseUrl}${endpoint}`);
   
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
