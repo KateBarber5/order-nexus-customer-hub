@@ -841,15 +841,9 @@ export const crudMunicipality = async (requestData: CrudMunicipalityRequest): Pr
   try {
     console.log('Submitting municipality CRUD request...');
     console.log('Request data:', requestData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await fetch('/api/GovMetricAPI/CrudMunicipality', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.CRUD_MUNICIPALITY, requestData);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -919,16 +913,10 @@ export const crudMunicipality = async (requestData: CrudMunicipalityRequest): Pr
 export const getOrganizations = async (): Promise<Organization[]> => {
   try {
     console.log('Fetching organizations from API...');
-    console.log('API URL:', '/api/GovMetricAPI/GetOrganizations');
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
     // Try with GET request first (simpler approach)
-    let response = await fetch('/api/GovMetricAPI/GetOrganizations', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
+    let response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_ORGANIZATIONS);
     
     console.log('GET Response status:', response.status);
     console.log('GET Response status text:', response.statusText);
@@ -944,14 +932,7 @@ export const getOrganizations = async (): Promise<Organization[]> => {
         }
       ];
       
-      response = await fetch('/api/GovMetricAPI/GetOrganizations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      response = await apiRequest.post(API_CONFIG.ENDPOINTS.GET_ORGANIZATIONS, requestBody);
       
       console.log('POST Response status:', response.status);
       console.log('POST Response status text:', response.statusText);
@@ -1239,15 +1220,9 @@ export const submitReportRequestByParcel = async (
 export const getAllAvailableServices = async (): Promise<AvailableService[]> => {
   try {
     console.log('Fetching all available services from API...');
-    console.log('API URL:', '/api/GovMetricAPI/GetAllAvailableServices');
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await fetch('/api/GovMetricAPI/GetAllAvailableServices', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_ALL_AVAILABLE_SERVICES);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -1301,6 +1276,7 @@ export const submitReportRequestByAddress = async (
     console.log('Address:', address);
     console.log('County Name:', countyName);
     console.log('Report Type:', reportType);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
     const { iOrganizationID, iUserGuid } = getOrganizationAndUserData();
     const iGovOrderReportType = reportType === 'full' ? "1" : "0";
@@ -1315,14 +1291,7 @@ export const submitReportRequestByAddress = async (
     
     console.log('Request body:', requestBody);
     
-    const response = await fetch('/api/GovMetricAPI/PostReportRequestByAddress', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.POST_REPORT_REQUEST_BY_ADDRESS, requestBody);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -1403,17 +1372,11 @@ export interface AdminOrderReportingResponse {
 export const getAdminOrderReporting = async (filters: AdminOrderReportingFilter[]): Promise<AdminOrderReportingResponse[]> => {
   try {
     console.log('Fetching admin order reporting from API...');
-    console.log('API URL:', '/api/GovMetricAPI/GetAdminOrderReporting');
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     console.log('Request filters:', filters);
     
     // Try with GET request first (simpler approach)
-    let response = await fetch('/api/GovMetricAPI/GetAdminOrderReporting', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
+    let response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_ADMIN_ORDER_REPORTING);
     
     console.log('GET Response status:', response.status);
     console.log('GET Response status text:', response.statusText);
@@ -1422,14 +1385,7 @@ export const getAdminOrderReporting = async (filters: AdminOrderReportingFilter[
     if (!response.ok) {
       console.log('GET request failed, trying POST request...');
       
-      response = await fetch('/api/GovMetricAPI/GetAdminOrderReporting', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(filters),
-      });
+      response = await apiRequest.post(API_CONFIG.ENDPOINTS.GET_ADMIN_ORDER_REPORTING, filters);
       
       console.log('POST Response status:', response.status);
       console.log('POST Response status text:', response.statusText);
@@ -1608,15 +1564,9 @@ export const crudAccount = async (requestData: CrudAccountRequest): Promise<Crud
   try {
     console.log('Submitting account CRUD request...');
     console.log('Request data:', requestData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await fetch('/api/GovMetricAPI/CrudAccount', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.CRUD_ACCOUNT, requestData);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -1692,16 +1642,10 @@ export const getSystemParameter = async (parameterKey: string): Promise<GetSyste
   try {
     console.log('Fetching system parameter from API...');
     console.log('Parameter Key:', parameterKey);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const url = `/api/GovMetricAPI/GetSystemParameter?WWPParameterKey=${encodeURIComponent(parameterKey)}`;
-    console.log('API URL:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_SYSTEM_PARAMETER, {
+      WWPParameterKey: parameterKey
     });
     
     console.log('Response status:', response.status);
@@ -1777,6 +1721,7 @@ export interface UserProfileResponse {
 export const getUserProfile = async (): Promise<UserProfileResponse> => {
   try {
     console.log('Fetching user profile from API...');
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
     // Get the current user ID from session
     const userID = sessionManager.getCurrentUserID();
@@ -1787,15 +1732,8 @@ export const getUserProfile = async (): Promise<UserProfileResponse> => {
     
     console.log('User ID:', userID);
     
-    const url = `/api/GovMetricAPI/GetUserProfile?iUserGUID=${encodeURIComponent(userID)}`;
-    console.log('API URL:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_USER_PROFILE, {
+      iUserGUID: userID
     });
     
     console.log('Response status:', response.status);
@@ -1883,6 +1821,7 @@ export const updateUserProfile = async (userData: {
   try {
     console.log('Updating user profile...');
     console.log('User data:', userData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
     // Split the name into first and last name
     const nameParts = userData.email.split('@')[0].split('.');
@@ -1906,14 +1845,7 @@ export const updateUserProfile = async (userData: {
     
     console.log('Request data:', requestData);
     
-    const response = await fetch('/api/GovMetricAPI/CrudAccount', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.CRUD_ACCOUNT, requestData);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -2046,6 +1978,7 @@ export const changeUserPassword = async (userID: string, newPassword: string): P
   try {
     console.log('Changing user password...');
     console.log('User ID:', userID);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
     
     const requestData: ChangePasswordRequest = {
       iUserGUID: userID,
@@ -2055,14 +1988,7 @@ export const changeUserPassword = async (userID: string, newPassword: string): P
     
     console.log('Request data:', requestData);
     
-    const response = await fetch('/api/GovMetricAPI/PostChangePassword', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.POST_CHANGE_PASSWORD, requestData);
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
