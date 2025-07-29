@@ -60,6 +60,17 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Azure Static Web Apps Configuration
+
+This project includes configuration for Azure Static Web Apps to handle client-side routing properly. The `staticwebapp.config.json` file ensures that all routes are served by `index.html`, allowing React Router to handle the routing on the client side.
+
+### Key Configuration Files:
+- `staticwebapp.config.json` - Azure Static Web Apps routing configuration
+- `vite.config.ts` - Includes a custom plugin to copy the config file to the build output
+
+### Why This is Needed:
+When you refresh the page on a client-side route (like `/profile`), Azure Static Web Apps tries to find a file at that path. Since it's a React Router route, no such file exists, resulting in a 404 error. The configuration file tells Azure to serve `index.html` for all routes, allowing React Router to take over.
+
 ## How can I deploy this project?
 
 ### Option 1: Lovable Deployment

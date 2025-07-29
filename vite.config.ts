@@ -2,6 +2,25 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import fs from "fs";
+
+// Custom plugin to copy staticwebapp.config.json to dist
+const copyStaticWebAppConfig = () => {
+  return {
+    name: 'copy-staticwebapp-config',
+    writeBundle() {
+      const sourcePath = path.resolve(__dirname, 'staticwebapp.config.json');
+      const destPath = path.resolve(__dirname, 'dist/staticwebapp.config.json');
+      
+      if (fs.existsSync(sourcePath)) {
+        fs.copyFileSync(sourcePath, destPath);
+        console.log('✅ Copied staticwebapp.config.json to dist/');
+      } else {
+        console.warn('⚠️ staticwebapp.config.json not found in root directory');
+      }
+    }
+  };
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -31,6 +50,7 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' &&
       componentTagger(),
+      copyStaticWebAppConfig(),
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -40,5 +60,13 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env': process.env,
     },
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+        },
+      },
+    },
+    publicDir: 'public',
   };
 });
