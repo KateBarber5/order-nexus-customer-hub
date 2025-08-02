@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { mockCustomer, Customer } from '@/data/mockData';
-import { getUserProfile, updateUserProfile, changeUserPassword, UserProfileResponse } from '@/services/orderService';
+import { getUserProfile, updateUserProfile, changeUserPassword, UserProfileResponse, getOrganizations, Organization, sessionManager } from '@/services/orderService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,14 +33,15 @@ const CustomerProfile = () => {
   });
   const [passwordError, setPasswordError] = useState('');
   
-  // Mock subscription data
-  const [subscriptionData] = useState({
-    plan: 'Retail',
-    ordersUsed: 8,
-    ordersTotal: 25,
-    nextBillingDate: '2025-08-01',
-    amount: '$199',
-    status: 'Active'
+  // Subscription data from API
+  const [subscriptionData, setSubscriptionData] = useState({
+    plan: '',
+    ordersUsed: 0,
+    ordersTotal: 0,
+    nextBillingDate: '',
+    amount: '',
+    status: '',
+    excessOrderCost: ''
   });
 
   // Mock stored card data (last 4 digits)
@@ -84,12 +85,56 @@ const CustomerProfile = () => {
         setOrganizationName(userProfile.OrganizationName || '');
         
         console.log('User profile loaded successfully:', transformedCustomer);
+        
+        // Load organization subscription data
+        await loadOrganizationData();
+        
       } catch (err) {
         console.error('Error loading user profile:', err);
         setError(err instanceof Error ? err.message : 'Failed to load user profile');
         toast.error('Failed to load user profile. Please try again.');
       } finally {
         setIsLoading(false);
+      }
+    };
+
+    const loadOrganizationData = async () => {
+      try {
+        // Get the current organization ID from session
+        const organizationId = sessionManager.getCurrentOrganizationID();
+        
+        if (!organizationId) {
+          console.warn('No organization ID found in session');
+          return;
+        }
+        
+        // Call the GetOrganizations API
+        const organizations = await getOrganizations();
+        
+        // Find the organization that matches the current user's organization
+        const userOrganization = organizations.find(org => org.OrganizationID === organizationId);
+        
+        if (userOrganization) {
+          // Map the API response to the component's subscription data format
+          const mappedSubscriptionData = {
+            plan: userOrganization.OrganizationPlan,
+            ordersUsed: userOrganization.OrganizationPlanUsedOrders,
+            ordersTotal: userOrganization.OrganizationPlanMonthlyOrders,
+            nextBillingDate: userOrganization.OrganizationPlanNextBillingDate,
+            amount: `$${userOrganization.OrganizationPlanMonthlyPrice}`,
+            status: userOrganization.OrganizationPlanStatus,
+            excessOrderCost: userOrganization.OrganizationPlanExcessOrderCost
+          };
+          
+          setSubscriptionData(mappedSubscriptionData);
+          console.log('Organization subscription data loaded successfully:', mappedSubscriptionData);
+        } else {
+          console.warn('User organization not found in organizations list');
+        }
+      } catch (err) {
+        console.error('Error loading organization data:', err);
+        // Don't set error state here as the user profile is still loaded
+        toast.error('Failed to load subscription data. Please try again.');
       }
     };
 
@@ -497,7 +542,7 @@ const CustomerProfile = () => {
                     <div 
                       className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                       style={{ 
-                        width: `${(subscriptionData.ordersUsed / subscriptionData.ordersTotal) * 100}%` 
+                        width: subscriptionData.ordersTotal > 0 ? `${(subscriptionData.ordersUsed / subscriptionData.ordersTotal) * 100}%` : '0%' 
                       }}
                     ></div>
                   </div>
@@ -505,7 +550,7 @@ const CustomerProfile = () => {
                     You have {subscriptionData.ordersTotal - subscriptionData.ordersUsed} orders remaining this month
                   </p>
                   <p className="text-xs text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-200">
-                    Any orders exceeding the monthly limit will be charged the flat rate of $10 per order.
+                    Any orders exceeding the monthly limit will be charged the flat rate of ${subscriptionData.excessOrderCost || '10'} per order.
                   </p>
                 </div>
               </CardContent>

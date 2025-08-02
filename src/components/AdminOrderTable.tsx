@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { setGovOrderPaidStatus } from '@/services/orderService';
+import { useToast } from '@/hooks/use-toast';
 
 interface OrderData {
   id: string;
@@ -19,6 +21,55 @@ interface AdminOrderTableProps {
 }
 
 const AdminOrderTable = ({ data, onMarkOrderAsPaid }: AdminOrderTableProps) => {
+  const { toast } = useToast();
+
+  const handleMarkAsPaid = async (orderId: string) => {
+    try {
+      // Convert orderId to number for the API call
+      const orderIdNumber = parseInt(orderId, 10);
+      
+      if (isNaN(orderIdNumber)) {
+        toast({
+          title: "Error",
+          description: "Invalid order ID format",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call the API to set the order as paid
+      const response = await setGovOrderPaidStatus(orderIdNumber, "Paid");
+      
+      // Check if the API call was successful
+      if (response.oMessages && response.oMessages.length > 0) {
+        const successMessage = response.oMessages.find(msg => msg.Type === 2);
+        const errorMessage = response.oMessages.find(msg => msg.Type !== 2);
+        
+        if (successMessage) {
+          toast({
+            title: "Success",
+            description: successMessage.Description,
+          });
+          // Call the parent callback to update the UI
+          onMarkOrderAsPaid(orderId);
+        } else if (errorMessage) {
+          toast({
+            title: "Error",
+            description: errorMessage.Description,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error marking order as paid:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to mark order as paid",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse border border-gray-300">
@@ -51,7 +102,7 @@ const AdminOrderTable = ({ data, onMarkOrderAsPaid }: AdminOrderTableProps) => {
                   variant="outline"
                   size="sm"
                   disabled={row.paidStatus === 'Paid'}
-                  onClick={() => onMarkOrderAsPaid(row.id)}
+                  onClick={() => handleMarkAsPaid(row.id)}
                 >
                   Mark as Paid
                 </Button>

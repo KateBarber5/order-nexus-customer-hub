@@ -1,67 +1,70 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save } from 'lucide-react';
+import { Edit, Save, Loader2 } from 'lucide-react';
+import { getOrganizations, Organization, updateOrganizationSubscription, OrganizationSubscriptionSDT } from '@/services/orderService';
 
 interface SubscriptionData {
   id: string;
+  organizationId: number; // Hidden field for OrganizationID
   clientName: string;
   subscriptionOption: string;
-  monthlyPrice: number;
+  monthlyPrice: string;
   monthlyOrders: number;
   remainingOrders: number;
-  excessOrderCost: number;
+  excessOrderCost: string;
 }
 
 const AdminSubscriptionsGrid = () => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [pendingChanges, setPendingChanges] = useState<Partial<SubscriptionData>>({});
-  
-  // Mock subscription data
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData[]>([
-    {
-      id: '1',
-      clientName: 'John Doe',
-      subscriptionOption: 'Premium',
-      monthlyPrice: 299,
-      monthlyOrders: 50,
-      remainingOrders: 35,
-      excessOrderCost: 10
-    },
-    {
-      id: '2',
-      clientName: 'Jane Smith',
-      subscriptionOption: 'Standard',
-      monthlyPrice: 199,
-      monthlyOrders: 30,
-      remainingOrders: 12,
-      excessOrderCost: 10
-    },
-    {
-      id: '3',
-      clientName: 'Bob Johnson',
-      subscriptionOption: 'Basic',
-      monthlyPrice: 99,
-      monthlyOrders: 15,
-      remainingOrders: 8,
-      excessOrderCost: 10
-    },
-    {
-      id: '4',
-      clientName: 'Alice Williams',
-      subscriptionOption: 'Enterprise',
-      monthlyPrice: 499,
-      monthlyOrders: 100,
-      remainingOrders: 75,
-      excessOrderCost: 8
-    }
-  ]);
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch organizations data on component mount
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const organizations = await getOrganizations();
+        
+        // Map API response to component data structure
+        const mappedData: SubscriptionData[] = organizations.map((org: Organization) => ({
+          id: org.OrganizationID.toString(),
+          organizationId: org.OrganizationID, // Add OrganizationID to the data
+          clientName: org.OrganizationName,
+          subscriptionOption: org.OrganizationPlan,
+          monthlyPrice: org.OrganizationPlanMonthlyPrice,
+          monthlyOrders: org.OrganizationPlanMonthlyOrders,
+          remainingOrders: org.OrganizationPlanRemainingOrders,
+          excessOrderCost: org.OrganizationPlanExcessOrderCost
+        }));
+        
+        setSubscriptionData(mappedData);
+      } catch (err) {
+        console.error('Error fetching organizations:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch organizations');
+        toast({
+          title: "Error",
+          description: "Failed to load subscription data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrganizations();
+  }, [toast]);
 
   const handleEdit = (id: string) => {
     const row = subscriptionData.find(item => item.id === id);
@@ -75,23 +78,56 @@ const AdminSubscriptionsGrid = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editingRow) {
-      setSubscriptionData(prev => 
-        prev.map(item => 
-          item.id === editingRow 
-            ? { ...item, ...pendingChanges }
-            : item
-        )
-      );
-      
-      setEditingRow(null);
-      setPendingChanges({});
-      
-      toast({
-        title: "Changes Saved",
-        description: "Subscription details have been updated successfully.",
-      });
+      try {
+        // Find the current row data
+        const currentRow = subscriptionData.find(item => item.id === editingRow);
+        if (!currentRow) {
+          throw new Error('Row data not found');
+        }
+
+        // Create the subscription data with the mapping
+        const apiSubscriptionData: OrganizationSubscriptionSDT = {
+          OrganizationID: currentRow.organizationId,
+          OrganizationName: currentRow.clientName,
+          OrganizationPlan: currentRow.subscriptionOption,
+          OrganizationPlanMonthlyPrice: currentRow.monthlyPrice,
+          OrganizationPlanMonthlyOrders: pendingChanges.monthlyOrders || currentRow.monthlyOrders,
+          OrganizationPlanUsedOrders: pendingChanges.monthlyOrders - (pendingChanges.remainingOrders || currentRow.remainingOrders), // Calculate used orders
+          OrganizationPlanRemainingOrders: pendingChanges.remainingOrders || currentRow.remainingOrders,
+          OrganizationPlanExcessOrderCost: pendingChanges.excessOrderCost || currentRow.excessOrderCost,
+          OrganizationPlanNextBillingDate: "", // This would need to come from the original data
+          OrganizationPlanStatus: "" // This would need to come from the original data
+        };
+
+        // Call the API to update the subscription
+        const response = await updateOrganizationSubscription(apiSubscriptionData);
+
+        // Update local state with the changes
+        setSubscriptionData(prev => 
+          prev.map(item => 
+            item.id === editingRow 
+              ? { ...item, ...pendingChanges }
+              : item
+          )
+        );
+        
+        setEditingRow(null);
+        setPendingChanges({});
+        
+        toast({
+          title: "Changes Saved",
+          description: "Subscription details have been updated successfully.",
+        });
+      } catch (error) {
+        console.error('Error updating subscription:', error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to update subscription. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -101,12 +137,64 @@ const AdminSubscriptionsGrid = () => {
   };
 
   const handleInputChange = (field: keyof SubscriptionData, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setPendingChanges(prev => ({
-      ...prev,
-      [field]: numValue
-    }));
+    if (field === 'monthlyOrders' || field === 'remainingOrders') {
+      const numValue = parseInt(value) || 0;
+      setPendingChanges(prev => ({
+        ...prev,
+        [field]: numValue
+      }));
+    } else if (field === 'excessOrderCost') {
+      setPendingChanges(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Subscriptions</CardTitle>
+          <CardDescription>
+            Manage client subscription details and pricing
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Loading subscription data...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Subscriptions</CardTitle>
+          <CardDescription>
+            Manage client subscription details and pricing
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading subscription data</p>
+            <p className="text-sm text-gray-600">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+              variant="outline"
+            >
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -162,8 +250,7 @@ const AdminSubscriptionsGrid = () => {
                 <TableCell>
                   {editingRow === row.id ? (
                     <Input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       value={pendingChanges.excessOrderCost || row.excessOrderCost}
                       onChange={(e) => handleInputChange('excessOrderCost', e.target.value)}
                       className="w-20"

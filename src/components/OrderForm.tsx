@@ -231,6 +231,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
   // Handle municipality availability check by address
   const handleMunicipalityAvailabilityByAddress = async (address: string) => {
     console.log('handleMunicipalityAvailabilityByAddress called with address:', address);
+    console.log('Address length:', address.length);
     
     if (!address || address.length < 10) {
       console.log('Address validation failed: address too short or empty');
@@ -309,8 +310,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       address: value
     }));
     
-    // Reset validation state when address changes
-    if (value !== formData.address) {
+    // Only reset validation state if the address is being cleared or significantly changed
+    // Don't reset if it's just being updated with a complete address from Google Places
+    if (value === '' || (value !== formData.address && value.length < 10)) {
       setMunicipalityData(null);
       if (onMunicipalityDataChange) {
         onMunicipalityDataChange(null);

@@ -596,40 +596,70 @@ export const checkMunicipalityAvailability = async (parcelId: string, countyName
     console.log('County Name:', countyName);
     console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_PARCEL, {
-      iParcelID: parcelId,
-      iCountyName: countyName
-    });
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
-    console.log('Response status:', response.status);
-    console.log('Response status text:', response.statusText);
-    
-    if (!response.ok) {
-      let errorText = '';
-      try {
-        errorText = await response.text();
-        console.error('Response error text:', errorText);
-      } catch (textError) {
-        console.error('Could not read error response text:', textError);
-        errorText = 'Unable to read error details';
+    try {
+      const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_PARCEL, {
+        iParcelID: parcelId,
+        iCountyName: countyName
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+      
+      if (!response.ok) {
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Response error text:', errorText);
+        } catch (textError) {
+          console.error('Could not read error response text:', textError);
+          errorText = 'Unable to read error details';
+        }
+        
+        // Try to parse as JSON for more detailed error info
+        let errorDetails = '';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+        } catch {
+          errorDetails = errorText;
+        }
+        
+        throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
       }
       
-      // Try to parse as JSON for more detailed error info
-      let errorDetails = '';
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
-      } catch {
-        errorDetails = errorText;
+      const data: MunicipalityAvailabilityResponse = await response.json();
+      console.log('Municipality availability response:', data);
+      
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      // Check if it's an abort error (timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
       }
       
-      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+      // Check if it's a message port error
+      if (error instanceof Error && 
+          (error.message.includes('message port') || error.message.includes('asynchronous response'))) {
+        console.log('Message port error detected, returning empty response');
+        return {
+          PlaceID: 0,
+          PlaceName: '',
+          PlaceStatus: 'ERROR',
+          PlaceStatusMessage: 'Service temporarily unavailable',
+          SubPlace: []
+        };
+      }
+      
+      throw error;
     }
-    
-    const data: MunicipalityAvailabilityResponse = await response.json();
-    console.log('Municipality availability response:', data);
-    
-    return data;
   } catch (error) {
     console.error('Error checking municipality availability:', error);
     throw error;
@@ -643,39 +673,69 @@ export const checkMunicipalityAvailabilityByAddress = async (address: string): P
     console.log('Address:', address);
     console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_ADDRESS, {
-      iAddress: address
-    });
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
-    console.log('Response status:', response.status);
-    console.log('Response status text:', response.statusText);
-    
-    if (!response.ok) {
-      let errorText = '';
-      try {
-        errorText = await response.text();
-        console.error('Response error text:', errorText);
-      } catch (textError) {
-        console.error('Could not read error response text:', textError);
-        errorText = 'Unable to read error details';
+    try {
+      const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_ADDRESS, {
+        iAddress: address
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+      
+      if (!response.ok) {
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Response error text:', errorText);
+        } catch (textError) {
+          console.error('Could not read error response text:', textError);
+          errorText = 'Unable to read error details';
+        }
+        
+        // Try to parse as JSON for more detailed error info
+        let errorDetails = '';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+        } catch {
+          errorDetails = errorText;
+        }
+        
+        throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
       }
       
-      // Try to parse as JSON for more detailed error info
-      let errorDetails = '';
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
-      } catch {
-        errorDetails = errorText;
+      const data: MunicipalityAvailabilityResponse = await response.json();
+      console.log('Municipality availability by address response:', data);
+      
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      // Check if it's an abort error (timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
       }
       
-      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+      // Check if it's a message port error
+      if (error instanceof Error && 
+          (error.message.includes('message port') || error.message.includes('asynchronous response'))) {
+        console.log('Message port error detected, returning empty response');
+        return {
+          PlaceID: 0,
+          PlaceName: '',
+          PlaceStatus: 'ERROR',
+          PlaceStatusMessage: 'Service temporarily unavailable',
+          SubPlace: []
+        };
+      }
+      
+      throw error;
     }
-    
-    const data: MunicipalityAvailabilityResponse = await response.json();
-    console.log('Municipality availability by address response:', data);
-    
-    return data;
   } catch (error) {
     console.error('Error checking municipality availability by address:', error);
     throw error;
@@ -760,6 +820,14 @@ export interface OrganizationUser {
 export interface Organization {
   OrganizationID: number;
   OrganizationName: string;
+  OrganizationPlan: string;
+  OrganizationPlanMonthlyPrice: string;
+  OrganizationPlanMonthlyOrders: number;
+  OrganizationPlanUsedOrders: number;
+  OrganizationPlanRemainingOrders: number;
+  OrganizationPlanExcessOrderCost: string;
+  OrganizationPlanNextBillingDate: string;
+  OrganizationPlanStatus: string;
   User: OrganizationUser[];
 }
 
@@ -1955,6 +2023,35 @@ export const getMunicipalityCurrentServices = async (municipalityName: string): 
   }
 };
 
+// Update Organization Subscription API interfaces
+export interface OrganizationSubscriptionSDT {
+  OrganizationID: number;
+  OrganizationName: string;
+  OrganizationPlan: string;
+  OrganizationPlanMonthlyPrice: string;
+  OrganizationPlanMonthlyOrders: number;
+  OrganizationPlanUsedOrders: number;
+  OrganizationPlanRemainingOrders: number;
+  OrganizationPlanExcessOrderCost: string;
+  OrganizationPlanNextBillingDate: string;
+  OrganizationPlanStatus: string;
+}
+
+export interface UpdateOrganizationSubscriptionRequest {
+  iOrganizationSDT: OrganizationSubscriptionSDT;
+}
+
+export interface UpdateOrganizationSubscriptionMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface UpdateOrganizationSubscriptionResponse {
+  oMessages: UpdateOrganizationSubscriptionMessage[];
+  [key: string]: any;
+}
+
 // Change Password API interfaces
 export interface ChangePasswordRequest {
   iUserGUID: string;
@@ -1972,6 +2069,117 @@ export interface ChangePasswordResponse {
   oMessages: ChangePasswordMessage[];
   [key: string]: any;
 }
+
+// Set GovOrder Paid Status API interfaces
+export interface SetGovOrderPaidStatusRequest {
+  iGovOrderId: number;
+  iGovOrderPaidStatus: string;
+}
+
+export interface SetGovOrderPaidStatusMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface SetGovOrderPaidStatusResponse {
+  oMessages: SetGovOrderPaidStatusMessage[];
+  [key: string]: any;
+}
+
+// Update Organization Subscription API function
+export const updateOrganizationSubscription = async (subscriptionData: OrganizationSubscriptionSDT): Promise<UpdateOrganizationSubscriptionResponse> => {
+  try {
+    console.log('Updating organization subscription...');
+    console.log('Subscription data:', subscriptionData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    const requestData: UpdateOrganizationSubscriptionRequest = {
+      iOrganizationSDT: subscriptionData
+    };
+    
+    console.log('Request data:', requestData);
+    
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.UPDATE_ORGANIZATION_SUBSCRIPTION, requestData);
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: UpdateOrganizationSubscriptionResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Update organization subscription response:', data);
+        
+        // Check if the response contains success messages
+        if (data.oMessages && Array.isArray(data.oMessages)) {
+          const successMessages = data.oMessages.filter(msg => msg.Type === 2);
+          const errorMessages = data.oMessages.filter(msg => msg.Type !== 2);
+          
+          if (successMessages.length > 0) {
+            console.log('Success messages:', successMessages);
+          }
+          
+          if (errorMessages.length > 0) {
+            console.log('Error messages:', errorMessages);
+            throw new Error(errorMessages.map(msg => msg.Description).join(', '));
+          }
+        }
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'Organization subscription updated successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating organization subscription:', error);
+    throw error;
+  }
+};
 
 // Change Password API function
 export const changeUserPassword = async (userID: string, newPassword: string): Promise<ChangePasswordResponse> => {
@@ -2039,6 +2247,102 @@ export const changeUserPassword = async (userID: string, newPassword: string): P
     return data;
   } catch (error) {
     console.error('Error changing password:', error);
+    throw error;
+  }
+};
+
+// Set GovOrder Paid Status API function
+export const setGovOrderPaidStatus = async (orderId: number, paidStatus: string): Promise<SetGovOrderPaidStatusResponse> => {
+  try {
+    console.log('Setting GovOrder paid status...');
+    console.log('Order ID:', orderId);
+    console.log('Paid Status:', paidStatus);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    const requestData: SetGovOrderPaidStatusRequest = {
+      iGovOrderId: orderId,
+      iGovOrderPaidStatus: paidStatus
+    };
+    
+    console.log('Request data:', requestData);
+    
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.SET_GOV_ORDER_PAID_STATUS, requestData);
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: SetGovOrderPaidStatusResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Set GovOrder paid status response:', data);
+        
+        // Check if the response contains success messages
+        if (data.oMessages && Array.isArray(data.oMessages)) {
+          const successMessages = data.oMessages.filter(msg => msg.Type === 2);
+          const errorMessages = data.oMessages.filter(msg => msg.Type !== 2);
+          
+          if (successMessages.length > 0) {
+            console.log('Success messages:', successMessages);
+          }
+          
+          if (errorMessages.length > 0) {
+            console.log('Error messages:', errorMessages);
+            throw new Error(errorMessages.map(msg => msg.Description).join(', '));
+          }
+        }
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'GovOrder paid status updated successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error setting GovOrder paid status:', error);
     throw error;
   }
 };

@@ -232,7 +232,7 @@ const Admin = () => {
     // For now, we'll just show a toast message
     toast({
       title: "Order Marked as Paid",
-      description: `Order ${orderId} has been marked as paid. This would typically update the database via API.`,
+      description: `Order ${orderId} has been marked as paid.`,
     });
   };
 
