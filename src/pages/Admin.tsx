@@ -218,21 +218,67 @@ const Admin = () => {
     return filtered;
   }, [customerOrdersGrouped, selectedCustomers, selectedPaidStatus]);
 
+  // Helper function to build current filters
+  const buildCurrentFilters = (): AdminOrderReportingFilter[] => {
+    const filters: AdminOrderReportingFilter[] = [];
+    
+    if (selectedCustomer) {
+      filters.push({
+        FilterID: "OrganizationName",
+        FilterValue: selectedCustomer
+      });
+    }
+    
+    if (selectedCustomers.length > 0) {
+      selectedCustomers.forEach(customer => {
+        filters.push({
+          FilterID: "OrganizationName",
+          FilterValue: customer
+        });
+      });
+    }
+    
+    if (selectedPaidStatus && selectedPaidStatus !== 'all') {
+      filters.push({
+        FilterID: "PaidStatus",
+        FilterValue: selectedPaidStatus
+      });
+    }
+    
+    if (startDate) {
+      filters.push({
+        FilterID: "StartDate",
+        FilterValue: startDate
+      });
+    }
+    
+    if (endDate) {
+      filters.push({
+        FilterID: "EndDate",
+        FilterValue: endDate
+      });
+    }
+    
+    return filters;
+  };
+
   const handleMarkOrdersAsPaid = (customerName: string) => {
-    // Note: This would typically call an API to update the paid status
-    // For now, we'll just show a toast message
+    // Refresh the data to reflect the updated paid status with current filters
+    const currentFilters = buildCurrentFilters();
+    fetchAdminOrderData(currentFilters);
     toast({
       title: "Orders Marked as Paid",
-      description: `All unpaid orders for ${customerName} have been marked as paid. This would typically update the database via API.`,
+      description: `All unpaid orders for ${customerName} have been marked as paid. Data has been refreshed.`,
     });
   };
 
   const handleMarkOrderAsPaid = (orderId: string) => {
-    // Note: This would typically call an API to update the paid status
-    // For now, we'll just show a toast message
+    // Refresh the data to reflect the updated paid status with current filters
+    const currentFilters = buildCurrentFilters();
+    fetchAdminOrderData(currentFilters);
     toast({
       title: "Order Marked as Paid",
-      description: `Order ${orderId} has been marked as paid.`,
+      description: `Order ${orderId} has been marked as paid. Data has been refreshed.`,
     });
   };
 

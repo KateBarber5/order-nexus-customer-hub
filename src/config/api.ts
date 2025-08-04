@@ -29,6 +29,10 @@ export const API_CONFIG = {
     POST_CHANGE_PASSWORD: '/GovMetricAPI/PostChangePassword',
     UPDATE_ORGANIZATION_SUBSCRIPTION: '/GovMetricAPI/UptateOrganizationSubscription',
     SET_GOV_ORDER_PAID_STATUS: '/GovMetricAPI/SetGovOrderPaidStatus',
+    UPDATE_PAYMENT_INFORMATION: '/GovMetricAPI/UpdatePaymentInformation',
+    UPDATE_BILLING_INFORMATION: '/GovMetricAPI/UpdateBillingInformation',
+    GET_PAYMENT_INFORMATION: '/GovMetricAPI/GetPaymentInformation',
+    GET_BILLING_INFORMATION: '/GovMetricAPI/GetBillingInformation',
   }
 };
 

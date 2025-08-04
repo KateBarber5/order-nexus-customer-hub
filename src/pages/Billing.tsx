@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ArrowLeft, CreditCard, Calendar, Lock, Building } from 'lucide-react';
+import { updatePaymentInformation, updateBillingInformation, getPaymentInformation, getBillingInformation, updateOrganizationSubscription } from '@/services/orderService';
+import { sessionManager } from '@/services/orderService';
 
 const Billing = () => {
   const location = useLocation();
@@ -35,6 +37,64 @@ const Billing = () => {
     state: '',
     zipCode: ''
   });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load existing payment and billing information when component mounts
+  useEffect(() => {
+    const loadPaymentAndBillingInformation = async () => {
+      try {
+        const organizationID = sessionManager.getCurrentOrganizationID();
+        
+        if (!organizationID) {
+          console.error('No organization ID found in session');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Loading payment and billing information for organization:', organizationID);
+        
+        // Load payment information
+        const paymentInfo = await getPaymentInformation(organizationID);
+        console.log('Loaded payment information:', paymentInfo);
+        
+        // Load billing information
+        const billingInfo = await getBillingInformation(organizationID);
+        console.log('Loaded billing information:', billingInfo);
+        
+        // Set payment method based on OrganizationPaymentMethodType
+        if (paymentInfo.OrganizationPaymentMethodType === 'ACH Bank Transfer') {
+          setPaymentMethod('ach');
+        } else {
+          setPaymentMethod('card');
+        }
+        
+        // Update form data with existing payment and billing information
+        setFormData(prev => ({
+          ...prev,
+          // ACH fields
+          accountNumber: paymentInfo.OrganizationAccountNumber || '',
+          routingNumber: paymentInfo.OrganizationRoutingNumber || '',
+          accountType: paymentInfo.OrganizationAccountType?.toLowerCase() === 'savings' ? 'savings' : 'checking',
+          accountHolderName: paymentInfo.OrganizationAccountHolderName || '',
+          // Credit card fields (if any exist, they would be populated here)
+          cardholderName: paymentInfo.OrganizationAccountHolderName || '', // Use account holder name as fallback
+          // Billing address fields
+          billingAddress: billingInfo.OrganizationBillingAddress || '',
+          city: billingInfo.OrganizationBillingCity || '',
+          state: billingInfo.OrganizationBillingState || '',
+          zipCode: billingInfo.OrganizationBillingPostCode || '',
+        }));
+        
+      } catch (error) {
+        console.error('Error loading payment and billing information:', error);
+        // Don't show alert for loading errors, just log them
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPaymentAndBillingInformation();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,11 +104,137 @@ const Billing = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle payment processing here
-    console.log('Processing payment for:', selectedPlan, 'Method:', paymentMethod, formData);
-    // Redirect to success page or dashboard
+    
+    try {
+      // Get organization ID from current user session
+      const organizationID = sessionManager.getCurrentOrganizationID();
+      
+      if (!organizationID) {
+        console.error('No organization ID found in session');
+        alert('Please log in again to continue.');
+        return;
+      }
+      
+      console.log('Processing payment for:', selectedPlan, 'Method:', paymentMethod, formData);
+      
+      // Update billing information for both payment methods
+      try {
+        const billingResult = await updateBillingInformation({
+          organizationID: organizationID,
+          postCode: formData.zipCode,
+          address: formData.billingAddress,
+          city: formData.city,
+          state: formData.state
+        });
+        
+        if (billingResult.oMessages && billingResult.oMessages.some(msg => msg.Type === 2)) {
+          console.log('Billing information updated successfully');
+        } else {
+          console.error('Failed to update billing information');
+          alert('Failed to update billing information. Please try again.');
+          return;
+        }
+      } catch (billingError) {
+        console.error('Error updating billing information:', billingError);
+        alert('Failed to update billing information. Please try again.');
+        return;
+      }
+      
+      // Handle ACH Bank Transfer payment method
+      if (paymentMethod === 'ach') {
+        try {
+          // Call the UpdatePaymentInformation API
+          const paymentResult = await updatePaymentInformation({
+            organizationID: organizationID,
+            accountNumber: formData.accountNumber,
+            paymentMethodType: "ACH Bank Transfer",
+            accountHolderName: formData.accountHolderName,
+            accountType: formData.accountType === 'checking' ? 'Checking' : 'Savings',
+            routingNumber: formData.routingNumber
+          });
+          
+          // Check if the API call was successful
+          if (paymentResult.oMessages && paymentResult.oMessages.some(msg => msg.Type === 2)) {
+            console.log('Payment information updated successfully');
+            
+            // Update organization subscription
+            try {
+              const subscriptionResult = await updateOrganizationSubscription({
+                OrganizationID: organizationID,
+                OrganizationPlan: selectedPlan,
+                OrganizationName: '',
+                OrganizationPlanMonthlyPrice: '',
+                OrganizationPlanMonthlyOrders: 0,
+                OrganizationPlanUsedOrders: 0,
+                OrganizationPlanRemainingOrders: 0,
+                OrganizationPlanExcessOrderCost: '',
+                OrganizationPlanNextBillingDate: '',
+                OrganizationPlanStatus: ''
+              });
+              
+              if (subscriptionResult.oMessages && subscriptionResult.oMessages.some(msg => msg.Type === 2)) {
+                console.log('Organization subscription updated successfully');
+                alert('Payment, billing, and subscription information updated successfully!');
+                // Redirect to success page or dashboard
+                navigate('/dashboard');
+              } else {
+                console.error('Failed to update organization subscription');
+                alert('Payment and billing updated, but failed to update subscription. Please contact support.');
+                navigate('/dashboard');
+              }
+            } catch (subscriptionError) {
+              console.error('Error updating organization subscription:', subscriptionError);
+              alert('Payment and billing updated, but failed to update subscription. Please contact support.');
+              navigate('/dashboard');
+            }
+          } else {
+            console.error('Failed to update payment information');
+            alert('Failed to update payment information. Please try again.');
+          }
+        } catch (paymentError) {
+          console.error('Error updating payment information:', paymentError);
+          alert('Failed to update payment information. Please try again.');
+        }
+      } else {
+        // Handle credit card payment method
+        console.log('Processing credit card payment for:', selectedPlan, 'Method:', paymentMethod, formData);
+        
+        // Update organization subscription for credit card payments
+        try {
+          const subscriptionResult = await updateOrganizationSubscription({
+            OrganizationID: organizationID,
+            OrganizationPlan: selectedPlan,
+            OrganizationName: '',
+            OrganizationPlanMonthlyPrice: '',
+            OrganizationPlanMonthlyOrders: 0,
+            OrganizationPlanUsedOrders: 0,
+            OrganizationPlanRemainingOrders: 0,
+            OrganizationPlanExcessOrderCost: '',
+            OrganizationPlanNextBillingDate: '',
+            OrganizationPlanStatus: 'Active'
+          });
+          
+          if (subscriptionResult.oMessages && subscriptionResult.oMessages.some(msg => msg.Type === 2)) {
+            console.log('Organization subscription updated successfully');
+            alert('Billing and subscription information updated successfully! Credit card payment processing not yet implemented.');
+            navigate('/dashboard');
+          } else {
+            console.error('Failed to update organization subscription');
+            alert('Billing updated, but failed to update subscription. Please contact support.');
+            navigate('/dashboard');
+          }
+        } catch (subscriptionError) {
+          console.error('Error updating organization subscription:', subscriptionError);
+          alert('Billing updated, but failed to update subscription. Please contact support.');
+          navigate('/dashboard');
+        }
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      alert('An error occurred while processing your payment. Please try again.');
+    }
   };
 
   const calculateProrationInfo = () => {
@@ -100,7 +286,15 @@ const Billing = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading payment information...</p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Payment Method Selection */}
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Payment Method</Label>
@@ -301,6 +495,7 @@ const Billing = () => {
                   Complete Subscription
                 </Button>
               </form>
+              )}
             </CardContent>
           </Card>
 

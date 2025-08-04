@@ -2087,6 +2087,74 @@ export interface SetGovOrderPaidStatusResponse {
   [key: string]: any;
 }
 
+// Update Payment Information API interfaces
+export interface PaymentMethodItem {
+  OrganizationAccountNumber: string;
+  OrganizationPaymentMethodType: string;
+  OrganizationAccountHolderName: string;
+  OrganizationAccountType: string;
+  OrganizationRoutingNumber: string;
+}
+
+export interface UpdatePaymentInformationRequest {
+  iOrganizationID: number;
+  iPaymentMethodItem: PaymentMethodItem;
+}
+
+export interface UpdatePaymentInformationMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface UpdatePaymentInformationResponse {
+  oMessages: UpdatePaymentInformationMessage[];
+  [key: string]: any;
+}
+
+// Update Billing Information API interfaces
+export interface BillingItem {
+  OrganizationBillingPostCode: string;
+  OrganizationBillingAddress: string;
+  OrganizationBillingCity: string;
+  OrganizationBillingState: string;
+}
+
+export interface UpdateBillingInformationRequest {
+  iOrganizationID: number;
+  iBillingItem: BillingItem;
+}
+
+export interface UpdateBillingInformationMessage {
+  Id: string;
+  Type: number;
+  Description: string;
+}
+
+export interface UpdateBillingInformationResponse {
+  oMessages: UpdateBillingInformationMessage[];
+  [key: string]: any;
+}
+
+// Get Payment Information API interfaces
+export interface GetPaymentInformationResponse {
+  OrganizationAccountNumber: string;
+  OrganizationPaymentMethodType: string;
+  OrganizationAccountHolderName: string;
+  OrganizationAccountType: string;
+  OrganizationRoutingNumber: string;
+}
+
+// Get Billing Information API interfaces
+export interface GetBillingInformationResponse {
+  OrganizationBillingPostCode: string;
+  OrganizationBillingCity: string;
+  OrganizationBillingAddress: string;
+  OrganizationBillingState: string;
+}
+
+
+
 // Update Organization Subscription API function
 export const updateOrganizationSubscription = async (subscriptionData: OrganizationSubscriptionSDT): Promise<UpdateOrganizationSubscriptionResponse> => {
   try {
@@ -2343,6 +2411,354 @@ export const setGovOrderPaidStatus = async (orderId: number, paidStatus: string)
     return data;
   } catch (error) {
     console.error('Error setting GovOrder paid status:', error);
+    throw error;
+  }
+};
+
+// Update Payment Information API function
+export const updatePaymentInformation = async (paymentData: {
+  organizationID: number;
+  accountNumber: string;
+  paymentMethodType: string;
+  accountHolderName: string;
+  accountType: string;
+  routingNumber: string;
+}): Promise<UpdatePaymentInformationResponse> => {
+  try {
+    console.log('Updating payment information...');
+    console.log('Payment data:', paymentData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    const requestData: UpdatePaymentInformationRequest = {
+      iOrganizationID: paymentData.organizationID,
+      iPaymentMethodItem: {
+        OrganizationAccountNumber: paymentData.accountNumber,
+        OrganizationPaymentMethodType: paymentData.paymentMethodType,
+        OrganizationAccountHolderName: paymentData.accountHolderName,
+        OrganizationAccountType: paymentData.accountType,
+        OrganizationRoutingNumber: paymentData.routingNumber
+      }
+    };
+    
+    console.log('Request data:', requestData);
+    
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.UPDATE_PAYMENT_INFORMATION, requestData);
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: UpdatePaymentInformationResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Update payment information response:', data);
+        
+        // Check if the response contains success messages
+        if (data.oMessages && Array.isArray(data.oMessages)) {
+          const successMessages = data.oMessages.filter(msg => msg.Type === 2);
+          const errorMessages = data.oMessages.filter(msg => msg.Type !== 2);
+          
+          if (successMessages.length > 0) {
+            console.log('Success messages:', successMessages);
+          }
+          
+          if (errorMessages.length > 0) {
+            console.log('Error messages:', errorMessages);
+            throw new Error(errorMessages.map(msg => msg.Description).join(', '));
+          }
+        }
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'Payment information updated successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating payment information:', error);
+    throw error;
+  }
+};
+
+// Update Billing Information API function
+export const updateBillingInformation = async (billingData: {
+  organizationID: number;
+  postCode: string;
+  address: string;
+  city: string;
+  state: string;
+}): Promise<UpdateBillingInformationResponse> => {
+  try {
+    console.log('Updating billing information...');
+    console.log('Billing data:', billingData);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    const requestData: UpdateBillingInformationRequest = {
+      iOrganizationID: billingData.organizationID,
+      iBillingItem: {
+        OrganizationBillingPostCode: billingData.postCode,
+        OrganizationBillingAddress: billingData.address,
+        OrganizationBillingCity: billingData.city,
+        OrganizationBillingState: billingData.state
+      }
+    };
+    
+    console.log('Request data:', requestData);
+    
+    const response = await apiRequest.post(API_CONFIG.ENDPOINTS.UPDATE_BILLING_INFORMATION, requestData);
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if response has content
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    let data: UpdateBillingInformationResponse;
+    if (responseText.trim()) {
+      try {
+        data = JSON.parse(responseText);
+        console.log('Update billing information response:', data);
+        
+        // Check if the response contains success messages
+        if (data.oMessages && Array.isArray(data.oMessages)) {
+          const successMessages = data.oMessages.filter(msg => msg.Type === 2);
+          const errorMessages = data.oMessages.filter(msg => msg.Type !== 2);
+          
+          if (successMessages.length > 0) {
+            console.log('Success messages:', successMessages);
+          }
+          
+          if (errorMessages.length > 0) {
+            console.log('Error messages:', errorMessages);
+            throw new Error(errorMessages.map(msg => msg.Description).join(', '));
+          }
+        }
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        // If it's not JSON but the request was successful, return a success response
+        return { 
+          oMessages: [{ 
+            Id: 'Success', 
+            Type: 2, 
+            Description: responseText 
+          }] 
+        };
+      }
+    } else {
+      // Empty response but successful status
+      data = { 
+        oMessages: [{ 
+          Id: 'Success', 
+          Type: 2, 
+          Description: 'Billing information updated successfully' 
+        }] 
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating billing information:', error);
+    throw error;
+  }
+};
+
+// Get Payment Information API function
+export const getPaymentInformation = async (organizationID: number): Promise<GetPaymentInformationResponse> => {
+  try {
+    console.log('Fetching payment information from API...');
+    console.log('Organization ID:', organizationID);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_PAYMENT_INFORMATION, {
+      iOrganizationID: organizationID.toString()
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: GetPaymentInformationResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log('Get payment information response:', data);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText);
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching payment information:', error);
+    throw error;
+  }
+};
+
+// Get Billing Information API function
+export const getBillingInformation = async (organizationID: number): Promise<GetBillingInformationResponse> => {
+  try {
+    console.log('Fetching billing information from API...');
+    console.log('Organization ID:', organizationID);
+    console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_BILLING_INFORMATION, {
+      iOrganizationID: organizationID.toString()
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
+      }
+      
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    }
+    
+    // Check if the response is HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response text:', responseText);
+    
+    // Check if response starts with HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html>')) {
+      throw new Error('API endpoint returned HTML instead of JSON');
+    }
+    
+    let data: GetBillingInformationResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log('Get billing information response:', data);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      console.error('Response text that failed to parse:', responseText);
+      throw new Error('Failed to parse JSON response from API');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching billing information:', error);
     throw error;
   }
 };

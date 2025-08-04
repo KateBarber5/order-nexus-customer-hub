@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { mockCustomer, Customer } from '@/data/mockData';
 import { getUserProfile, updateUserProfile, changeUserPassword, UserProfileResponse, getOrganizations, Organization, sessionManager } from '@/services/orderService';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import {
 import { Lock, CreditCard, Calendar, User, Loader2 } from 'lucide-react';
 
 const CustomerProfile = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [customer, setCustomer] = useState<Customer>(mockCustomer);
   const [formData, setFormData] = useState<Customer>(mockCustomer);
@@ -644,7 +646,11 @@ const CustomerProfile = () => {
                     <Button type="submit" variant="default">
                       Update Card
                     </Button>
-                    <Button type="button" variant="outline">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => navigate('/subscriptions')}
+                    >
                       Manage Subscription
                     </Button>
                   </div>
