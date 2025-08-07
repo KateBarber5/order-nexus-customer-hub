@@ -208,9 +208,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
 
   const isSearchCriteriaFilled = () => {
     if (formData.searchType === 'address') {
-      return formData.address.trim() !== '' && formData.identifiedMunicipality;
+      return formData.address.trim() !== '' && formData.identifiedMunicipality && formData.identifiedCounty;
     } else {
-      return formData.parcelId.trim() !== '' && formData.county.trim() !== '' && formData.identifiedMunicipality;
+      return formData.parcelId.trim() !== '' && formData.county.trim() !== '' && formData.identifiedMunicipality && formData.identifiedCounty;
     }
   };
 
@@ -374,6 +374,10 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
         toast.error('Please enter a property address');
         return;
       }
+      if (!formData.identifiedCounty) {
+        toast.error('County information is required. Please ensure address validation is complete.');
+        return;
+      }
     } else {
       if (!formData.parcelId || !formData.county) {
         toast.error('Please enter both Parcel ID and County');
@@ -381,6 +385,10 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       }
       if (!formData.identifiedMunicipality) {
         toast.error('Please search for municipality first');
+        return;
+      }
+      if (!formData.identifiedCounty) {
+        toast.error('County information is required. Please ensure municipality lookup is complete.');
         return;
       }
     }
@@ -406,7 +414,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       
       if (formData.searchType === 'address') {
         // For address search, use the address-based API endpoint
-        const countyName = formData.identifiedCounty || '';
+        const countyName = formData.identifiedCounty;
         
         if (!countyName) {
           toast.error('County information is required. Please ensure address validation is complete.');
@@ -429,7 +437,13 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       } else {
         // For parcel search, use the parcel-based API endpoint
         const parcelId = formData.parcelId;
-        const countyName = formData.identifiedCounty || formData.county;
+        const countyName = formData.identifiedCounty;
+        
+        if (!countyName) {
+          toast.error('County information is required. Please ensure municipality lookup is complete.');
+          setIsSubmitting(false);
+          return;
+        }
         
         console.log('Submitting parcel-based order:', {
           parcelId,

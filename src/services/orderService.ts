@@ -747,7 +747,14 @@ export const getOrganizationAndUserData = () => {
   const userID = sessionManager.getCurrentUserID();
   const organizationID = sessionManager.getCurrentOrganizationID();
   
-  // Fallback to default values if session data is not available
+  console.log('Session data:', { userID, organizationID });
+  
+  // Check if session data is available
+  if (!userID || !organizationID) {
+    console.error('Missing session data:', { userID, organizationID });
+    throw new Error('User session not found. Please log in again.');
+  }
+  
   return {
     iOrganizationID: organizationID,
     iUserGuid: userID
@@ -1217,6 +1224,11 @@ export const submitReportRequestByParcel = async (
     console.log('Report Type:', reportType);
     console.log('API Base URL:', API_CONFIG.BASE_URL);
     
+    // Validate input parameters
+    if (!countyName || !parcelId) {
+      throw new Error(`Invalid parameters: countyName=${countyName}, parcelId=${parcelId}`);
+    }
+    
     const { iOrganizationID, iUserGuid } = getOrganizationAndUserData();
     const iGovOrderReportType = reportType === 'full' ? "1" : "0";
     
@@ -1345,6 +1357,11 @@ export const submitReportRequestByAddress = async (
     console.log('County Name:', countyName);
     console.log('Report Type:', reportType);
     console.log('API Base URL:', API_CONFIG.BASE_URL);
+    
+    // Validate input parameters
+    if (!address || !countyName) {
+      throw new Error(`Invalid parameters: address=${address}, countyName=${countyName}`);
+    }
     
     const { iOrganizationID, iUserGuid } = getOrganizationAndUserData();
     const iGovOrderReportType = reportType === 'full' ? "1" : "0";
