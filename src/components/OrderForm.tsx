@@ -97,8 +97,13 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     if (!municipality || !municipalityData) return false;
     
     const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
-    const isServiced = municipalityInfo && municipalityInfo.SubPlaceStatus === "Active";
-    console.log(`isMunicipalityServiced for ${municipality}:`, isServiced, municipalityInfo);
+    const isSubPlaceActive = municipalityInfo?.SubPlaceStatus === "Active";
+    const isPlaceActive = municipalityData.PlaceStatus === "Active";
+    const isServiced = Boolean(isSubPlaceActive && isPlaceActive);
+    console.log(`isMunicipalityServiced for ${municipality}:`, isServiced, {
+      subPlaceStatus: municipalityInfo?.SubPlaceStatus,
+      placeStatus: municipalityData.PlaceStatus
+    });
     return isServiced;
   };
 
@@ -186,7 +191,18 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
           setLocationAlertType(locationStatus.type);
           setShowLocationAlert(true);
         } else {
-          toast.success(`Municipality identified: ${formatMunicipalityDisplayName(municipality.SubPlaceName, response.PlaceName)}`);
+          const content = buildMunicipalityVerificationContent(
+            municipality,
+            response.PlaceName,
+            (response as any).PlaceStatus,
+            (response as any).PlaceStatusMessage
+          );
+          const hasUnavailable = (response as any).PlaceStatus === 'Unavailable' || municipality.SubPlaceStatus === 'Unavailable';
+          if (hasUnavailable) {
+            toast.warning(content);
+          } else {
+            toast.success(content);
+          }
         }
       } else {
         toast.error('No municipality found for the provided parcel ID and county');
@@ -204,6 +220,67 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     return municipalityName === countyName 
       ? `${municipalityName} County`
       : `${municipalityName}, ${countyName} County`;
+  };
+
+  // Helper to build the municipality verification message from API payload
+  const buildMunicipalityVerificationMessage = (
+    subPlace: { SubPlaceName?: string; SubPlaceStatus?: string; SubPlaceStatusMessage?: string },
+    placeName: string,
+    placeStatus?: string,
+    placeStatusMessage?: string
+  ) => {
+    const subPlaceName = subPlace?.SubPlaceName || 'Unknown';
+    const subPlaceStatus = subPlace?.SubPlaceStatus || 'Unknown';
+    const normalizedPlaceStatus = placeStatus || 'Unknown';
+
+    const header = `Municipality verification: ${subPlaceName} (${subPlaceStatus}), ${placeName} County (${normalizedPlaceStatus})`;
+
+    const extraLines: string[] = [];
+    if (normalizedPlaceStatus === 'Unavailable' && placeStatusMessage) {
+      extraLines.push(placeStatusMessage);
+    }
+    if (subPlaceStatus === 'Unavailable' && subPlace?.SubPlaceStatusMessage) {
+      extraLines.push(subPlace.SubPlaceStatusMessage);
+    }
+
+    return extraLines.length > 0 ? `${header}\n${extraLines.join('\n')}` : header;
+  };
+
+  // Helper to build JSX content for the verification toast with highlighted reason lines
+  const buildMunicipalityVerificationContent = (
+    subPlace: { SubPlaceName?: string; SubPlaceStatus?: string; SubPlaceStatusMessage?: string },
+    placeName: string,
+    placeStatus?: string,
+    placeStatusMessage?: string
+  ) => {
+    const subPlaceName = subPlace?.SubPlaceName || 'Unknown';
+    const subPlaceStatus = subPlace?.SubPlaceStatus || 'Unknown';
+    const normalizedPlaceStatus = placeStatus || 'Unknown';
+
+    const header = `Municipality verification: ${subPlaceName} (${subPlaceStatus}), ${placeName} County (${normalizedPlaceStatus})`;
+
+    const showPlaceReason = normalizedPlaceStatus === 'Unavailable' && Boolean(placeStatusMessage);
+    const showSubPlaceReason = subPlaceStatus === 'Unavailable' && Boolean(subPlace?.SubPlaceStatusMessage);
+
+    return (
+      <div>
+        <div>{header}</div>
+        {(showPlaceReason || showSubPlaceReason) && (
+          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-md p-2 text-amber-800 text-sm">
+            {showPlaceReason && (
+              <div>
+                <span className="font-medium">Reason:</span> {placeStatusMessage}
+              </div>
+            )}
+            {showSubPlaceReason && (
+              <div>
+                <span className="font-medium">Reason:</span> {subPlace.SubPlaceStatusMessage}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const isSearchCriteriaFilled = () => {
@@ -272,7 +349,18 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
           setLocationAlertType(locationStatus.type);
           setShowLocationAlert(true);
         } else {
-          toast.success(`Municipality identified: ${formatMunicipalityDisplayName(municipality.SubPlaceName, response.PlaceName)}`);
+          const content = buildMunicipalityVerificationContent(
+            municipality,
+            response.PlaceName,
+            (response as any).PlaceStatus,
+            (response as any).PlaceStatusMessage
+          );
+          const hasUnavailable = (response as any).PlaceStatus === 'Unavailable' || municipality.SubPlaceStatus === 'Unavailable';
+          if (hasUnavailable) {
+            toast.warning(content);
+          } else {
+            toast.success(content);
+          }
         }
       } else {
         toast.error('No municipality found for the provided address');
