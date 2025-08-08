@@ -87,6 +87,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   useEffect(() => {
     console.log('useEffect for autocomplete - isGoogleLoaded:', isGoogleLoaded, 'inputRef.current:', !!inputRef.current, 'autocompleteRef.current:', !!autocompleteRef.current, 'window.google:', !!window.google);
     
+
+    
     if (isGoogleLoaded && inputRef.current && window.google) {
       // Clean up existing autocomplete if it exists
       if (autocompleteRef.current && window.google) {
@@ -102,82 +104,197 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       try {
         console.log('Initializing Google Places Autocomplete...');
         // Initialize autocomplete
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+        // Initialize autocomplete with specific settings for consistent results
+        const options: google.maps.places.AutocompleteOptions = {
           types: ['address'],
-          componentRestrictions: { country: 'us' }, // Restrict to US addresses
-          fields: ['formatted_address', 'address_components', 'geometry']
-        });
+          componentRestrictions: { country: 'us' },
+          fields: [
+            'formatted_address',
+            'address_components',
+            'geometry',
+            'place_id',
+            'types'
+          ]
+        };
+
+        // Create a session token for consistent results
+        const sessionToken = new google.maps.places.AutocompleteSessionToken();
+
+        // Initialize autocomplete with options
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, options);
+        
+        // @ts-ignore - sessionToken is a valid option but not in the type definitions
+        autocompleteRef.current.setOptions({ sessionToken });
 
         console.log('Autocomplete initialized, adding place_changed listener...');
 
+        // Helper function to process place details and build complete address
+        const processPlaceDetails = async (placeDetails: google.maps.places.PlaceResult) => {
+          console.log('Processing place details:', placeDetails);
+          
+          if (placeDetails.address_components) {
+            // Build complete address with zipcode
+            let streetNumber = '';
+            let route = '';
+            let locality = '';
+            let administrativeArea = '';
+            let postalCode = '';
+            
+            console.log('Processing address components:', placeDetails.address_components);
+            
+            placeDetails.address_components.forEach((component: any) => {
+              const types = component.types;
+              console.log('Component:', { types, long_name: component.long_name, short_name: component.short_name });
+              
+              if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+                console.log('Found street number:', streetNumber);
+              } else if (types.includes('route')) {
+                route = component.long_name;
+                console.log('Found route:', route);
+              } else if (types.includes('locality')) {
+                locality = component.long_name;
+                console.log('Found locality:', locality);
+              } else if (types.includes('administrative_area_level_1')) {
+                administrativeArea = component.short_name;
+                console.log('Found state:', administrativeArea);
+              } else if (types.includes('postal_code')) {
+                postalCode = component.long_name;
+                console.log('Found postal code:', postalCode);
+              }
+            });
+            
+            // Only proceed if we have all required components
+            if (!streetNumber || !route || !locality || !administrativeArea) {
+              console.log('Missing required address components');
+              return;
+            }
+            
+            // Build complete address with proper formatting
+            const completeAddress = postalCode
+              ? `${streetNumber} ${route}, ${locality}, ${administrativeArea}, ${postalCode}`
+              : `${streetNumber} ${route}, ${locality}, ${administrativeArea}`;
+            
+            console.log('Complete address built:', completeAddress);
+            
+            if (completeAddress) {
+              // Clear any pending debounce timeout when address is selected from dropdown
+              if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+                debounceTimeoutRef.current = null;
+              }
+              
+              // Immediately update the input value and trigger callbacks
+              console.log('Selected address from autocomplete:', completeAddress);
+              onChange(completeAddress);
+              
+              // Always trigger onAddressSelected immediately for autocomplete selections
+              if (onAddressSelected) {
+                console.log('Calling onAddressSelected callback with complete address');
+                onAddressSelected(completeAddress);
+              }
+            } else {
+              console.error('Failed to build complete address from components');
+            }
+          } else {
+            console.log('No address_components found in place object');
+          }
+        };
+
         // Handle place selection
-        const placeChangedListener = () => {
+        const placeChangedListener = async () => {
           console.log('place_changed event fired');
           
           try {
             const place = autocompleteRef.current?.getPlace();
-            console.log('Place object:', place);
+            console.log('Initial place object:', place);
             
-            if (place && place.address_components) {
-              // Build complete address with zipcode
-              let streetNumber = '';
-              let route = '';
-              let locality = '';
-              let administrativeArea = '';
-              let postalCode = '';
+            // If we don't have a place_id, try to get it from the input value
+            if (!place || !place.place_id) {
+              console.log('No valid place selected, checking input value');
               
-              place.address_components.forEach((component: any) => {
-                const types = component.types;
-                if (types.includes('street_number')) {
-                  streetNumber = component.long_name;
-                } else if (types.includes('route')) {
-                  route = component.long_name;
-                } else if (types.includes('locality')) {
-                  locality = component.long_name;
-                } else if (types.includes('administrative_area_level_1')) {
-                  administrativeArea = component.short_name;
-                } else if (types.includes('postal_code')) {
-                  postalCode = component.long_name;
-                }
-              });
-              
-              // Build complete address
-              const completeAddress = [streetNumber, route, locality, administrativeArea, postalCode]
-                .filter(part => part)
-                .join(', ');
-              
-              console.log('Complete address built:', completeAddress);
-              
-              if (completeAddress) {
-                // Clear any pending debounce timeout when address is selected from dropdown
-                if (debounceTimeoutRef.current) {
-                  clearTimeout(debounceTimeoutRef.current);
-                  debounceTimeoutRef.current = null;
-                }
-                
-                // Immediately update the input value and trigger callbacks
-                onChange(completeAddress);
-                if (onAddressSelected) {
-                  console.log('Calling onAddressSelected callback with complete address');
-                  onAddressSelected(completeAddress);
-                }
-              } else if (place.formatted_address) {
-                // Clear any pending debounce timeout when address is selected from dropdown
-                if (debounceTimeoutRef.current) {
-                  clearTimeout(debounceTimeoutRef.current);
-                  debounceTimeoutRef.current = null;
-                }
-                
-                // Fallback to formatted_address if building fails
-                console.log('Using formatted_address as fallback:', place.formatted_address);
-                onChange(place.formatted_address);
-                if (onAddressSelected) {
-                  onAddressSelected(place.formatted_address);
+              // If we have a substantial address in the input, try to geocode it
+              if (value && value.length > 10) {
+                console.log('Attempting to geocode input value:', value);
+                try {
+                  const geocoder = new window.google.maps.Geocoder();
+                  const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+                    geocoder.geocode({ address: value }, (results, status) => {
+                      if (status === google.maps.GeocoderStatus.OK && results) {
+                        resolve(results);
+                      } else {
+                        reject(new Error(`Geocoding failed: ${status}`));
+                      }
+                    });
+                  });
+                  
+                  if (result && result.length > 0) {
+                    console.log('Geocoding successful, using first result');
+                    const geocodedPlace = result[0];
+                    
+                    // Process the geocoded result
+                    if (geocodedPlace.place_id) {
+                      // Get detailed place information using Places Details
+                      const placeDetails = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
+                        const service = new google.maps.places.PlacesService(document.createElement('div'));
+                        service.getDetails(
+                          {
+                            placeId: geocodedPlace.place_id,
+                            fields: [
+                              'address_components',
+                              'formatted_address',
+                              'geometry',
+                              'place_id',
+                              'types'
+                            ]
+                          },
+                          (result, status) => {
+                            if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+                              resolve(result);
+                            } else {
+                              reject(new Error(`Place details request failed: ${status}`));
+                            }
+                          }
+                        );
+                      });
+                      
+                      // Process the place details
+                      await processPlaceDetails(placeDetails);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Geocoding failed:', error);
                 }
               }
-            } else {
-              console.log('No address_components found in place object');
+              return;
             }
+            
+            // Get detailed place information using Places Details with all address components
+            const placeDetails = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
+              const service = new google.maps.places.PlacesService(document.createElement('div'));
+              service.getDetails(
+                {
+                  placeId: place.place_id,
+                  fields: [
+                    'address_components',
+                    'formatted_address',
+                    'geometry',
+                    'place_id',
+                    'types'
+                  ]
+                },
+                (result, status) => {
+                  if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+                    resolve(result);
+                  } else {
+                    reject(new Error(`Place details request failed: ${status}`));
+                  }
+                }
+              );
+            });
+            
+            // Process the place details
+            await processPlaceDetails(placeDetails);
           } catch (error) {
             console.error('Error in place_changed listener:', error);
           }
@@ -200,6 +317,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         if (autocompleteRef.current && window.google) {
           console.log('Cleaning up autocomplete listeners');
           window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+          
+
+          
           autocompleteRef.current = null;
         }
       } catch (error) {
@@ -240,8 +360,15 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
-    // Prevent default to avoid any potential conflicts with Google Places
-    e.preventDefault();
+    // Ensure the input is properly focused and autocomplete is activated
+    e.currentTarget.focus();
+    
+    // If there's a value and autocomplete is available, trigger a search
+    if (value && autocompleteRef.current && window.google) {
+      console.log('Input clicked, ensuring autocomplete is active');
+      // Trigger a focus event to ensure autocomplete is properly initialized
+      window.google.maps.event.trigger(autocompleteRef.current, 'focus');
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -254,7 +381,21 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow normal key behavior for Google Places
+    // Handle keyboard navigation for Google Places Autocomplete
+    if (e.key === 'Enter' && autocompleteRef.current) {
+      // Prevent default to avoid form submission
+      e.preventDefault();
+      
+      // Get the currently selected place
+      const place = autocompleteRef.current.getPlace();
+      if (place && place.place_id) {
+        console.log('Enter key pressed, triggering place selection');
+        // Trigger the place_changed event manually
+        if (window.google) {
+          window.google.maps.event.trigger(autocompleteRef.current, 'place_changed');
+        }
+      }
+    }
   };
 
   return (
