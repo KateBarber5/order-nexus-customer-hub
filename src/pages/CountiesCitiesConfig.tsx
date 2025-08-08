@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import AddCountyDialog from '@/components/AddCountyDialog';
 import AddMunicipalityDialog from '@/components/AddMunicipalityDialog';
 import EditCountyDialog from '@/components/EditCountyDialog';
 import EditMunicipalityDialog from '@/components/EditMunicipalityDialog';
-import { fetchPlaces, transformPlacesToCounties, County, Municipality, StatusType, ServiceAvailability, ReportType, crudCounty } from '@/services/orderService';
+import { fetchPlaces, transformPlacesToCounties, County, Municipality, StatusType, ReportType, crudCounty, Place, SubPlace } from '@/services/orderService';
 
 const CountiesCitiesConfig = () => {
   const [counties, setCounties] = useState<County[]>([]);
@@ -25,41 +25,59 @@ const CountiesCitiesConfig = () => {
   const [selectedCountyForMunicipality, setSelectedCountyForMunicipality] = useState<string | null>(null);
   const [editingCounty, setEditingCounty] = useState<County | null>(null);
   const [editingMunicipality, setEditingMunicipality] = useState<Municipality | null>(null);
+  const [municipalityServicesMap, setMunicipalityServicesMap] = useState<Record<string, string[]>>({});
 
   // Fetch counties and municipalities data from API
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const places = await fetchPlaces();
-        console.log('Fetched places:', places);
-        
-        if (!places || !Array.isArray(places)) {
-          throw new Error('Invalid data received from API');
-        }
-        
-        const transformedCounties = transformPlacesToCounties(places);
-        console.log('Transformed counties:', transformedCounties);
-        
-        if (!Array.isArray(transformedCounties)) {
-          throw new Error('Failed to transform places data');
-        }
-        
-        setCounties(transformedCounties);
-      } catch (err) {
-        console.error('Error loading counties data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load counties data');
-        toast.error('Failed to load counties and municipalities data');
-        // Set empty array as fallback
-        setCounties([]);
-      } finally {
-        setLoading(false);
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const places = await fetchPlaces();
+      console.log('Fetched places:', places);
+      
+      if (!places || !Array.isArray(places)) {
+        throw new Error('Invalid data received from API');
       }
-    };
+      
+      const transformedCounties = transformPlacesToCounties(places);
+      console.log('Transformed counties:', transformedCounties);
+      
+      if (!Array.isArray(transformedCounties)) {
+        throw new Error('Failed to transform places data');
+      }
+      
+      setCounties(transformedCounties);
 
-    loadData();
+      // Build a map of municipality ID -> array of service names from API
+      const servicesMap: Record<string, string[]> = {};
+      (places as Place[]).forEach((place: Place) => {
+        const subPlaces: SubPlace[] = Array.isArray(place.SubPlace) ? place.SubPlace : [];
+        subPlaces.forEach((subPlace: SubPlace) => {
+          const municipalityId = `${place.PlaceID}-${subPlace.SubPlaceName}`;
+          const serviceNames = Array.isArray(subPlace.Service)
+            ? subPlace.Service
+                .map((s) => s?.PlaceServiceName)
+                .filter((name): name is string => Boolean(name))
+            : [];
+          servicesMap[municipalityId] = serviceNames;
+        });
+      });
+      setMunicipalityServicesMap(servicesMap);
+    } catch (err) {
+      console.error('Error loading counties data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load counties data');
+      toast.error('Failed to load counties and municipalities data');
+      // Set empty array as fallback
+      setCounties([]);
+      setMunicipalityServicesMap({});
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const filteredCounties = counties.filter(county =>
     county.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -162,6 +180,10 @@ const CountiesCitiesConfig = () => {
     })));
     toast.success(`Municipality "${municipalityData.name}" updated successfully`);
     setEditingMunicipality(null);
+
+    // Refresh data from API to reflect updated services and keep the current filter
+    // Note: searchTerm is preserved in state, so filtering remains intact
+    loadData();
   };
 
   const handleDeleteMunicipality = (municipalityId: string) => {
@@ -175,14 +197,10 @@ const CountiesCitiesConfig = () => {
     toast.success(`Municipality "${municipality.name}" deleted successfully`);
   };
 
-  const getServiceBadges = (services: ServiceAvailability) => {
-    const activeServices = Object.entries(services)
-      .filter(([_, active]) => active)
-      .map(([service, _]) => service);
-    
-    return activeServices.map(service => (
-      <Badge key={service} variant="secondary" className="capitalize">
-        {service}
+  const renderServiceBadges = (serviceNames: string[]) => {
+    return serviceNames.map((serviceName) => (
+      <Badge key={serviceName} variant="secondary">
+        {serviceName}
       </Badge>
     ));
   };
@@ -368,7 +386,7 @@ const CountiesCitiesConfig = () => {
                               <div>
                                 <Label className="text-xs text-muted-foreground">Available Services:</Label>
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                  {getServiceBadges(municipality.availableServices)}
+                                  {renderServiceBadges(municipalityServicesMap[municipality.id] || [])}
                                 </div>
                               </div>
                               <div>
