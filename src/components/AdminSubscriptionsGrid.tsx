@@ -25,10 +25,30 @@ interface SubscriptionData {
 const subscriptionOptions = ['Per Order', 'Retail', 'Enterprise', 'Custom'];
 
 const subscriptionPricing = {
-  'Per Order': { monthlyPrice: '0.00', description: 'Pay per order processed' },
-  'Retail': { monthlyPrice: '99.99', description: 'Standard retail pricing' },
-  'Enterprise': { monthlyPrice: '299.99', description: 'Enterprise level pricing' },
-  'Custom': { monthlyPrice: 'Custom', description: 'Custom pricing arrangement' }
+  'Per Order': { 
+    monthlyPrice: '0.00', 
+    monthlyOrders: 0, 
+    excessOrderCost: '5.00',
+    description: 'Pay per order processed' 
+  },
+  'Retail': { 
+    monthlyPrice: '99.99', 
+    monthlyOrders: 100, 
+    excessOrderCost: '2.50',
+    description: 'Standard retail pricing' 
+  },
+  'Enterprise': { 
+    monthlyPrice: '299.99', 
+    monthlyOrders: 500, 
+    excessOrderCost: '1.50',
+    description: 'Enterprise level pricing' 
+  },
+  'Custom': { 
+    monthlyPrice: 'Custom', 
+    monthlyOrders: 'Custom', 
+    excessOrderCost: 'Custom',
+    description: 'Custom pricing arrangement' 
+  }
 };
 
 const AdminSubscriptionsGrid = () => {
@@ -391,6 +411,8 @@ const AdminSubscriptionsGrid = () => {
                 <TableRow>
                   <TableHead>Subscription Model</TableHead>
                   <TableHead>Monthly Price</TableHead>
+                  <TableHead>Monthly Orders</TableHead>
+                  <TableHead>Excess Order Cost</TableHead>
                   <TableHead>Description</TableHead>
                 </TableRow>
               </TableHeader>
@@ -403,6 +425,12 @@ const AdminSubscriptionsGrid = () => {
                     ${subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.monthlyPrice || 'N/A'}
                   </TableCell>
                   <TableCell>
+                    {subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.monthlyOrders || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    ${subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.excessOrderCost || 'N/A'}
+                  </TableCell>
+                  <TableCell>
                     {subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.description || 'N/A'}
                   </TableCell>
                 </TableRow>
@@ -412,6 +440,12 @@ const AdminSubscriptionsGrid = () => {
                   </TableCell>
                   <TableCell>
                     ${subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.monthlyPrice || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.monthlyOrders || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    ${subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.excessOrderCost || 'N/A'}
                   </TableCell>
                   <TableCell>
                     {subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.description || 'N/A'}
