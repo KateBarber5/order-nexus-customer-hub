@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -475,7 +476,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder || "Enter address..."}
-        className={className}
+        className={cn("h-9", className)} // Reduced height from default
         disabled={isLoading}
       />
       {isLoading && (
