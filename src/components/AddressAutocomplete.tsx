@@ -28,6 +28,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const loaderRef = useRef<Loader | null>(null);
   const isInitializingRef = useRef(false);
   const isAutocompleteSelectionRef = useRef(false);
+  const hasActiveDropdownRef = useRef(false);
   const onChangeRef = useRef(onChange);
   const onAddressSelectedRef = useRef(onAddressSelected);
 
@@ -196,6 +197,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               
               // Set flag to indicate this is an autocomplete selection
               isAutocompleteSelectionRef.current = true;
+              hasActiveDropdownRef.current = false; // Dropdown is closing
               
               // Immediately update the input value and trigger callbacks
               console.log('Selected address from autocomplete:', completeAddress);
@@ -323,6 +325,38 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         console.log('Adding place_changed listener to autocomplete:', autocompleteRef.current);
         autocompleteRef.current.addListener('place_changed', placeChangedListener);
         
+        // Add listeners to detect when dropdown is shown/hidden
+        const inputElement = inputRef.current;
+        if (inputElement) {
+          // Listen for focus to potentially show dropdown
+          const focusListener = () => {
+            console.log('Input focused, dropdown may appear');
+          };
+          
+          // Listen for input events that might show the dropdown
+          const inputListener = () => {
+            if (value.length > 2) {
+              hasActiveDropdownRef.current = true;
+              console.log('Dropdown likely active due to input length');
+            }
+          };
+          
+          // Listen for blur to hide dropdown
+          const blurListener = () => {
+            // Add a small delay to allow for dropdown clicks
+            setTimeout(() => {
+              hasActiveDropdownRef.current = false;
+              console.log('Dropdown likely hidden due to blur');
+            }, 200);
+          };
+          
+          inputElement.addEventListener('focus', focusListener);
+          inputElement.addEventListener('input', inputListener);
+          inputElement.addEventListener('blur', blurListener);
+          
+          // Cleanup function will handle removing these listeners
+        }
+        
         console.log('place_changed listener added successfully');
       } catch (error) {
         console.error('Error initializing Google Places Autocomplete:', error);
@@ -361,10 +395,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
     
     debounceTimeoutRef.current = setTimeout(() => {
-      // Only trigger if address is substantial enough (at least 10 characters like the API expects)
-      if (address.trim().length >= 10 && onAddressSelectedRef.current) {
+      // Only trigger if address is substantial enough AND no dropdown is active
+      if (address.trim().length >= 10 && onAddressSelectedRef.current && !hasActiveDropdownRef.current) {
         console.log('Debounced address selection triggered for:', address);
         onAddressSelectedRef.current(address);
+      } else if (hasActiveDropdownRef.current) {
+        console.log('Skipping debounced validation - dropdown is active');
       }
     }, 2000); // Increased to 2 seconds to give users more time to type
   }, []); // Remove onAddressSelected dependency
@@ -373,6 +409,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     const newValue = e.target.value;
     console.log('Input change event:', newValue, 'isAutocompleteSelection:', isAutocompleteSelectionRef.current);
     onChangeRef.current(newValue);
+    
+    // Set dropdown as potentially active when typing
+    if (newValue.length > 2 && !isAutocompleteSelectionRef.current) {
+      hasActiveDropdownRef.current = true;
+    }
     
     // Only trigger debounced address selection for manual typing when not from autocomplete
     if (!isAutocompleteSelectionRef.current) {
