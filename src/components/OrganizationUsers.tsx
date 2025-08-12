@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Edit, Trash2, Search } from 'lucide-react';
 import CreateUserModal from '@/components/CreateUserModal';
+import EditUserModal from '@/components/EditUserModal';
 
 interface User {
   UserGuid: string;
@@ -24,19 +25,18 @@ const OrganizationUsers = ({ organizationId, organizationName, users }: Organiza
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
   const handleAddUser = () => {
     setCreateUserModalOpen(true);
   };
 
   const handleEditUser = (user: User) => {
-    // TODO: Implement edit user functionality
-    toast({
-      title: "Edit User",
-      description: `Editing user: ${user.UserName}`,
-    });
+    setUserToEdit(user);
+    setEditUserModalOpen(true);
   };
 
   const handleDeleteUser = (user: User) => {
@@ -177,6 +177,21 @@ const OrganizationUsers = ({ organizationId, organizationName, users }: Organiza
         onOpenChange={setCreateUserModalOpen}
         organizationName={organizationName}
         organizationId={organizationId}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        open={editUserModalOpen}
+        onOpenChange={setEditUserModalOpen}
+        user={userToEdit}
+        organizationName={organizationName}
+        onUserUpdated={() => {
+          // In a real implementation, this would refresh the user list
+          toast({
+            title: "User list updated",
+            description: "The user list has been refreshed.",
+          });
+        }}
       />
 
       {/* Delete Confirmation Dialog */}
