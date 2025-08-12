@@ -170,7 +170,8 @@ const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizatio
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="button" variant="secondary" onClick={handleEditSubscription}>
+              <Button type="button" variant="outline" onClick={handleEditSubscription}
+                className="border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 hover:text-orange-800">
                 Edit Subscription Model
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
