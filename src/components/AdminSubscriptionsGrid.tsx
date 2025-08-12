@@ -51,7 +51,12 @@ const subscriptionPricing = {
   }
 };
 
-const AdminSubscriptionsGrid = () => {
+interface AdminSubscriptionsGridProps {
+  autoEditOrganizationId?: number;
+  onAutoEditComplete?: () => void;
+}
+
+const AdminSubscriptionsGrid = ({ autoEditOrganizationId, onAutoEditComplete }: AdminSubscriptionsGridProps = {}) => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [pendingChanges, setPendingChanges] = useState<Partial<SubscriptionData>>({});
@@ -94,6 +99,15 @@ const AdminSubscriptionsGrid = () => {
         }));
         
         setSubscriptionData(mappedData);
+        
+        // Auto-edit if organizationId is provided
+        if (autoEditOrganizationId) {
+          const targetRow = mappedData.find(row => row.organizationId === autoEditOrganizationId);
+          if (targetRow) {
+            handleEdit(targetRow.id);
+            onAutoEditComplete?.();
+          }
+        }
       } catch (err) {
         console.error('Error fetching organizations:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch organizations');
@@ -108,7 +122,7 @@ const AdminSubscriptionsGrid = () => {
     };
 
     fetchOrganizations();
-  }, [toast]);
+  }, [toast, autoEditOrganizationId, onAutoEditComplete]);
 
   const handleEdit = (id: string) => {
     const row = subscriptionData.find(item => item.id === id);

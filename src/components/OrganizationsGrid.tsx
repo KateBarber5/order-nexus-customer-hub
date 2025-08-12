@@ -127,6 +127,10 @@ const OrganizationsGrid = () => {
     setCreateUserModalOpen(true);
   };
 
+  const handleEditSubscription = (organizationId: number) => {
+    navigate(`/admin?tab=client-subscriptions&editOrg=${organizationId}`);
+  };
+
   const handleOrganizationUpdated = (updatedOrganization: Organization) => {
     // Update both the full data and the grid data
     setFullOrganizationsData(prev => 
@@ -301,6 +305,7 @@ const OrganizationsGrid = () => {
         onOpenChange={setEditModalOpen}
         organization={selectedOrgForEdit}
         onOrganizationUpdated={handleOrganizationUpdated}
+        onEditSubscription={handleEditSubscription}
       />
     </Card>
   );

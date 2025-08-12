@@ -32,6 +32,8 @@ const Admin = () => {
   const [adminOrderData, setAdminOrderData] = useState<AdminOrderReportingResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('order-reporting');
+  const [autoEditOrganizationId, setAutoEditOrganizationId] = useState<number | undefined>();
   const { toast } = useToast();
 
   // Fetch admin order reporting data
@@ -496,6 +498,15 @@ const Admin = () => {
     }
   };
 
+  const handleEditSubscription = (organizationId: number) => {
+    setAutoEditOrganizationId(organizationId);
+    setActiveTab('client-subscriptions');
+  };
+
+  const handleAutoEditComplete = () => {
+    setAutoEditOrganizationId(undefined);
+  };
+
   const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
 
   return (
@@ -503,7 +514,7 @@ const Admin = () => {
       <div className="max-w-6xl mx-auto">
         <h1 className="page-title">Admin</h1>
         
-        <Tabs defaultValue="order-reporting" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="order-reporting">Order Reporting</TabsTrigger>
             <TabsTrigger value="client-subscriptions">Account Subscriptions</TabsTrigger>
@@ -580,7 +591,10 @@ const Admin = () => {
           </TabsContent>
           
           <TabsContent value="client-subscriptions">
-            <AdminSubscriptionsGrid />
+            <AdminSubscriptionsGrid 
+              autoEditOrganizationId={autoEditOrganizationId}
+              onAutoEditComplete={handleAutoEditComplete}
+            />
           </TabsContent>
         </Tabs>
       </div>

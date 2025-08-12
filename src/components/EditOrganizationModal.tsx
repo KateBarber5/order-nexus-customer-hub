@@ -36,9 +36,10 @@ interface EditOrganizationModalProps {
   onOpenChange: (open: boolean) => void;
   organization: Organization | null;
   onOrganizationUpdated?: (updatedOrganization: Organization) => void;
+  onEditSubscription?: (organizationId: number) => void;
 }
 
-const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizationUpdated }: EditOrganizationModalProps) => {
+const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizationUpdated, onEditSubscription }: EditOrganizationModalProps) => {
   const { toast } = useToast();
   
   const form = useForm<EditOrganizationForm>({
@@ -94,6 +95,13 @@ const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizatio
         description: "Failed to update organization. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleEditSubscription = () => {
+    if (organization) {
+      onEditSubscription?.(organization.OrganizationID);
+      handleClose();
     }
   };
 
@@ -157,9 +165,13 @@ const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizatio
               )}
             />
             
-            <DialogFooter>
+            
+            <DialogFooter className="gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
+              </Button>
+              <Button type="button" variant="secondary" onClick={handleEditSubscription}>
+                Edit Subscription Model
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Updating...' : 'Update Organization'}
