@@ -180,6 +180,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             if (completeAddress) {
               // Clear any pending debounce timeout when address is selected from dropdown
               if (debounceTimeoutRef.current) {
+                console.log('Clearing debounce timeout due to autocomplete selection');
                 clearTimeout(debounceTimeoutRef.current);
                 debounceTimeoutRef.current = null;
               }
@@ -191,7 +192,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               // Always trigger onAddressSelected immediately for autocomplete selections
               if (onAddressSelected) {
                 console.log('Calling onAddressSelected callback with complete address');
-                onAddressSelected(completeAddress);
+                // Use setTimeout to ensure the onChange has been processed first
+                setTimeout(() => {
+                  onAddressSelected(completeAddress);
+                }, 0);
               }
             } else {
               console.error('Failed to build complete address from components');
@@ -354,9 +358,16 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     console.log('Input change event:', newValue);
     onChange(newValue);
     
-    // Only trigger debounced address selection for manual typing
-    // Let Google Places handle its own selections
-    debouncedAddressSelection(newValue);
+    // Only trigger debounced address selection for manual typing when not from autocomplete
+    // Check if this change is likely from Google Places autocomplete by looking for specific patterns
+    const isFromAutocomplete = newValue.includes(', ') && newValue.includes(' FL ');
+    
+    if (!isFromAutocomplete) {
+      console.log('Triggering debounced address selection for manual typing');
+      debouncedAddressSelection(newValue);
+    } else {
+      console.log('Skipping debounced selection - likely from autocomplete');
+    }
   };
 
   const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
