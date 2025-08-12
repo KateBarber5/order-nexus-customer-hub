@@ -99,15 +99,6 @@ const AdminSubscriptionsGrid = ({ autoEditOrganizationId, onAutoEditComplete }: 
         }));
         
         setSubscriptionData(mappedData);
-        
-        // Auto-edit if organizationId is provided
-        if (autoEditOrganizationId) {
-          const targetRow = mappedData.find(row => row.organizationId === autoEditOrganizationId);
-          if (targetRow) {
-            handleEdit(targetRow.id);
-            onAutoEditComplete?.();
-          }
-        }
       } catch (err) {
         console.error('Error fetching organizations:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch organizations');
@@ -122,7 +113,25 @@ const AdminSubscriptionsGrid = ({ autoEditOrganizationId, onAutoEditComplete }: 
     };
 
     fetchOrganizations();
-  }, [toast, autoEditOrganizationId, onAutoEditComplete]);
+  }, [toast]);
+
+  // Separate effect for auto-edit functionality
+  useEffect(() => {
+    if (autoEditOrganizationId && subscriptionData.length > 0 && !loading) {
+      const targetRow = subscriptionData.find(row => row.organizationId === autoEditOrganizationId);
+      if (targetRow && editingRow !== targetRow.id) {
+        console.log('Auto-editing organization:', autoEditOrganizationId, 'Target row:', targetRow);
+        setEditingRow(targetRow.id);
+        setPendingChanges({
+          subscriptionOption: targetRow.subscriptionOption,
+          monthlyOrders: targetRow.monthlyOrders,
+          remainingOrders: targetRow.remainingOrders,
+          excessOrderCost: targetRow.excessOrderCost
+        });
+        onAutoEditComplete?.();
+      }
+    }
+  }, [autoEditOrganizationId, subscriptionData, loading, editingRow, onAutoEditComplete]);
 
   const handleEdit = (id: string) => {
     const row = subscriptionData.find(item => item.id === id);
