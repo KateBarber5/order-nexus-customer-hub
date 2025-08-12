@@ -413,7 +413,6 @@ const AdminSubscriptionsGrid = () => {
                   <TableHead>Monthly Price</TableHead>
                   <TableHead>Monthly Orders</TableHead>
                   <TableHead>Excess Order Cost</TableHead>
-                  <TableHead>Description</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -430,9 +429,6 @@ const AdminSubscriptionsGrid = () => {
                   <TableCell>
                     ${subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.excessOrderCost || 'N/A'}
                   </TableCell>
-                  <TableCell>
-                    {subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.description || 'N/A'}
-                  </TableCell>
                 </TableRow>
                 <TableRow className="bg-green-50">
                   <TableCell className="font-medium">
@@ -446,9 +442,6 @@ const AdminSubscriptionsGrid = () => {
                   </TableCell>
                   <TableCell>
                     ${subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.excessOrderCost || 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    {subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.description || 'N/A'}
                   </TableCell>
                 </TableRow>
               </TableBody>
