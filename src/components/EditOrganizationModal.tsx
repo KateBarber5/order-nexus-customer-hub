@@ -20,15 +20,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Organization } from '@/services/orderService';
 
 const editOrganizationSchema = z.object({
   organizationName: z.string().min(1, 'Organization name is required'),
-  organizationPlan: z.string().min(1, 'Plan is required'),
-  organizationPlanStatus: z.string().min(1, 'Plan status is required'),
-  organizationPlanMonthlyPrice: z.string().min(1, 'Monthly price is required'),
-  organizationPlanMonthlyOrders: z.string().min(1, 'Monthly orders is required'),
+  organizationAdmin: z.string().min(1, 'Organization admin is required'),
 });
 
 type EditOrganizationForm = z.infer<typeof editOrganizationSchema>;
@@ -47,22 +45,19 @@ const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizatio
     resolver: zodResolver(editOrganizationSchema),
     defaultValues: {
       organizationName: '',
-      organizationPlan: '',
-      organizationPlanStatus: '',
-      organizationPlanMonthlyPrice: '',
-      organizationPlanMonthlyOrders: '',
+      organizationAdmin: '',
     },
   });
 
   // Update form when organization changes
   useEffect(() => {
     if (organization && open) {
+      // Get the first user as default admin (in real implementation, you'd check for admin role)
+      const defaultAdmin = organization.User && organization.User.length > 0 ? organization.User[0].UserGuid : '';
+      
       form.reset({
         organizationName: organization.OrganizationName || '',
-        organizationPlan: organization.OrganizationPlan || '',
-        organizationPlanStatus: organization.OrganizationPlanStatus || '',
-        organizationPlanMonthlyPrice: organization.OrganizationPlanMonthlyPrice || '',
-        organizationPlanMonthlyOrders: organization.OrganizationPlanMonthlyOrders?.toString() || '',
+        organizationAdmin: defaultAdmin,
       });
     }
   }, [organization, open, form]);
@@ -81,12 +76,7 @@ const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizatio
       const updatedOrganization: Organization = {
         ...organization,
         OrganizationName: values.organizationName,
-        OrganizationPlan: values.organizationPlan,
-        OrganizationPlanStatus: values.organizationPlanStatus,
-        OrganizationPlanMonthlyPrice: values.organizationPlanMonthlyPrice,
-        OrganizationPlanMonthlyOrders: parseInt(values.organizationPlanMonthlyOrders),
-        // Recalculate remaining orders
-        OrganizationPlanRemainingOrders: parseInt(values.organizationPlanMonthlyOrders) - (organization.OrganizationPlanUsedOrders || 0)
+        // Note: In real implementation, you'd update the admin user assignment
       };
       
       toast({
@@ -140,61 +130,32 @@ const EditOrganizationModal = ({ open, onOpenChange, organization, onOrganizatio
             
             <FormField
               control={form.control}
-              name="organizationPlan"
+              name="organizationAdmin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Plan</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter plan name" {...field} />
-                  </FormControl>
+                  <FormLabel>Organization Admin</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select admin user" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-background border z-50">
+                      {organization?.User?.map((user) => (
+                        <SelectItem 
+                          key={user.UserGuid} 
+                          value={user.UserGuid}
+                          className="hover:bg-accent focus:bg-accent"
+                        >
+                          {user.UserName || 'Unnamed User'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            <FormField
-              control={form.control}
-              name="organizationPlanStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Plan Status</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter plan status (e.g., Active, Inactive)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="organizationPlanMonthlyPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Price ($)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0.00" type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="organizationPlanMonthlyOrders"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Orders</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0" type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>
