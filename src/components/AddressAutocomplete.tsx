@@ -27,6 +27,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loaderRef = useRef<Loader | null>(null);
   const isInitializingRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const onAddressSelectedRef = useRef(onAddressSelected);
+
+  // Update refs when props change
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    onAddressSelectedRef.current = onAddressSelected;
+  }, [onChange, onAddressSelected]);
 
   useEffect(() => {
     const initializeGooglePlaces = async () => {
@@ -187,14 +195,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               
               // Immediately update the input value and trigger callbacks
               console.log('Selected address from autocomplete:', completeAddress);
-              onChange(completeAddress);
+              onChangeRef.current(completeAddress);
               
               // Always trigger onAddressSelected immediately for autocomplete selections
-              if (onAddressSelected) {
+              if (onAddressSelectedRef.current) {
                 console.log('Calling onAddressSelected callback with complete address');
                 // Use setTimeout to ensure the onChange has been processed first
                 setTimeout(() => {
-                  onAddressSelected(completeAddress);
+                  onAddressSelectedRef.current!(completeAddress);
                 }, 0);
               }
             } else {
@@ -336,7 +344,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         debounceTimeoutRef.current = null;
       }
     };
-  }, [isGoogleLoaded, onChange, onAddressSelected]);
+  }, [isGoogleLoaded]); // Remove onChange and onAddressSelected from dependencies
 
   // Debounced function to trigger address selection after user stops typing
   const debouncedAddressSelection = useCallback((address: string) => {
@@ -346,17 +354,17 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     
     debounceTimeoutRef.current = setTimeout(() => {
       // Only trigger if address is substantial enough (at least 10 characters like the API expects)
-      if (address.trim().length >= 10 && onAddressSelected) {
+      if (address.trim().length >= 10 && onAddressSelectedRef.current) {
         console.log('Debounced address selection triggered for:', address);
-        onAddressSelected(address);
+        onAddressSelectedRef.current(address);
       }
     }, 1000); // Wait 1 second after user stops typing
-  }, [onAddressSelected]);
+  }, []); // Remove onAddressSelected dependency
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     console.log('Input change event:', newValue);
-    onChange(newValue);
+    onChangeRef.current(newValue);
     
     // Only trigger debounced address selection for manual typing when not from autocomplete
     // Check if this change is likely from Google Places autocomplete by looking for specific patterns
