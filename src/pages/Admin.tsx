@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +23,7 @@ interface OrderData {
 }
 
 const Admin = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reportType, setReportType] = useState<string>('');
@@ -35,6 +37,25 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('order-reporting');
   const [autoEditOrganizationId, setAutoEditOrganizationId] = useState<number | undefined>();
   const { toast } = useToast();
+
+  // Handle URL parameters on mount and when search params change
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const editOrg = searchParams.get('editOrg');
+    
+    if (tab === 'client-subscriptions') {
+      setActiveTab('client-subscriptions');
+      
+      if (editOrg) {
+        const orgId = parseInt(editOrg);
+        if (!isNaN(orgId)) {
+          setAutoEditOrganizationId(orgId);
+        }
+      }
+    } else {
+      setActiveTab('order-reporting');
+    }
+  }, [searchParams]);
 
   // Fetch admin order reporting data
   const fetchAdminOrderData = async (filters: AdminOrderReportingFilter[] = []) => {
@@ -501,10 +522,14 @@ const Admin = () => {
   const handleEditSubscription = (organizationId: number) => {
     setAutoEditOrganizationId(organizationId);
     setActiveTab('client-subscriptions');
+    // Update URL parameters
+    setSearchParams({ tab: 'client-subscriptions', editOrg: organizationId.toString() });
   };
 
   const handleAutoEditComplete = () => {
     setAutoEditOrganizationId(undefined);
+    // Clear the editOrg parameter from URL
+    setSearchParams({ tab: 'client-subscriptions' });
   };
 
   const isCustomerOrderReport = reportType === 'customer-order' || reportType === 'customer-order-csv' || reportType === 'customer-order-pdf';
@@ -514,7 +539,10 @@ const Admin = () => {
       <div className="max-w-6xl mx-auto">
         <h1 className="page-title">Admin</h1>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(tab) => {
+          setActiveTab(tab);
+          setSearchParams({ tab });
+        }} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="order-reporting">Order Reporting</TabsTrigger>
             <TabsTrigger value="client-subscriptions">Account Subscriptions</TabsTrigger>
