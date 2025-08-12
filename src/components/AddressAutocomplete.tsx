@@ -476,8 +476,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder || "Enter address..."}
-        className={cn("!h-8 !min-h-8 !py-1", className)} // Force smaller height with important
-        style={{ height: '32px', minHeight: '32px' }} // Inline style override
+        className={cn("!h-14 !min-h-14 !py-3", className)} // Increased height to h-14
+        style={{ height: '56px', minHeight: '56px' }} // Inline style override for h-14
         disabled={isLoading}
       />
       {isLoading && (
