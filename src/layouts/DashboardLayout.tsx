@@ -32,4 +32,5 @@ const DashboardLayout = ({ children, className }: DashboardLayoutProps) => {
   );
 };
 
+export { DashboardLayout };
 export default DashboardLayout;
