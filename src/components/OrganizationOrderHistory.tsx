@@ -104,6 +104,9 @@ const OrganizationOrderHistory = ({ organizationId }: OrganizationOrderHistoryPr
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    // Sort by creation date descending (most recent first)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   if (loading) {
