@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, Edit, UserPlus, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { getOrganizations, Organization } from '@/services/orderService';
 import CreateUserModal from '@/components/CreateUserModal';
 
@@ -26,6 +27,7 @@ interface OrganizationGridData {
 
 const OrganizationsGrid = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [organizations, setOrganizations] = useState<OrganizationGridData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,11 +103,7 @@ const OrganizationsGrid = () => {
   };
 
   const handleView = (organization: OrganizationGridData) => {
-    // TODO: Implement view organization details
-    toast({
-      title: "View Organization",
-      description: `Viewing details for ${organization.name}`,
-    });
+    navigate(`/admin/organizations/${organization.organizationId}`);
   };
 
   const handleEdit = (organization: OrganizationGridData) => {
