@@ -9,6 +9,7 @@ import { Eye, Edit, UserPlus, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getOrganizations, Organization } from '@/services/orderService';
 import CreateUserModal from '@/components/CreateUserModal';
+import EditOrganizationModal from '@/components/EditOrganizationModal';
 
 interface OrganizationGridData {
   id: string;
@@ -32,7 +33,10 @@ const OrganizationsGrid = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<OrganizationGridData | null>(null);
+  const [selectedOrgForEdit, setSelectedOrgForEdit] = useState<Organization | null>(null);
+  const [fullOrganizationsData, setFullOrganizationsData] = useState<Organization[]>([]);
 
   // Fetch organizations data on component mount
   useEffect(() => {
@@ -42,6 +46,9 @@ const OrganizationsGrid = () => {
         setError(null);
         
         const organizationsData = await getOrganizations();
+        
+        // Store full organization data for editing
+        setFullOrganizationsData(organizationsData);
         
         // Map API response to component data structure
         const mappedData: OrganizationGridData[] = organizationsData.map((org: Organization) => ({
@@ -107,16 +114,34 @@ const OrganizationsGrid = () => {
   };
 
   const handleEdit = (organization: OrganizationGridData) => {
-    // TODO: Implement edit organization
-    toast({
-      title: "Edit Organization",
-      description: `Editing ${organization.name}`,
-    });
+    // Find the full organization data for editing
+    const fullOrgData = fullOrganizationsData.find(org => org.OrganizationID === organization.organizationId);
+    if (fullOrgData) {
+      setSelectedOrgForEdit(fullOrgData);
+      setEditModalOpen(true);
+    }
   };
 
   const handleAddUser = (organization: OrganizationGridData) => {
     setSelectedOrganization(organization);
     setCreateUserModalOpen(true);
+  };
+
+  const handleOrganizationUpdated = (updatedOrganization: Organization) => {
+    // Update both the full data and the grid data
+    setFullOrganizationsData(prev => 
+      prev.map(org => 
+        org.OrganizationID === updatedOrganization.OrganizationID ? updatedOrganization : org
+      )
+    );
+    
+    setOrganizations(prev => 
+      prev.map(org => 
+        org.organizationId === updatedOrganization.OrganizationID 
+          ? { ...org, name: updatedOrganization.OrganizationName }
+          : org
+      )
+    );
   };
 
   const getStatusBadge = (status: string, isActive: boolean) => {
@@ -269,6 +294,13 @@ const OrganizationsGrid = () => {
         onOpenChange={setCreateUserModalOpen}
         organizationName={selectedOrganization?.name || ''}
         organizationId={selectedOrganization?.organizationId || 0}
+      />
+      
+      <EditOrganizationModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        organization={selectedOrgForEdit}
+        onOrganizationUpdated={handleOrganizationUpdated}
       />
     </Card>
   );
