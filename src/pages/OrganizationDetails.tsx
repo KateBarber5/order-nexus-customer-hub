@@ -5,11 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Building, Calendar, CreditCard, Users } from 'lucide-react';
+import { ArrowLeft, Building, Calendar, CreditCard, Users, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getOrganizations, Organization } from '@/services/orderService';
 import OrganizationOrderHistory from '@/components/OrganizationOrderHistory';
 import OrganizationUsers from '@/components/OrganizationUsers';
+import EditOrganizationModal from '@/components/EditOrganizationModal';
 
 const OrganizationDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,7 @@ const OrganizationDetails = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrganization = async () => {
@@ -100,6 +102,14 @@ const OrganizationDetails = () => {
     );
   };
 
+  const handleEditOrganization = () => {
+    setEditModalOpen(true);
+  };
+
+  const handleOrganizationUpdated = (updatedOrganization: Organization) => {
+    setOrganization(updatedOrganization);
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto py-6 space-y-6">
@@ -119,12 +129,18 @@ const OrganizationDetails = () => {
         {/* Organization Profile Card */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <Building className="h-8 w-8 text-primary" />
-              <div>
-                <CardTitle className="text-2xl">{organization.OrganizationName}</CardTitle>
-                <CardDescription>Organization Details</CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Building className="h-8 w-8 text-primary" />
+                <div>
+                  <CardTitle className="text-2xl">{organization.OrganizationName}</CardTitle>
+                  <CardDescription>Organization Details</CardDescription>
+                </div>
               </div>
+              <Button onClick={handleEditOrganization} className="gap-2">
+                <Edit className="h-4 w-4" />
+                Edit Organization
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -200,6 +216,14 @@ const OrganizationDetails = () => {
             />
           </TabsContent>
         </Tabs>
+
+        {/* Edit Organization Modal */}
+        <EditOrganizationModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          organization={organization}
+          onOrganizationUpdated={handleOrganizationUpdated}
+        />
       </div>
     </DashboardLayout>
   );
