@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, Edit, UserPlus, Loader2 } from 'lucide-react';
 import { getOrganizations, Organization } from '@/services/orderService';
+import CreateUserModal from '@/components/CreateUserModal';
 
 interface OrganizationGridData {
   id: string;
@@ -28,6 +29,8 @@ const OrganizationsGrid = () => {
   const [organizations, setOrganizations] = useState<OrganizationGridData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationGridData | null>(null);
 
   // Fetch organizations data on component mount
   useEffect(() => {
@@ -114,11 +117,8 @@ const OrganizationsGrid = () => {
   };
 
   const handleAddUser = (organization: OrganizationGridData) => {
-    // TODO: Implement add user to organization
-    toast({
-      title: "Add User",
-      description: `Adding user to ${organization.name}`,
-    });
+    setSelectedOrganization(organization);
+    setCreateUserModalOpen(true);
   };
 
   const getStatusBadge = (status: string, isActive: boolean) => {
@@ -265,6 +265,13 @@ const OrganizationsGrid = () => {
           </div>
         )}
       </CardContent>
+      
+      <CreateUserModal
+        open={createUserModalOpen}
+        onOpenChange={setCreateUserModalOpen}
+        organizationName={selectedOrganization?.name || ''}
+        organizationId={selectedOrganization?.organizationId || 0}
+      />
     </Card>
   );
 };
