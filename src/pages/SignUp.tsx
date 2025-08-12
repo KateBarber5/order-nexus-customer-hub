@@ -301,7 +301,7 @@ const SignUp = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>No, Create New Organization</AlertDialogCancel>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleSendJoinRequest}>
                 Yes, Send Request
               </AlertDialogAction>
