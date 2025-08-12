@@ -8,6 +8,8 @@ import { Link } from 'react-router-dom';
 import { FileSearch, Lock, Mail, UserPlus, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { crudAccount, getSystemParameter } from '@/services/orderService';
+import { mockOrganizations, mockEmailService } from '@/data/mockData';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
@@ -17,6 +19,8 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showOrgDialog, setShowOrgDialog] = useState(false);
+  const [existingOrg, setExistingOrg] = useState<{ name: string; adminName: string; adminEmail: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +43,23 @@ const SignUp = () => {
       return;
     }
     
+    // Check if organization already exists in mock data
+    if (companyName) {
+      const existingOrganization = mockOrganizations.find(
+        org => org.name.toLowerCase() === companyName.toLowerCase()
+      );
+      
+      if (existingOrganization) {
+        setExistingOrg({
+          name: existingOrganization.name,
+          adminName: existingOrganization.adminName,
+          adminEmail: existingOrganization.adminEmail
+        });
+        setShowOrgDialog(true);
+        return;
+      }
+    }
+
     setIsLoading(true);
     
     try {
@@ -107,6 +128,37 @@ const SignUp = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendJoinRequest = async () => {
+    if (!existingOrg) return;
+    
+    try {
+      await mockEmailService.sendOrgJoinRequest(
+        { name: existingOrg.adminName, email: existingOrg.adminEmail },
+        { firstName, lastName, email }
+      );
+      
+      toast({
+        title: "Request Sent",
+        description: `We've sent a request to ${existingOrg.adminName} at ${existingOrg.name}. They will review your request and get back to you.`,
+      });
+      
+      setShowOrgDialog(false);
+      // Clear form
+      setFirstName('');
+      setLastName('');
+      setCompanyName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send join request. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -237,6 +289,25 @@ const SignUp = () => {
             </div>
           </CardFooter>
         </Card>
+
+        <AlertDialog open={showOrgDialog} onOpenChange={setShowOrgDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Organization Already Exists</AlertDialogTitle>
+              <AlertDialogDescription>
+                We found an existing organization called "{existingOrg?.name}". 
+                If you're connected to this organization, we can ask the organization's admin to add you. 
+                Should we send the request now?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>No, Create New Organization</AlertDialogCancel>
+              <AlertDialogAction onClick={handleSendJoinRequest}>
+                Yes, Send Request
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
