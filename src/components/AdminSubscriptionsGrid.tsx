@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Save, Loader2 } from 'lucide-react';
@@ -20,6 +22,15 @@ interface SubscriptionData {
   excessOrderCost: string;
 }
 
+const subscriptionOptions = ['Per Order', 'Retail', 'Enterprise', 'Custom'];
+
+const subscriptionPricing = {
+  'Per Order': { monthlyPrice: '0.00', description: 'Pay per order processed' },
+  'Retail': { monthlyPrice: '99.99', description: 'Standard retail pricing' },
+  'Enterprise': { monthlyPrice: '299.99', description: 'Enterprise level pricing' },
+  'Custom': { monthlyPrice: 'Custom', description: 'Custom pricing arrangement' }
+};
+
 const AdminSubscriptionsGrid = () => {
   const { toast } = useToast();
   const [editingRow, setEditingRow] = useState<string | null>(null);
@@ -27,6 +38,19 @@ const AdminSubscriptionsGrid = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [subscriptionChangeModal, setSubscriptionChangeModal] = useState<{
+    open: boolean;
+    organizationName: string;
+    currentOption: string;
+    newOption: string;
+    rowId: string;
+  }>({
+    open: false,
+    organizationName: '',
+    currentOption: '',
+    newOption: '',
+    rowId: ''
+  });
 
   // Fetch organizations data on component mount
   useEffect(() => {
@@ -71,6 +95,7 @@ const AdminSubscriptionsGrid = () => {
     if (row) {
       setEditingRow(id);
       setPendingChanges({
+        subscriptionOption: row.subscriptionOption,
         monthlyOrders: row.monthlyOrders,
         remainingOrders: row.remainingOrders,
         excessOrderCost: row.excessOrderCost
@@ -148,7 +173,35 @@ const AdminSubscriptionsGrid = () => {
         ...prev,
         [field]: value
       }));
+    } else if (field === 'subscriptionOption') {
+      const currentRow = subscriptionData.find(item => item.id === editingRow);
+      if (currentRow && value !== currentRow.subscriptionOption) {
+        setSubscriptionChangeModal({
+          open: true,
+          organizationName: currentRow.clientName,
+          currentOption: currentRow.subscriptionOption,
+          newOption: value,
+          rowId: editingRow!
+        });
+      } else {
+        setPendingChanges(prev => ({
+          ...prev,
+          [field]: value
+        }));
+      }
     }
+  };
+
+  const handleSubscriptionChangeConfirm = () => {
+    setPendingChanges(prev => ({
+      ...prev,
+      subscriptionOption: subscriptionChangeModal.newOption
+    }));
+    setSubscriptionChangeModal(prev => ({ ...prev, open: false }));
+  };
+
+  const handleSubscriptionChangeCancel = () => {
+    setSubscriptionChangeModal(prev => ({ ...prev, open: false }));
   };
 
   if (loading) {
@@ -221,7 +274,27 @@ const AdminSubscriptionsGrid = () => {
             {subscriptionData.map((row) => (
               <TableRow key={row.id}>
                 <TableCell className="font-medium">{row.clientName}</TableCell>
-                <TableCell>{row.subscriptionOption}</TableCell>
+                <TableCell>
+                  {editingRow === row.id ? (
+                    <Select
+                      value={pendingChanges.subscriptionOption || row.subscriptionOption}
+                      onValueChange={(value) => handleInputChange('subscriptionOption', value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subscriptionOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    row.subscriptionOption
+                  )}
+                </TableCell>
                 <TableCell>${row.monthlyPrice}</TableCell>
                 <TableCell>
                   {editingRow === row.id ? (
@@ -302,6 +375,62 @@ const AdminSubscriptionsGrid = () => {
           </TableBody>
         </Table>
       </CardContent>
+      
+      <Dialog open={subscriptionChangeModal.open} onOpenChange={(open) => setSubscriptionChangeModal(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm Subscription Change</DialogTitle>
+            <DialogDescription>
+              You are changing the subscription model for {subscriptionChangeModal.organizationName} from {subscriptionChangeModal.currentOption} to {subscriptionChangeModal.newOption}. The pricing differences are outlined below. Are you sure you want to change?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subscription Model</TableHead>
+                  <TableHead>Monthly Price</TableHead>
+                  <TableHead>Description</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow className="bg-red-50">
+                  <TableCell className="font-medium">
+                    {subscriptionChangeModal.currentOption} (Current)
+                  </TableCell>
+                  <TableCell>
+                    ${subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.monthlyPrice || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {subscriptionPricing[subscriptionChangeModal.currentOption as keyof typeof subscriptionPricing]?.description || 'N/A'}
+                  </TableCell>
+                </TableRow>
+                <TableRow className="bg-green-50">
+                  <TableCell className="font-medium">
+                    {subscriptionChangeModal.newOption} (New)
+                  </TableCell>
+                  <TableCell>
+                    ${subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.monthlyPrice || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {subscriptionPricing[subscriptionChangeModal.newOption as keyof typeof subscriptionPricing]?.description || 'N/A'}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleSubscriptionChangeCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubscriptionChangeConfirm}>
+              Confirm Change
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
