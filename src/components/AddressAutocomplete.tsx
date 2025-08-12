@@ -27,6 +27,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loaderRef = useRef<Loader | null>(null);
   const isInitializingRef = useRef(false);
+  const isAutocompleteSelectionRef = useRef(false);
   const onChangeRef = useRef(onChange);
   const onAddressSelectedRef = useRef(onAddressSelected);
 
@@ -193,6 +194,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                 debounceTimeoutRef.current = null;
               }
               
+              // Set flag to indicate this is an autocomplete selection
+              isAutocompleteSelectionRef.current = true;
+              
               // Immediately update the input value and trigger callbacks
               console.log('Selected address from autocomplete:', completeAddress);
               onChangeRef.current(completeAddress);
@@ -203,6 +207,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                 // Use setTimeout to ensure the onChange has been processed first
                 setTimeout(() => {
                   onAddressSelectedRef.current!(completeAddress);
+                  // Reset the flag after a short delay
+                  setTimeout(() => {
+                    isAutocompleteSelectionRef.current = false;
+                  }, 100);
                 }, 0);
               }
             } else {
@@ -358,23 +366,20 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         console.log('Debounced address selection triggered for:', address);
         onAddressSelectedRef.current(address);
       }
-    }, 1000); // Wait 1 second after user stops typing
+    }, 2000); // Increased to 2 seconds to give users more time to type
   }, []); // Remove onAddressSelected dependency
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    console.log('Input change event:', newValue);
+    console.log('Input change event:', newValue, 'isAutocompleteSelection:', isAutocompleteSelectionRef.current);
     onChangeRef.current(newValue);
     
     // Only trigger debounced address selection for manual typing when not from autocomplete
-    // Check if this change is likely from Google Places autocomplete by looking for specific patterns
-    const isFromAutocomplete = newValue.includes(', ') && newValue.includes(' FL ');
-    
-    if (!isFromAutocomplete) {
+    if (!isAutocompleteSelectionRef.current) {
       console.log('Triggering debounced address selection for manual typing');
       debouncedAddressSelection(newValue);
     } else {
-      console.log('Skipping debounced selection - likely from autocomplete');
+      console.log('Skipping debounced selection - this is from autocomplete');
     }
   };
 
