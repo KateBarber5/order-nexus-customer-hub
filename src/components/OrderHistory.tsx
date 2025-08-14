@@ -119,6 +119,9 @@ const OrderHistory = () => {
     }
     
     return matchesSearch && matchesStatus && matchesDateRange;
+  }).sort((a, b) => {
+    // Sort by creation date descending (most recent first)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   // Calculate pagination

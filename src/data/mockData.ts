@@ -78,3 +78,58 @@ export const mockCustomer: Customer = {
   state: 'CA',
   zipCode: '12345'
 };
+
+export interface MockOrganization {
+  id: string;
+  name: string;
+  adminName: string;
+  adminEmail: string;
+  plan: string;
+}
+
+export const mockOrganizations: MockOrganization[] = [
+  {
+    id: '1',
+    name: 'Acme Corporation',
+    adminName: 'Jane Smith',
+    adminEmail: 'jane.smith@acme.com',
+    plan: 'Enterprise'
+  },
+  {
+    id: '2',
+    name: 'TechCorp Solutions',
+    adminName: 'Bob Johnson',
+    adminEmail: 'bob.johnson@techcorp.com',
+    plan: 'Professional'
+  },
+  {
+    id: '3',
+    name: 'Global Industries',
+    adminName: 'Sarah Wilson',
+    adminEmail: 'sarah.wilson@globalindustries.com',
+    plan: 'Basic'
+  }
+];
+
+// Mock email service
+export const mockEmailService = {
+  sendOrgJoinRequest: (orgAdmin: { name: string; email: string }, requestUser: { firstName: string; lastName: string; email: string }) => {
+    console.log('📧 Mock Email Sent:');
+    console.log(`To: ${orgAdmin.email}`);
+    console.log(`Subject: New User Request for Your Organization`);
+    console.log(`
+Dear ${orgAdmin.name},
+
+${requestUser.firstName} ${requestUser.lastName} (${requestUser.email}) has requested to join your organization in GovMetric.
+
+Please review and respond to this request:
+
+✅ Approve Request: [Mock Confirm Link]
+❌ Deny Request: [Mock Deny Link]
+
+Best regards,
+GovMetric Team
+    `);
+    return Promise.resolve({ success: true });
+  }
+};

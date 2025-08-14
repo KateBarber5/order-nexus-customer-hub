@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings, CreditCard, Map, MapPin } from 'lucide-react';
+import { FileSearch, History, User, Menu, X, LayoutDashboard, LogOut, Settings, CreditCard, Map, MapPin, Building } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,7 @@ const Navigation = () => {
   const adminNavItems = [
     { name: 'Admin', path: '/admin', icon: <Settings className="h-5 w-5" /> },
     { name: 'Counties & Cities', path: '/admin/counties-cities', icon: <MapPin className="h-5 w-5" /> },
+    { name: 'Organizations', path: '/admin/organizations', icon: <Building className="h-5 w-5" /> },
   ];
 
   const handleLogout = () => {

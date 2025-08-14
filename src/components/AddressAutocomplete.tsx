@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -27,6 +28,16 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loaderRef = useRef<Loader | null>(null);
   const isInitializingRef = useRef(false);
+  const isAutocompleteSelectionRef = useRef(false);
+  const hasActiveDropdownRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const onAddressSelectedRef = useRef(onAddressSelected);
+
+  // Update refs when props change
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    onAddressSelectedRef.current = onAddressSelected;
+  }, [onChange, onAddressSelected]);
 
   useEffect(() => {
     const initializeGooglePlaces = async () => {
@@ -180,18 +191,30 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             if (completeAddress) {
               // Clear any pending debounce timeout when address is selected from dropdown
               if (debounceTimeoutRef.current) {
+                console.log('Clearing debounce timeout due to autocomplete selection');
                 clearTimeout(debounceTimeoutRef.current);
                 debounceTimeoutRef.current = null;
               }
               
+              // Set flag to indicate this is an autocomplete selection
+              isAutocompleteSelectionRef.current = true;
+              hasActiveDropdownRef.current = false; // Dropdown is closing
+              
               // Immediately update the input value and trigger callbacks
               console.log('Selected address from autocomplete:', completeAddress);
-              onChange(completeAddress);
+              onChangeRef.current(completeAddress);
               
               // Always trigger onAddressSelected immediately for autocomplete selections
-              if (onAddressSelected) {
+              if (onAddressSelectedRef.current) {
                 console.log('Calling onAddressSelected callback with complete address');
-                onAddressSelected(completeAddress);
+                // Use setTimeout to ensure the onChange has been processed first
+                setTimeout(() => {
+                  onAddressSelectedRef.current!(completeAddress);
+                  // Reset the flag after a short delay
+                  setTimeout(() => {
+                    isAutocompleteSelectionRef.current = false;
+                  }, 100);
+                }, 0);
               }
             } else {
               console.error('Failed to build complete address from components');
@@ -303,6 +326,38 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         console.log('Adding place_changed listener to autocomplete:', autocompleteRef.current);
         autocompleteRef.current.addListener('place_changed', placeChangedListener);
         
+        // Add listeners to detect when dropdown is shown/hidden
+        const inputElement = inputRef.current;
+        if (inputElement) {
+          // Listen for focus to potentially show dropdown
+          const focusListener = () => {
+            console.log('Input focused, dropdown may appear');
+          };
+          
+          // Listen for input events that might show the dropdown
+          const inputListener = () => {
+            if (value.length > 2) {
+              hasActiveDropdownRef.current = true;
+              console.log('Dropdown likely active due to input length');
+            }
+          };
+          
+          // Listen for blur to hide dropdown
+          const blurListener = () => {
+            // Add a small delay to allow for dropdown clicks
+            setTimeout(() => {
+              hasActiveDropdownRef.current = false;
+              console.log('Dropdown likely hidden due to blur');
+            }, 200);
+          };
+          
+          inputElement.addEventListener('focus', focusListener);
+          inputElement.addEventListener('input', inputListener);
+          inputElement.addEventListener('blur', blurListener);
+          
+          // Cleanup function will handle removing these listeners
+        }
+        
         console.log('place_changed listener added successfully');
       } catch (error) {
         console.error('Error initializing Google Places Autocomplete:', error);
@@ -332,7 +387,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         debounceTimeoutRef.current = null;
       }
     };
-  }, [isGoogleLoaded, onChange, onAddressSelected]);
+  }, [isGoogleLoaded]); // Remove onChange and onAddressSelected from dependencies
 
   // Debounced function to trigger address selection after user stops typing
   const debouncedAddressSelection = useCallback((address: string) => {
@@ -341,22 +396,33 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
     
     debounceTimeoutRef.current = setTimeout(() => {
-      // Only trigger if address is substantial enough (at least 10 characters like the API expects)
-      if (address.trim().length >= 10 && onAddressSelected) {
+      // Only trigger if address is substantial enough AND no dropdown is active
+      if (address.trim().length >= 10 && onAddressSelectedRef.current && !hasActiveDropdownRef.current) {
         console.log('Debounced address selection triggered for:', address);
-        onAddressSelected(address);
+        onAddressSelectedRef.current(address);
+      } else if (hasActiveDropdownRef.current) {
+        console.log('Skipping debounced validation - dropdown is active');
       }
-    }, 1000); // Wait 1 second after user stops typing
-  }, [onAddressSelected]);
+    }, 2000); // Increased to 2 seconds to give users more time to type
+  }, []); // Remove onAddressSelected dependency
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    console.log('Input change event:', newValue);
-    onChange(newValue);
+    console.log('Input change event:', newValue, 'isAutocompleteSelection:', isAutocompleteSelectionRef.current);
+    onChangeRef.current(newValue);
     
-    // Only trigger debounced address selection for manual typing
-    // Let Google Places handle its own selections
-    debouncedAddressSelection(newValue);
+    // Set dropdown as potentially active when typing
+    if (newValue.length > 2 && !isAutocompleteSelectionRef.current) {
+      hasActiveDropdownRef.current = true;
+    }
+    
+    // Only trigger debounced address selection for manual typing when not from autocomplete
+    if (!isAutocompleteSelectionRef.current) {
+      console.log('Triggering debounced address selection for manual typing');
+      debouncedAddressSelection(newValue);
+    } else {
+      console.log('Skipping debounced selection - this is from autocomplete');
+    }
   };
 
   const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -410,7 +476,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder || "Enter address..."}
-        className={className}
+        className={cn("!h-14 !min-h-14 !py-3", className)} // Increased height to h-14
+        style={{ height: '56px', minHeight: '56px' }} // Inline style override for h-14
         disabled={isLoading}
       />
       {isLoading && (

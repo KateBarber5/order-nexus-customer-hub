@@ -21,6 +21,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import FloridaMap from "./pages/FloridaMap";
 import ExampleReport from "./pages/ExampleReport";
 import CountiesCitiesConfig from "./pages/CountiesCitiesConfig";
+import Organizations from "./pages/Organizations";
+import OrganizationDetails from "./pages/OrganizationDetails";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
@@ -142,6 +144,16 @@ const App = () => (
               <Route path="/admin/counties-cities" element={
                 <ProtectedRoute>
                   <CountiesCitiesConfig />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/organizations" element={
+                <ProtectedRoute>
+                  <Organizations />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/organizations/:id" element={
+                <ProtectedRoute>
+                  <OrganizationDetails />
                 </ProtectedRoute>
               } />
               <Route path="/subscriptions" element={
