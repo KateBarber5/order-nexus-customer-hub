@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { FileSearch, Lock, Mail, UserPlus, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { crudAccount, getSystemParameter } from '@/services/orderService';
+import { crudAccount, getSystemParameter, govMetricLogin, sessionManager } from '@/services/orderService';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
@@ -84,6 +84,20 @@ const SignUp = () => {
           title: "Account Request Submitted",
           description: successMessage.Description,
         });
+        
+        // Attempt automatic login and store session
+        try {
+          const login = await govMetricLogin(email, password);
+          if (login.LoginIsValid) {
+            sessionManager.storeFromLogin(login, email, true);
+            toast({
+              title: "Signed in",
+              description: `Welcome ${firstName || email}!`,
+            });
+          }
+        } catch (loginError) {
+          console.error('Auto login after signup failed:', loginError);
+        }
         
         // Clear form on success
         setFirstName('');

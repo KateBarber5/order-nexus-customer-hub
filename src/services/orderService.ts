@@ -41,6 +41,9 @@ export interface LoginResponse {
   LoginIsValid: boolean;
   UserID?: string;
   OrganizationID?: number;
+  OrganizationName?: string;
+  RoleId?: number;
+  UserTimeZone?: string;
   Error?: LoginError[];
 }
 
@@ -49,6 +52,9 @@ export interface UserSession {
   isAuthenticated: boolean;
   userID: string;
   organizationID: number;
+  organizationName?: string;
+  roleId?: number;
+  userTimeZone?: string;
   email?: string;
   loginTime: number;
   expiresAt: number;
@@ -78,6 +84,25 @@ export const sessionManager = {
     }
     
     console.log('Session stored:', { session, rememberMe, storage: rememberMe ? 'localStorage' : 'sessionStorage' });
+  },
+  // Convenience to build and store session from login payload
+  storeFromLogin: (
+    login: LoginResponse,
+    email: string,
+    rememberMe: boolean = false
+  ): void => {
+    const session: UserSession = {
+      isAuthenticated: login.LoginIsValid === true,
+      userID: login.UserID || '',
+      organizationID: (typeof login.OrganizationID === 'number' ? login.OrganizationID : Number(login.OrganizationID)) || 0,
+      organizationName: login.OrganizationName,
+      roleId: (typeof login.RoleId === 'number' ? login.RoleId : Number(login.RoleId)) || undefined,
+      userTimeZone: login.UserTimeZone,
+      email,
+      loginTime: Date.now(),
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000)
+    };
+    sessionManager.storeSession(session, rememberMe);
   },
 
   // Retrieve user session data
@@ -1609,7 +1634,17 @@ export const govMetricLogin = async (email: string, password: string): Promise<L
       throw new Error('Failed to parse JSON response from API');
     }
     
-    return data;
+    // Normalize the return payload to the expected shape
+    const normalized: LoginResponse = {
+      LoginIsValid: data?.LoginIsValid === true,
+      UserID: (data as any)?.UserID,
+      OrganizationID: typeof (data as any)?.OrganizationID === 'number' ? (data as any)?.OrganizationID : Number((data as any)?.OrganizationID) || undefined,
+      OrganizationName: (data as any)?.OrganizationName,
+      RoleId: typeof (data as any)?.RoleId === 'number' ? (data as any)?.RoleId : Number((data as any)?.RoleId) || undefined,
+      UserTimeZone: (data as any)?.UserTimeZone,
+      Error: (data as any)?.Error
+    };
+    return normalized;
   } catch (error) {
     console.error('Error authenticating with GovMetric:', error);
     throw error;
