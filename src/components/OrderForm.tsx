@@ -540,6 +540,7 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
   };
 
   const handleBackToDetails = () => {
+    console.log('handleBackToDetails called, changing step from', currentStep, 'to details');
     setCurrentStep('details');
   };
 
@@ -745,11 +746,16 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
             </div>
           </CardContent>
           
-          <CardFooter className="flex justify-between">
+           <CardFooter className="flex justify-between">
             <Button 
               type="button" 
               variant="outline" 
-              onClick={handleBackToDetails}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Back button clicked');
+                handleBackToDetails();
+              }}
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Edit
             </Button>
