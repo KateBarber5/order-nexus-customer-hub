@@ -43,6 +43,7 @@ export interface LoginResponse {
   OrganizationID?: number;
   OrganizationName?: string;
   RoleId?: number;
+  RoleName?: string;
   UserTimeZone?: string;
   Error?: LoginError[];
 }
@@ -54,6 +55,7 @@ export interface UserSession {
   organizationID: number;
   organizationName?: string;
   roleId?: number;
+  roleName?: string;
   userTimeZone?: string;
   email?: string;
   loginTime: number;
@@ -97,6 +99,7 @@ export const sessionManager = {
       organizationID: (typeof login.OrganizationID === 'number' ? login.OrganizationID : Number(login.OrganizationID)) || 0,
       organizationName: login.OrganizationName,
       roleId: (typeof login.RoleId === 'number' ? login.RoleId : Number(login.RoleId)) || undefined,
+      roleName: login.RoleName,
       userTimeZone: login.UserTimeZone,
       email,
       loginTime: Date.now(),
@@ -469,7 +472,18 @@ export const fetchOrdersFromAPI = async (): Promise<Order[]> => {
     console.log('Fetching orders from API...');
     console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_ORDERS);
+    // Get organization ID from user session
+    const organizationID = sessionManager.getCurrentOrganizationID();
+    if (!organizationID) {
+      throw new Error('No organization ID found in session. Please log in again.');
+    }
+    
+    console.log('Organization ID from session:', organizationID);
+    
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.GET_ORDERS, {
+      iFilterOption: 'OrganizationID',
+      iFilerValue: organizationID.toString()
+    });
     
     console.log('Response status:', response.status);
     console.log('Response status text:', response.statusText);
@@ -1581,6 +1595,7 @@ export const govMetricLogin = async (email: string, password: string): Promise<L
       OrganizationID: typeof (data as any)?.OrganizationID === 'number' ? (data as any)?.OrganizationID : Number((data as any)?.OrganizationID) || undefined,
       OrganizationName: (data as any)?.OrganizationName,
       RoleId: typeof (data as any)?.RoleId === 'number' ? (data as any)?.RoleId : Number((data as any)?.RoleId) || undefined,
+      RoleName: (data as any)?.RoleName,
       UserTimeZone: (data as any)?.UserTimeZone,
       Error: (data as any)?.Error
     };

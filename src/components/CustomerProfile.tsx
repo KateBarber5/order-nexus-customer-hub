@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockCustomer, Customer } from '@/data/mockData';
 import { getUserProfile, updateUserProfile, changeUserPassword, UserProfileResponse, getOrganizations, Organization, sessionManager } from '@/services/orderService';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,7 @@ import { Lock, CreditCard, Calendar, User, Loader2 } from 'lucide-react';
 
 const CustomerProfile = () => {
   const navigate = useNavigate();
+  const { userSession } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [customer, setCustomer] = useState<Customer>(mockCustomer);
   const [formData, setFormData] = useState<Customer>(mockCustomer);
@@ -320,15 +322,17 @@ const CustomerProfile = () => {
       
       <CardContent>
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={`grid w-full ${userSession?.roleName === 'Organization Admin' ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="subscription" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Subscription
-            </TabsTrigger>
+            {userSession?.roleName === 'Organization Admin' && (
+              <TabsTrigger value="subscription" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Subscription
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
@@ -497,7 +501,8 @@ const CustomerProfile = () => {
             </form>
           </TabsContent>
 
-          <TabsContent value="subscription" className="space-y-6">
+          {userSession?.roleName === 'Organization Admin' && (
+            <TabsContent value="subscription" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -658,6 +663,7 @@ const CustomerProfile = () => {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
         </Tabs>
       </CardContent>
     </Card>

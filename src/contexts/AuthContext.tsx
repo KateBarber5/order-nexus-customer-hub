@@ -99,6 +99,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isAuthenticated: true,
           userID: response.UserID,
           organizationID: response.OrganizationID,
+          organizationName: response.OrganizationName,
+          roleId: response.RoleId,
+          roleName: response.RoleName,
+          userTimeZone: response.UserTimeZone,
           email: email,
           loginTime: loginTime,
           expiresAt: expiresAt

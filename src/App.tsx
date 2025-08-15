@@ -145,27 +145,27 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/admin" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin={true}>
                     <Admin />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/counties-cities" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin={true}>
                     <CountiesCitiesConfig />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/organizations" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin={true}>
                     <Organizations />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/organizations/:id" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin={true}>
                     <OrganizationDetails />
                   </ProtectedRoute>
                 } />
                 <Route path="/subscriptions" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireOrgAdmin={true}>
                     <Subscriptions />
                   </ProtectedRoute>
                 } />

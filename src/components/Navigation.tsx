@@ -22,6 +22,9 @@ const Navigation = () => {
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { name: 'Place New Order', path: '/orders', icon: <FileSearch className="h-5 w-5" /> },
     { name: 'Order History', path: '/history', icon: <History className="h-5 w-5" /> },
+  ];
+
+  const orgAdminNavItems = [
     { name: 'Subscriptions', path: '/subscriptions', icon: <CreditCard className="h-5 w-5" /> },
   ];
 
@@ -65,8 +68,29 @@ const Navigation = () => {
                 </Link>
               ))}
               
+              {/* Organization Admin Navigation - Show only if user has organization admin privileges */}
+              {userSession && userSession.roleName === 'Organization Admin' && (
+                <>
+                  {orgAdminNavItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={cn(
+                        "inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium",
+                        isActive(item.path)
+                          ? "border-primary text-gray-900"
+                          : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                      )}
+                    >
+                      {item.icon}
+                      <span className="ml-1">{item.name}</span>
+                    </Link>
+                  ))}
+                </>
+              )}
+              
               {/* Admin Navigation - Show only if user has admin privileges */}
-              {userSession && (
+              {userSession && userSession.roleName === 'Govmetric Admin' && (
                 <>
                   {adminNavItems.map((item) => (
                     <Link
@@ -152,8 +176,30 @@ const Navigation = () => {
               </Link>
             ))}
             
+            {/* Organization Admin Navigation - Show only if user has organization admin privileges */}
+            {userSession && userSession.roleName === 'Organization Admin' && (
+              <>
+                {orgAdminNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      "flex items-center px-3 py-2 text-base font-medium",
+                      isActive(item.path)
+                        ? "bg-primary-50 border-l-4 border-primary text-primary"
+                        : "border-l-4 border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
+                    )}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.icon}
+                    <span className="ml-2">{item.name}</span>
+                  </Link>
+                ))}
+              </>
+            )}
+            
             {/* Admin Navigation - Show only if user has admin privileges */}
-            {userSession && (
+            {userSession && userSession.roleName === 'Govmetric Admin' && (
               <>
                 {adminNavItems.map((item) => (
                   <Link

@@ -6,14 +6,18 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   redirectTo?: string;
+  requireAdmin?: boolean;
+  requireOrgAdmin?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   requireAuth = true, 
-  redirectTo = '/' 
+  redirectTo = '/',
+  requireAdmin = false,
+  requireOrgAdmin = false
 }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, userSession } = useAuth();
   const location = useLocation();
 
   // Show loading state while checking authentication
@@ -30,6 +34,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     // Store the attempted URL to redirect back after login
     sessionStorage.setItem('redirectAfterLogin', location.pathname);
     return <Navigate to={redirectTo} replace />;
+  }
+
+  // If admin access is required, check if user has admin role
+  if (requireAdmin && (!userSession || userSession.roleName !== 'Govmetric Admin')) {
+    console.log('Access denied: User does not have admin privileges');
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // If organization admin access is required, check if user has organization admin role
+  if (requireOrgAdmin && (!userSession || userSession.roleName !== 'Organization Admin')) {
+    console.log('Access denied: User does not have organization admin privileges');
+    return <Navigate to="/dashboard" replace />;
   }
 
   // If user is authenticated and trying to access login page, redirect to dashboard
