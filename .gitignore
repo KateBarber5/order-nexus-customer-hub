@@ -28,3 +28,7 @@ dist-ssr
 .env
 
 .gitignore
+
+AUTHENTICATION.md
+AZURE_DEPLOYMENT.md
+ENVIRONMENT.md
