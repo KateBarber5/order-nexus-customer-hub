@@ -146,6 +146,12 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
   const isCardReportAvailable = (municipality: string) => {
     if (!municipality || !municipalityData) return false;
     
+    // If PlaceStatus is Active, always allow card report
+    if (municipalityData.PlaceStatus === 'Active') {
+      console.log(`isCardReportAvailable for ${municipality}: PlaceStatus is Active, allowing card report`);
+      return true;
+    }
+    
     const municipalityInfo = municipalityData.SubPlace.find(subPlace => subPlace.SubPlaceName === municipality);
     if (!municipalityInfo || !municipalityInfo.Report) return false;
     
@@ -188,7 +194,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
         setFormData(prev => ({
           ...prev,
           identifiedMunicipality: municipality.SubPlaceName,
-          identifiedCounty: response.PlaceName
+          identifiedCounty: response.PlaceName,
+          // Automatically set product type to 'card' if PlaceStatus is Active
+          productType: (response as any).PlaceStatus === 'Active' ? 'card' : prev.productType
         }));
         
         if (onAddressLookup) {
@@ -313,6 +321,12 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       return false;
     }
     
+    // Check if PlaceStatus is Active - if so, always allow product selection
+    if (municipalityData && municipalityData.PlaceStatus === 'Active') {
+      console.log(`isProductSelectionAllowed for ${formData.identifiedMunicipality}: PlaceStatus is Active, allowing selection`);
+      return true;
+    }
+    
     // Check if municipality is serviced AND has at least one report available
     const isServiced = isMunicipalityServiced(formData.identifiedMunicipality);
     const hasReports = isAnyReportAvailable(formData.identifiedMunicipality);
@@ -352,7 +366,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
         setFormData(prev => ({
           ...prev,
           identifiedMunicipality: municipality.SubPlaceName,
-          identifiedCounty: response.PlaceName
+          identifiedCounty: response.PlaceName,
+          // Automatically set product type to 'card' if PlaceStatus is Active
+          productType: (response as any).PlaceStatus === 'Active' ? 'card' : prev.productType
         }));
         
         if (onAddressLookup) {
