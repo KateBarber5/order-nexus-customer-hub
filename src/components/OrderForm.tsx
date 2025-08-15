@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +50,8 @@ interface OrderFormProps {
 }
 
 const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps) => {
+  const navigate = useNavigate();
+  
   // Load initial form data from localStorage if available
   const getInitialFormData = (): OrderFormData => {
     const savedData = localStorage.getItem('orderFormData');
@@ -607,28 +610,11 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       
       toast.success('Municipal lien search order submitted successfully!');
       
-      // Clear localStorage and reset form after 5 seconds
+      // Navigate to order history after 3 seconds
       setTimeout(() => {
         localStorage.removeItem('orderFormData');
-        setFormData({
-          address: '',
-          parcelId: '',
-          county: '',
-          productType: 'full',
-          searchType: 'address'
-        });
-        setCurrentStep('details');
-        setIsSuccess(false);
-        setHasSeenLocationAlert(false);
-        setMunicipalityData(null);
-        if (onMunicipalityDataChange) {
-          onMunicipalityDataChange(null);
-        }
-        
-        if (onAddressLookup) {
-          onAddressLookup('', '');
-        }
-      }, 5000);
+        navigate('/history');
+      }, 3000);
       
     } catch (error) {
       console.error('Error submitting order:', error);
