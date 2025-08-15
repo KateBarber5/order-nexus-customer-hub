@@ -164,7 +164,17 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
     setIsLookingUpMunicipality(true);
     
     try {
+      console.log('=== MUNICIPALITY LOOKUP DEBUG ===');
+      console.log('Calling checkMunicipalityAvailability with:', formData.parcelId, formData.county);
+      
       const response = await checkMunicipalityAvailability(formData.parcelId, formData.county);
+      
+      console.log('Raw response received:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', response ? Object.keys(response) : 'null/undefined');
+      console.log('SubPlace exists:', !!response?.SubPlace);
+      console.log('SubPlace length:', response?.SubPlace?.length);
+      
       setMunicipalityData(response);
       console.log('Municipality data set:', response);
       if (onMunicipalityDataChange) {
@@ -208,7 +218,13 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
         toast.error('No municipality found for the provided parcel ID and county');
       }
     } catch (error) {
+      console.error('=== ERROR IN HANDLE MUNICIPALITY LOOKUP ===');
       console.error('Error looking up municipality:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       toast.error('Failed to lookup municipality. Please try again.');
     } finally {
       setIsLookingUpMunicipality(false);

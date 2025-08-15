@@ -621,70 +621,40 @@ export const checkMunicipalityAvailability = async (parcelId: string, countyName
     console.log('County Name:', countyName);
     console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    // Add timeout to prevent hanging requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_PARCEL, {
+      iParcelID: parcelId,
+      iCountyName: countyName
+    });
     
-    try {
-      const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_PARCEL, {
-        iParcelID: parcelId,
-        iCountyName: countyName
-      });
-      
-      clearTimeout(timeoutId);
-      
-      console.log('Response status:', response.status);
-      console.log('Response status text:', response.statusText);
-      
-      if (!response.ok) {
-        let errorText = '';
-        try {
-          errorText = await response.text();
-          console.error('Response error text:', errorText);
-        } catch (textError) {
-          console.error('Could not read error response text:', textError);
-          errorText = 'Unable to read error details';
-        }
-        
-        // Try to parse as JSON for more detailed error info
-        let errorDetails = '';
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
-        } catch {
-          errorDetails = errorText;
-        }
-        
-        throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
       }
       
-      const data: MunicipalityAvailabilityResponse = await response.json();
-      console.log('Municipality availability response:', data);
-      
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      // Check if it's an abort error (timeout)
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timed out. Please try again.');
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
       }
       
-      // Check if it's a message port error
-      if (error instanceof Error && 
-          (error.message.includes('message port') || error.message.includes('asynchronous response'))) {
-        console.log('Message port error detected, returning empty response');
-        return {
-          PlaceID: 0,
-          PlaceName: '',
-          PlaceStatus: 'ERROR',
-          PlaceStatusMessage: 'Service temporarily unavailable',
-          SubPlace: []
-        };
-      }
-      
-      throw error;
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
     }
+    
+    const data: MunicipalityAvailabilityResponse = await response.json();
+    console.log('Municipality availability response:', data);
+    
+    return data;
   } catch (error) {
     console.error('Error checking municipality availability:', error);
     throw error;
@@ -698,69 +668,39 @@ export const checkMunicipalityAvailabilityByAddress = async (address: string): P
     console.log('Address:', address);
     console.log('API Base URL:', API_CONFIG.BASE_URL);
     
-    // Add timeout to prevent hanging requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_ADDRESS, {
+      iAddress: address
+    });
     
-    try {
-      const response = await apiRequest.get(API_CONFIG.ENDPOINTS.CHECK_MUNICIPALITY_BY_ADDRESS, {
-        iAddress: address
-      });
-      
-      clearTimeout(timeoutId);
-      
-      console.log('Response status:', response.status);
-      console.log('Response status text:', response.statusText);
-      
-      if (!response.ok) {
-        let errorText = '';
-        try {
-          errorText = await response.text();
-          console.error('Response error text:', errorText);
-        } catch (textError) {
-          console.error('Could not read error response text:', textError);
-          errorText = 'Unable to read error details';
-        }
-        
-        // Try to parse as JSON for more detailed error info
-        let errorDetails = '';
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
-        } catch {
-          errorDetails = errorText;
-        }
-        
-        throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+    
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('Response error text:', errorText);
+      } catch (textError) {
+        console.error('Could not read error response text:', textError);
+        errorText = 'Unable to read error details';
       }
       
-      const data: MunicipalityAvailabilityResponse = await response.json();
-      console.log('Municipality availability by address response:', data);
-      
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      // Check if it's an abort error (timeout)
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timed out. Please try again.');
+      // Try to parse as JSON for more detailed error info
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.message || errorJson.error || errorJson.detail || errorText;
+      } catch {
+        errorDetails = errorText;
       }
       
-      // Check if it's a message port error
-      if (error instanceof Error && 
-          (error.message.includes('message port') || error.message.includes('asynchronous response'))) {
-        console.log('Message port error detected, returning empty response');
-        return {
-          PlaceID: 0,
-          PlaceName: '',
-          PlaceStatus: 'ERROR',
-          PlaceStatusMessage: 'Service temporarily unavailable',
-          SubPlace: []
-        };
-      }
-      
-      throw error;
+      throw new Error(`HTTP error! status: ${response.status} (${response.statusText}), message: ${errorDetails}`);
     }
+    
+    const data: MunicipalityAvailabilityResponse = await response.json();
+    console.log('Municipality availability by address response:', data);
+    
+    return data;
   } catch (error) {
     console.error('Error checking municipality availability by address:', error);
     throw error;
