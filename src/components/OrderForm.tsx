@@ -49,13 +49,26 @@ interface OrderFormProps {
 }
 
 const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps) => {
-  const [formData, setFormData] = useState<OrderFormData>({
-    address: '',
-    parcelId: '',
-    county: '',
-    productType: 'full',
-    searchType: 'address'
-  });
+  // Load initial form data from localStorage if available
+  const getInitialFormData = (): OrderFormData => {
+    const savedData = localStorage.getItem('orderFormData');
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
+      }
+    }
+    return {
+      address: '',
+      parcelId: '',
+      county: '',
+      productType: 'full',
+      searchType: 'address'
+    };
+  };
+
+  const [formData, setFormData] = useState<OrderFormData>(getInitialFormData);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<'details' | 'review'>('details');
@@ -70,6 +83,11 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
   const [places, setPlaces] = useState<Place[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
   const [municipalityData, setMunicipalityData] = useState<MunicipalityAvailabilityResponse | null>(null);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('orderFormData', JSON.stringify(formData));
+  }, [formData]);
 
   // Load places data
   useEffect(() => {
@@ -588,8 +606,9 @@ const OrderForm = ({ onAddressLookup, onMunicipalityDataChange }: OrderFormProps
       
       toast.success('Municipal lien search order submitted successfully!');
       
-      // Reset form after 5 seconds
+      // Clear localStorage and reset form after 5 seconds
       setTimeout(() => {
+        localStorage.removeItem('orderFormData');
         setFormData({
           address: '',
           parcelId: '',
