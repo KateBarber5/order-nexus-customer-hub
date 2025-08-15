@@ -4,15 +4,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Edit, Trash2, Search } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Search, Mail } from 'lucide-react';
 import CreateUserModal from '@/components/CreateUserModal';
 import EditUserModal from '@/components/EditUserModal';
 
 interface User {
   UserGuid: string;
   UserName: string;
+  isActive?: boolean;
 }
 
 interface OrganizationUsersProps {
@@ -29,6 +31,14 @@ const OrganizationUsers = ({ organizationId, organizationName, users }: Organiza
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  // Local state to manage user active status (mock data)
+  const [userStatuses, setUserStatuses] = useState<Record<string, boolean>>(() => {
+    const initialStatuses: Record<string, boolean> = {};
+    users.forEach(user => {
+      initialStatuses[user.UserGuid] = user.isActive !== false; // Default to true if not specified
+    });
+    return initialStatuses;
+  });
 
   const handleAddUser = () => {
     setCreateUserModalOpen(true);
@@ -42,6 +52,31 @@ const OrganizationUsers = ({ organizationId, organizationName, users }: Organiza
   const handleDeleteUser = (user: User) => {
     setUserToDelete(user);
     setDeleteDialogOpen(true);
+  };
+
+  const handleToggleUserStatus = (userGuid: string) => {
+    setUserStatuses(prev => {
+      const newStatus = !prev[userGuid];
+      const userName = users.find(u => u.UserGuid === userGuid)?.UserName || 'User';
+      
+      toast({
+        title: "User Status Updated",
+        description: `${userName} has been ${newStatus ? 'activated' : 'deactivated'}.`,
+      });
+      
+      return {
+        ...prev,
+        [userGuid]: newStatus
+      };
+    });
+  };
+
+  const handleSendPasswordReset = (user: User) => {
+    // Mock implementation
+    toast({
+      title: "Password Reset Email Sent",
+      description: `A password reset email has been sent to ${user.UserName}.`,
+    });
   };
 
   const confirmDeleteUser = async () => {
@@ -74,10 +109,8 @@ const OrganizationUsers = ({ organizationId, organizationName, users }: Organiza
     user.UserGuid.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getUserStatus = (user: User) => {
-    // For now, assume all users are active
-    // In a real implementation, this would come from the API
-    return user.UserName ? 'Active' : 'Inactive';
+  const getUserStatus = (userGuid: string) => {
+    return userStatuses[userGuid] ? 'Active' : 'Inactive';
   };
 
   const getStatusBadge = (status: string) => {
@@ -133,10 +166,25 @@ const OrganizationUsers = ({ organizationId, organizationName, users }: Organiza
                   <TableCell className="font-medium">{user.UserGuid.substring(0, 8)}...</TableCell>
                   <TableCell>{user.UserName || 'No username set'}</TableCell>
                   <TableCell>
-                    {getStatusBadge(getUserStatus(user))}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(getUserStatus(user.UserGuid))}
+                      <Switch
+                        checked={userStatuses[user.UserGuid]}
+                        onCheckedChange={() => handleToggleUserStatus(user.UserGuid)}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleSendPasswordReset(user)}
+                        className="h-8 w-8 p-0"
+                        title="Send password reset email"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
