@@ -24,6 +24,9 @@ import CountiesCitiesConfig from "./pages/CountiesCitiesConfig";
 import Organizations from "./pages/Organizations";
 import OrganizationDetails from "./pages/OrganizationDetails";
 
+// Debug logging
+console.log('App.tsx: Starting application initialization');
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -32,21 +35,23 @@ class ErrorBoundary extends React.Component<
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
+    console.log('ErrorBoundary: Constructor called');
   }
 
   static getDerivedStateFromError(error: Error) {
+    console.log('ErrorBoundary: getDerivedStateFromError called with:', error);
     // Update state so the next render will show the fallback UI
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console
-    console.error('Error caught by boundary:', error);
-    console.error('Error info:', errorInfo);
+    console.error('ErrorBoundary: Error caught by boundary:', error);
+    console.error('ErrorBoundary: Error info:', errorInfo);
     
     // Check if it's a message port error and handle it gracefully
     if (error.message.includes('message port') || error.message.includes('asynchronous response')) {
-      console.log('Message port error detected, attempting to recover...');
+      console.log('ErrorBoundary: Message port error detected, attempting to recover...');
       // Don't set hasError for message port errors, let the app continue
       this.setState({ hasError: false });
       return;
@@ -54,6 +59,7 @@ class ErrorBoundary extends React.Component<
   }
 
   render() {
+    console.log('ErrorBoundary: Rendering, hasError:', this.state.hasError);
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
@@ -97,94 +103,97 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={
-                <ProtectedRoute requireAuth={false}>
-                  <Index />
-                </ProtectedRoute>
-              } />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              
-              {/* Protected routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/orders" element={
-                <ProtectedRoute>
-                  <Orders />
-                </ProtectedRoute>
-              } />
-              <Route path="/history" element={
-                <ProtectedRoute>
-                  <History />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/counties-cities" element={
-                <ProtectedRoute>
-                  <CountiesCitiesConfig />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/organizations" element={
-                <ProtectedRoute>
-                  <Organizations />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/organizations/:id" element={
-                <ProtectedRoute>
-                  <OrganizationDetails />
-                </ProtectedRoute>
-              } />
-              <Route path="/subscriptions" element={
-                <ProtectedRoute>
-                  <Subscriptions />
-                </ProtectedRoute>
-              } />
-              <Route path="/billing" element={
-                <ProtectedRoute>
-                  <Billing />
-                </ProtectedRoute>
-              } />
-              <Route path="/florida-map" element={
-                <ProtectedRoute>
-                  <FloridaMap />
-                </ProtectedRoute>
-              } />
-              <Route path="/example-report" element={
-                <ProtectedRoute>
-                  <ExampleReport />
-                </ProtectedRoute>
-              } />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  console.log('App: Component rendering');
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={
+                  <ProtectedRoute requireAuth={false}>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                
+                {/* Protected routes */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                } />
+                <Route path="/history" element={
+                  <ProtectedRoute>
+                    <History />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/counties-cities" element={
+                  <ProtectedRoute>
+                    <CountiesCitiesConfig />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/organizations" element={
+                  <ProtectedRoute>
+                    <Organizations />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/organizations/:id" element={
+                  <ProtectedRoute>
+                    <OrganizationDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/subscriptions" element={
+                  <ProtectedRoute>
+                    <Subscriptions />
+                  </ProtectedRoute>
+                } />
+                <Route path="/billing" element={
+                  <ProtectedRoute>
+                    <Billing />
+                  </ProtectedRoute>
+                } />
+                <Route path="/florida-map" element={
+                  <ProtectedRoute>
+                    <FloridaMap />
+                  </ProtectedRoute>
+                } />
+                <Route path="/example-report" element={
+                  <ProtectedRoute>
+                    <ExampleReport />
+                  </ProtectedRoute>
+                } />
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

@@ -42,7 +42,11 @@ npm run build
 
 #### Step 2: Deploy to Static Web Apps
 ```bash
-swa deploy dist --deployment-token YOUR_DEPLOYMENT_TOKEN
+# Deploy to preview environment (default)
+swa deploy dist --deployment-token fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950-407d-8847-d858aaac654200f10070b07be50f
+
+# Deploy to production environment
+swa deploy dist --deployment-token fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950-407d-8847-d858aaac654200f10070b07be50f --env production
 ```
 
 **Your Current Deployment Token:**
@@ -51,9 +55,10 @@ fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950
 ```
 
 #### Step 3: Access Your Application
-- **URL**: https://red-dune-0b07be50f.2.azurestaticapps.net/
+- **Production URL**: https://red-dune-0b07be50f.2.azurestaticapps.net/
+- **Preview URL**: https://red-dune-0b07be50f-preview.eastus2.2.azurestaticapps.net/
 - **Status**: Ready
-- **Environment**: Default (production)
+- **Environment**: Production and Preview available
 
 ### Method 2: Azure Storage Account (Alternative)
 
@@ -128,12 +133,13 @@ Create a `deploy.ps1` (PowerShell) or `deploy.sh` (Bash) script for quick deploy
 Write-Host "Building project..." -ForegroundColor Green
 npm run build
 
-# Deploy to Static Web Apps
-Write-Host "Deploying to Azure Static Web Apps..." -ForegroundColor Green
-swa deploy dist --deployment-token fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950-407d-8847-d858aaac654200f10070b07be50f
+# Deploy to Static Web Apps (Production)
+Write-Host "Deploying to Azure Static Web Apps (Production)..." -ForegroundColor Green
+swa deploy dist --deployment-token fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950-407d-8847-d858aaac654200f10070b07be50f --env production
 
 Write-Host "Deployment complete!" -ForegroundColor Green
-Write-Host "URL: https://red-dune-0b07be50f.2.azurestaticapps.net/" -ForegroundColor Yellow
+Write-Host "Production URL: https://red-dune-0b07be50f.2.azurestaticapps.net/" -ForegroundColor Yellow
+Write-Host "Preview URL: https://red-dune-0b07be50f-preview.eastus2.2.azurestaticapps.net/" -ForegroundColor Cyan
 ```
 
 ### Bash Script (deploy.sh)
@@ -144,12 +150,13 @@ Write-Host "URL: https://red-dune-0b07be50f.2.azurestaticapps.net/" -ForegroundC
 echo "Building project..."
 npm run build
 
-# Deploy to Static Web Apps
-echo "Deploying to Azure Static Web Apps..."
-swa deploy dist --deployment-token fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950-407d-8847-d858aaac654200f10070b07be50f
+# Deploy to Static Web Apps (Production)
+echo "Deploying to Azure Static Web Apps (Production)..."
+swa deploy dist --deployment-token fcae4401d8dc1d527ff42b1c63d3eb65dca6493948a17d9a86b40dd6403228a602-8fbed2c3-c950-407d-8847-d858aaac654200f10070b07be50f --env production
 
 echo "Deployment complete!"
-echo "URL: https://red-dune-0b07be50f.2.azurestaticapps.net/"
+echo "Production URL: https://red-dune-0b07be50f.2.azurestaticapps.net/"
+echo "Preview URL: https://red-dune-0b07be50f-preview.eastus2.2.azurestaticapps.net/"
 ```
 
 ## 📁 Configuration Files
@@ -176,7 +183,8 @@ The Vite configuration includes a custom plugin that automatically copies `stati
 ## 🌐 Application URLs
 
 ### Production URLs
-- **Static Web Apps**: https://red-dune-0b07be50f.2.azurestaticapps.net/
+- **Static Web Apps (Production)**: https://red-dune-0b07be50f.2.azurestaticapps.net/
+- **Static Web Apps (Preview)**: https://red-dune-0b07be50f-preview.eastus2.2.azurestaticapps.net/
 - **Storage Account**: https://govmetricstorage.z20.web.core.windows.net/
 
 ### Development URLs

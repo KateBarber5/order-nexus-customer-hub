@@ -101,22 +101,18 @@ const Index = () => {
                   />
                 </div>
               </div>
-              
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="password" 
                     type="password" 
+                    placeholder="Enter your password" 
                     className="pl-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     disabled={isLoading}
                   />
                 </div>
@@ -124,36 +120,26 @@ const Index = () => {
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="remember"
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={isLoading}
+                  className="rounded border-gray-300"
                 />
-                <Label htmlFor="remember" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Remember me
-                </Label>
+                <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-center text-muted-foreground">
+          <CardFooter className="flex flex-col space-y-2">
+            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+              Forgot your password?
+            </Link>
+            <div className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary font-medium hover:underline">
-                Sign Up
-              </Link>
-            </div>
-            <div className="text-xs text-center text-muted-foreground">
-              By continuing, you agree to our{" "}
-              <Link to="/terms" className="hover:underline">
-                Terms of Service
-              </Link>
-              {" "}and{" "}
-              <Link to="/privacy" className="hover:underline">
-                Privacy Policy
+              <Link to="/signup" className="text-blue-600 hover:underline">
+                Sign up
               </Link>
             </div>
           </CardFooter>
